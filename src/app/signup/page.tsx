@@ -22,31 +22,15 @@ export default function SignupPage() {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: { username },
+      },
     });
 
     if (signUpError) {
       setLoading(false);
       setError(signUpError.message);
       return;
-    }
-
-    if (data.user) {
-      const { error: profileError } = await supabase.from("users").insert({
-        id: data.user.id,
-        username,
-      });
-
-      if (profileError) {
-        setLoading(false);
-        setError(profileError.message);
-        return;
-      }
-
-      await supabase.from("portfolios").insert({
-        user_id: data.user.id,
-        abx_balance: 1000,
-        total_value: 1000,
-      });
     }
 
     setLoading(false);
