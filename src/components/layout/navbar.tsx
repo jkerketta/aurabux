@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -17,13 +16,11 @@ const navLinks = [
 ];
 
 export default function Navbar({ user }: NavbarProps) {
-  const router = useRouter();
   const supabase = createClient();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
+    window.location.href = "/login";
   };
 
   return (
