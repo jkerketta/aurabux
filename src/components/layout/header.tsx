@@ -19,17 +19,17 @@ export default function Header({ user }: HeaderProps) {
   };
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-white/5 bg-surface px-6">
+    <header className="flex h-16 items-center justify-between border-b border-neutral-200 bg-white px-8">
       <div className="flex items-center gap-4">
-        <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 text-sm font-medium text-neutral-700">
           {user.email?.charAt(0).toUpperCase()}
         </div>
-        <span className="text-sm text-text-secondary">{user.email}</span>
+        <span className="text-sm text-neutral-500">{user.email}</span>
       </div>
 
       <button
         onClick={handleLogout}
-        className="rounded-lg border border-white/10 px-4 py-2 text-sm text-text-secondary transition hover:bg-white/5 hover:text-text-primary"
+        className="rounded-lg px-4 py-2 text-sm text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900"
       >
         Sign Out
       </button>
