@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "last_run": "2026-05-17T18:18:21.668Z",
+    "root": "/home/jose/projects/ABX-Aurabux-",
+    "include_patterns": [
+      "src/**/*.ts",
+      "src/**/*.tsx",
+      "src/**/*.css",
+      "supabase/**/*.sql",
+      "package.json",
+      "next.config.ts",
+      "tsconfig.json",
+      "postcss.config.mjs",
+      ".env.example"
+    ],
+    "exclude_patterns": [
+      "**/*.test.ts",
+      "**/*.spec.ts",
+      "node_modules/**",
+      ".next/**",
+      "dist/**"
+    ],
+    "exceptions": []
+  },
+  "file_hashes": {
+    ".env.example": "f597483157a36a17dcf5449e14ed50e0",
+    "next.config.ts": "21958f5752add43cc47ab0ff5172cd46",
+    "package.json": "16b6daaecedefb6383628f331a18a00f",
+    "postcss.config.mjs": "675899342e765a4d16acd75a53389101",
+    "src/app/dashboard/layout.tsx": "f6ff5442860458256bc125f8d1585b1a",
+    "src/app/dashboard/page.tsx": "b9b46c1ed0e9541a0609d7202482db39",
+    "src/app/globals.css": "072b2edc87c3b47b77efcddc2bf71f1b",
+    "src/app/layout.tsx": "1d117975f953616f1deab13aad5d1262",
+    "src/app/login/layout.tsx": "62de9642590a84ba59f304fc36f9b578",
+    "src/app/login/page.tsx": "b4c6018fc0aff9bafaeade2e18c9d79e",
+    "src/app/page.tsx": "5ee6079a0925406b5711420aebf93f05",
+    "src/app/signup/layout.tsx": "62de9642590a84ba59f304fc36f9b578",
+    "src/app/signup/page.tsx": "da6c0695bfb047c621255f7732b78627",
+    "src/components/layout/header.tsx": "af4f7321f3f221b95e3ec95ad97eb0da",
+    "src/components/layout/sidebar.tsx": "74737e5e7ff9b9570dc28e53b5ff21cb",
+    "src/lib/supabase/client.ts": "5453d99289cf630306e5030428c0fc33",
+    "src/lib/supabase/server.ts": "924ee629152a5ac615c2f327f6de9b48",
+    "src/middleware.ts": "04d247096edaf741b78dbcd373e4a047",
+    "supabase/migrations/001_initial_schema.sql": "fd468820aa4134c2d12eeb144d4ccdd8",
+    "tsconfig.json": "0cf97a81150d3b8904f285780896980d"
+  },
+  "folder_hashes": {
+    ".": "522e5fc3343ce81d921a5c79582a5132",
+    "src": "ef5bd9e2b8dfc191b3d382d189505232",
+    "src/app": "47432f532e2695bdcc5cd6a605c39220",
+    "src/app/dashboard": "e5b2ace3a10b59c092ddb13795509f4c",
+    "src/app/login": "3c935a35f4241b710b354d06347725fa",
+    "src/app/signup": "e5da29fb8874459e6e662b47ffc31126",
+    "src/components": "9c649c8a6331d812b8867e82fb939159",
+    "src/components/layout": "9c649c8a6331d812b8867e82fb939159",
+    "src/lib": "849f6087d4bf42c8c221d92137cb1866",
+    "src/lib/supabase": "849f6087d4bf42c8c221d92137cb1866",
+    "supabase": "ac469dd53731a4d007003c3f638d99db",
+    "supabase/migrations": "ac469dd53731a4d007003c3f638d99db"
+  }
+}
