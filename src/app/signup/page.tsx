@@ -54,16 +54,16 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4">
-      <div className="w-full max-w-md space-y-8 bg-white rounded-2xl border border-neutral-200 p-8 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-white px-4">
+      <div className="w-full max-w-md space-y-10 rounded-lg border border-neutral-200 bg-white p-8">
         <div className="text-center">
-          <h1 className="text-5xl font-bold tracking-tight text-neutral-900">ABX</h1>
-          <p className="mt-2 text-neutral-500">Create your Aurabux account</p>
+          <h1 className="text-5xl font-bold tracking-tight text-black">ABX</h1>
+          <p className="mt-2 text-sm text-neutral-500">Create your Aurabux account</p>
         </div>
 
-        <form onSubmit={handleSignup} className="space-y-5">
+        <form onSubmit={handleSignup} className="space-y-4">
           {error && (
-            <div className="rounded-xl border border-red-100 bg-red-50 p-3 text-center text-sm text-red-600">
+            <div className="rounded-lg bg-red-50 border border-red-100 p-3 text-center text-sm text-red-600">
               {error}
             </div>
           )}
@@ -75,7 +75,7 @@ export default function SignupPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-neutral-900 placeholder-neutral-400 outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition"
+              className="w-full rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition"
             />
             <input
               type="email"
@@ -83,7 +83,7 @@ export default function SignupPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-neutral-900 placeholder-neutral-400 outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition"
+              className="w-full rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition"
             />
             <input
               type="password"
@@ -92,14 +92,14 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-neutral-900 placeholder-neutral-400 outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition"
+              className="w-full rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-neutral-900 py-3 font-medium text-white transition hover:bg-neutral-800 disabled:opacity-50"
+            className="w-full rounded-lg bg-black py-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-50"
           >
             {loading ? "Creating account..." : "Sign Up"}
           </button>
@@ -110,13 +110,13 @@ export default function SignupPage() {
             <div className="w-full border-t border-neutral-200"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-white px-2 text-neutral-400">or</span>
+            <span className="bg-white px-2 text-xs text-neutral-400">or</span>
           </div>
         </div>
 
         <button
           onClick={handleGoogleSignup}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white py-3 font-medium text-neutral-700 transition hover:bg-neutral-50"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white py-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path
@@ -141,7 +141,7 @@ export default function SignupPage() {
 
         <p className="text-center text-sm text-neutral-500">
           Already have an account?{" "}
-          <Link href="/login" className="text-neutral-900 hover:underline">
+          <Link href="/login" className="text-black hover:underline">
             Sign in
           </Link>
         </p>

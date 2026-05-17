@@ -51,16 +51,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4">
-      <div className="w-full max-w-md space-y-8 bg-white rounded-2xl border border-neutral-200 p-8 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-white px-4">
+      <div className="w-full max-w-md space-y-10 rounded-lg border border-neutral-200 bg-white p-8">
         <div className="text-center">
-          <h1 className="text-5xl font-bold tracking-tight text-neutral-900">ABX</h1>
-          <p className="mt-2 text-neutral-500">Sign in to Aurabux</p>
+          <h1 className="text-5xl font-bold tracking-tight text-black">ABX</h1>
+          <p className="mt-2 text-sm text-neutral-500">Sign in to Aurabux</p>
         </div>
 
-        <form onSubmit={handleEmailLogin} className="space-y-5">
+        <form onSubmit={handleEmailLogin} className="space-y-4">
           {error && (
-            <div className="rounded-xl bg-red-50 border border-red-100 p-3 text-center text-sm text-red-600">
+            <div className="rounded-lg bg-red-50 border border-red-100 p-3 text-center text-sm text-red-600">
               {error}
             </div>
           )}
@@ -72,7 +72,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-neutral-900 placeholder-neutral-400 outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition"
+              className="w-full rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition"
             />
             <input
               type="password"
@@ -80,14 +80,14 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-neutral-900 placeholder-neutral-400 outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition"
+              className="w-full rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-neutral-900 py-3 font-medium text-white transition hover:bg-neutral-800 disabled:opacity-50"
+            className="w-full rounded-lg bg-black py-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-50"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
@@ -98,13 +98,13 @@ export default function LoginPage() {
             <div className="w-full border-t border-neutral-200"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-white px-2 text-neutral-400">or</span>
+            <span className="bg-white px-2 text-xs text-neutral-400">or</span>
           </div>
         </div>
 
         <button
           onClick={handleGoogleLogin}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white py-3 font-medium text-neutral-700 transition hover:bg-neutral-50"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white py-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path
@@ -127,9 +127,9 @@ export default function LoginPage() {
           Continue with Google
         </button>
 
-        <p className="text-center text-sm text-text-secondary">
+        <p className="text-center text-sm text-neutral-500">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-neutral-900 hover:underline">
+          <Link href="/signup" className="text-black hover:underline">
             Sign up
           </Link>
         </p>
