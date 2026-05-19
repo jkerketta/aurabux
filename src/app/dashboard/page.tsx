@@ -26,6 +26,19 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single();
 
+  const { data: holdings } = await supabase
+    .from("holdings")
+    .select("ticker, shares, avg_buy_price")
+    .eq("user_id", user.id)
+    .order("ticker");
+
+  const { data: transactions } = await supabase
+    .from("transactions")
+    .select("ticker, type, shares, price_per_share, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
   const balance = portfolio?.abx_balance ?? 1000;
   const totalValue = portfolio?.total_value ?? 1000;
   const username = profile?.username ?? "";
@@ -50,6 +63,8 @@ export default async function DashboardPage() {
           initialTotalValue={totalValue}
           username={username}
           greeting={greeting}
+          holdings={holdings ?? []}
+          transactions={transactions ?? []}
         />
       </div>
     </div>

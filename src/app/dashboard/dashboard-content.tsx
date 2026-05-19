@@ -8,12 +8,28 @@ import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Plus } from "lucide-react";
 
+interface Holding {
+  ticker: string;
+  shares: number;
+  avg_buy_price: number;
+}
+
+interface Transaction {
+  ticker: string;
+  type: "buy" | "sell";
+  shares: number;
+  price_per_share: number;
+  created_at: string;
+}
+
 interface DashboardContentProps {
   user: User;
   initialBalance: number;
   initialTotalValue: number;
   username: string;
   greeting: string;
+  holdings: Holding[];
+  transactions: Transaction[];
 }
 
 // Static objects — extracted outside component to avoid recreation on every render
@@ -45,12 +61,22 @@ function formatCurrency(value: number) {
   });
 }
 
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export function DashboardContent({
   user: _user,
   initialBalance,
   initialTotalValue,
   username,
   greeting,
+  holdings,
+  transactions,
 }: DashboardContentProps) {
   const [showValues, setShowValues] = useState(true);
 
@@ -164,19 +190,147 @@ export function DashboardContent({
       </motion.div>
 
       {/* Holdings Section */}
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} className="mb-8">
         <h2 className="mb-4 text-lg font-semibold tracking-tight text-black">Holdings</h2>
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-100">
-              <Plus className="h-8 w-8 text-neutral-400" />
-            </div>
-            <p className="text-sm font-medium text-black">No holdings yet</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Start trading to build your portfolio
-            </p>
-          </CardContent>
-        </Card>
+        {holdings.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-100">
+                <Plus className="h-8 w-8 text-neutral-400" />
+              </div>
+              <p className="text-sm font-medium text-black">No holdings yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Start trading to build your portfolio
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-neutral-100">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+                    Ticker
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
+                    Shares
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
+                    Avg Buy Price
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
+                    Current Value
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {holdings.map((h) => {
+                  const currentValue = h.shares * h.avg_buy_price;
+                  return (
+                    <tr key={h.ticker} className="group">
+                      <td className="px-6 py-4 text-sm font-semibold text-black">
+                        {h.ticker}
+                      </td>
+                      <td className="px-6 py-4 text-right text-sm text-neutral-700">
+                        {h.shares}
+                      </td>
+                      <td className="px-6 py-4 text-right text-sm text-neutral-700">
+                        {formatCurrency(h.avg_buy_price)}
+                      </td>
+                      <td className="px-6 py-4 text-right text-sm font-medium text-black">
+                        {formatCurrency(currentValue)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </motion.div>
+
+      {/* Recent Transactions Section */}
+      <motion.div variants={itemVariants}>
+        <h2 className="mb-4 text-lg font-semibold tracking-tight text-black">
+          Recent Transactions
+        </h2>
+        {transactions.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-100">
+                <Plus className="h-8 w-8 text-neutral-400" />
+              </div>
+              <p className="text-sm font-medium text-black">No transactions yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Your trade history will appear here
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-neutral-100">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+                    Ticker
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+                    Type
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
+                    Shares
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
+                    Price
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
+                    Total
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {transactions.map((t, i) => {
+                  const total = t.shares * t.price_per_share;
+                  const isBuy = t.type === "buy";
+                  return (
+                    <tr key={`${t.created_at}-${i}`} className="group">
+                      <td className="px-6 py-4 text-sm text-neutral-600">
+                        {formatDate(t.created_at)}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-semibold text-black">
+                        {t.ticker}
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge
+                          variant="outline"
+                          className={
+                            isBuy
+                              ? "border-[#00C805] text-[#00C805]"
+                              : "border-[#FF4444] text-[#FF4444]"
+                          }
+                        >
+                          {isBuy ? "Buy" : "Sell"}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 text-right text-sm text-neutral-700">
+                        {t.shares}
+                      </td>
+                      <td className="px-6 py-4 text-right text-sm text-neutral-700">
+                        {formatCurrency(t.price_per_share)}
+                      </td>
+                      <td className="px-6 py-4 text-right text-sm font-medium text-black">
+                        {formatCurrency(total)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );
