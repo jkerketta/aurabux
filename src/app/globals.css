@@ -2,46 +2,54 @@
 
 @theme {
   --color-background: #ffffff;
-  --color-surface: #ffffff;
+  --color-foreground: #1a1a1a;
+  
+  --color-card: #ffffff;
+  --color-card-foreground: #1a1a1a;
+  
+  --color-popover: #ffffff;
+  --color-popover-foreground: #1a1a1a;
+  
+  --color-primary: #000000;
+  --color-primary-foreground: #ffffff;
+  
+  --color-secondary: #f4f4f5;
+  --color-secondary-foreground: #18181b;
+  
+  --color-muted: #f4f4f5;
+  --color-muted-foreground: #6b6b6b;
+  
+  --color-accent: #f4f4f5;
+  --color-accent-foreground: #18181b;
+  
+  --color-destructive: #ff4444;
+  --color-destructive-foreground: #ffffff;
+  
   --color-border: #e5e5e5;
-  --color-border-light: #f0f0f0;
-  --color-text-primary: #1a1a1a;
-  --color-text-secondary: #6b6b6b;
-  --color-text-muted: #999999;
-  --color-accent: #000000;
-  --color-accent-hover: #333333;
+  --color-input: #e5e5e5;
+  --color-ring: #1a1a1a;
+  
   --color-success: #00c805;
-  --color-danger: #ef4444;
+  --color-danger: #ff4444;
+  
+  --radius-lg: 0.5rem;
+  --radius-md: calc(var(--radius-lg) - 2px);
+  --radius-sm: calc(var(--radius-lg) - 4px);
+  
+  --font-family-sans: "Inter", system-ui, sans-serif;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-html,
-body {
-  background: var(--color-background);
-  color: var(--color-text-primary);
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-family-sans);
+  }
 }
 
 a {
   color: inherit;
   text-decoration: none;
-}
-
-/* Subtle gradient for ABX logo */
-.abx-logo {
-  background: linear-gradient(135deg, #171717 0%, #525252 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.abx-logo-accent {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
