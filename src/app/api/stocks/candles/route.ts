@@ -57,41 +57,22 @@ export async function GET(request: NextRequest) {
 
     const config = RANGE_MAP[range];
 
-    // Attempt with primary headers
-    let response = await fetchCandles(
+    // Single request — no retry
+    const response = await fetchCandles(
       symbol,
       config.interval,
       config.yahooRange,
       buildHeaders(),
     );
 
-    // If Yahoo returns 404, try with an alternative User-Agent in case of blocking
+    // If Yahoo returns 404, log and return no_data directly
     if (response.status === 404) {
-      console.warn(
-        `Yahoo Finance returned 404 for ${symbol}, retrying with alternate User-Agent...`,
-      );
-
-      // Log the full response for debugging in dev mode
-      if (process.env.NODE_ENV === "development") {
-        try {
-          const errorBody = await response.clone().text();
-          console.warn(
-            `Yahoo Finance 404 response body for ${symbol}:`,
-            errorBody,
-          );
-        } catch {
-          // ignore clone error
-        }
-      }
-
-      response = await fetchCandles(
-        symbol,
-        config.interval,
-        config.yahooRange,
-        buildHeaders(
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
-        ),
-      );
+      console.warn(`Yahoo Finance returned 404 for ${symbol}, no data available`);
+      return NextResponse.json({
+        timestamps: [],
+        closes: [],
+        status: "no_data",
+      });
     }
 
     // Log request details and response status in dev mode
@@ -102,9 +83,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (!response.ok) {
-      throw new Error(
-        `Yahoo Finance API responded with ${response.status} for symbol ${symbol}`,
-      );
+      return NextResponse.json({
+        timestamps: [],
+        closes: [],
+        status: "no_data",
+      });
     }
 
     const json = await response.json();

@@ -55,6 +55,30 @@ export default async function StockDetailPage({ params }: Props) {
     candles = await candleRes.json();
   }
 
+  // ── Price fallback from candles ────────────────────────
+  // If the quote API failed but candles have data, derive a fallback quote
+  // from the last candle close so the buy panel always works.
+  if (
+    !quote &&
+    candles &&
+    candles.status !== "no_data" &&
+    Array.isArray(candles.closes) &&
+    (candles.closes as number[]).length > 0
+  ) {
+    const closes = candles.closes as number[];
+    const lastClose = closes[closes.length - 1];
+    quote = {
+      symbol: symbolUpper,
+      currentPrice: lastClose,
+      change: 0,
+      changePercent: 0,
+      high: lastClose,
+      low: lastClose,
+      open: lastClose,
+      previousClose: lastClose,
+    };
+  }
+
   // ── Company name ───────────────────────────────────────
   let companyName = symbolUpper;
   if (searchRes.ok) {
