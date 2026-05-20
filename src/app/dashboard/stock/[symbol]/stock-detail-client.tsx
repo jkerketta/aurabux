@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent } from "react";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -160,12 +161,16 @@ export function StockDetailClient({
   const [chartRange, setChartRange] = useState<TimeRange>("1D");
   const [candleLoading, setCandleLoading] = useState(false);
 
+  const [tradeMode, setTradeMode] = useState<"buy" | "sell">("buy");
   const [buyMode, setBuyMode] = useState<"shares" | "abx">("shares");
   const [buyInput, setBuyInput] = useState("");
   const [buyLoading, setBuyLoading] = useState(false);
   const [buyError, setBuyError] = useState<string | null>(null);
-  const [buySuccess, setBuySuccess] = useState(false);
-  const [balance, setBalance] = useState<number | null>(null);
+
+  const [sellMode, setSellMode] = useState<"shares" | "abx">("shares");
+  const [sellInput, setSellInput] = useState("");
+  const [sellLoading, setSellLoading] = useState(false);
+  const [sellError, setSellError] = useState<string | null>(null);
 
   // ── Fetch candles on range change ──────────────────────
 
@@ -231,14 +236,13 @@ export function StockDetailClient({
     }
 
     // Client-side balance check for fast feedback
-    if (balance !== null && totalCost > balance) {
+    if (totalCost > effectiveBalance) {
       setBuyError("Insufficient ABX balance");
       return;
     }
 
     setBuyLoading(true);
     setBuyError(null);
-    setBuySuccess(false);
 
     try {
       const res = await fetch("/api/stocks/buy", {
@@ -258,15 +262,77 @@ export function StockDetailClient({
         return;
       }
 
-      setBuySuccess(true);
-      setBalance(data.balance);
       setBuyInput("");
+      router.refresh();
+      toast.success(
+        `Bought ${data.shares_bought} shares of ${data.symbol}`
+      );
     } catch {
       setBuyError("Network error — try again");
     } finally {
       setBuyLoading(false);
     }
-  }, [symbol, quoteData, buyInput, buyMode]);
+  }, [symbol, quoteData, buyInput, buyMode, availableBalance, router]);
+
+  // ── Sell logic ─────────────────────────────────────────
+
+  const handleSell = useCallback(async () => {
+    if (!quoteData || !sellInput || !userHolding) return;
+
+    const parsedInput = parseFloat(sellInput);
+    if (isNaN(parsedInput) || parsedInput <= 0) {
+      setSellError("Enter a valid amount");
+      return;
+    }
+
+    let shares: number;
+
+    if (sellMode === "shares") {
+      shares = parsedInput;
+    } else {
+      // ABX to receive → convert to shares
+      const proceeds = parsedInput;
+      shares = proceeds / quoteData.currentPrice;
+    }
+
+    // Client-side shares check
+    if (shares > userHolding.shares) {
+      setSellError("You don't own that many shares");
+      return;
+    }
+
+    setSellLoading(true);
+    setSellError(null);
+
+    try {
+      const res = await fetch("/api/stocks/sell", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          symbol,
+          shares: Math.round(shares * 100) / 100,
+          pricePerShare: quoteData.currentPrice,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        setSellError(data.error ?? "Sell failed");
+        return;
+      }
+
+      setSellInput("");
+      router.refresh();
+      toast.success(
+        `Sold ${data.shares_sold} shares of ${data.symbol}`
+      );
+    } catch {
+      setSellError("Network error — try again");
+    } finally {
+      setSellLoading(false);
+    }
+  }, [symbol, quoteData, sellInput, sellMode, userHolding, router]);
 
   // ── Computed ───────────────────────────────────────────
 
@@ -294,6 +360,7 @@ export function StockDetailClient({
   const chartColor = isUp ? "#00C805" : "#FF4444";
 
   const currentPrice = quoteData?.currentPrice ?? 0;
+  const effectiveBalance = availableBalance;
   const computedShares =
     buyMode === "abx" && buyInput
       ? parseFloat(buyInput) / currentPrice
@@ -302,7 +369,14 @@ export function StockDetailClient({
     buyMode === "shares" && buyInput
       ? parseFloat(buyInput) * currentPrice
       : 0;
-  const effectiveBalance = balance ?? availableBalance;
+  const computedSellProceeds =
+    sellMode === "shares" && sellInput
+      ? parseFloat(sellInput) * currentPrice
+      : 0;
+  const computedSellShares =
+    sellMode === "abx" && sellInput
+      ? parseFloat(sellInput) / currentPrice
+      : 0;
 
   // ── Render ─────────────────────────────────────────────
 
@@ -582,137 +656,280 @@ export function StockDetailClient({
           </Card>
         </div>
 
-        {/* ── Right column: Buy Panel + Position ── */}
+        {/* ── Right column: Trade Panel + Position ── */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Buy Panel */}
+          {/* Trade Panel */}
           <Card>
             <CardContent className="p-6">
+              {/* Buy/Sell Toggle */}
+              <div className="mb-4 flex items-center gap-2">
+                {(["buy", "sell"] as const).map((mode) => {
+                  const isSellDisabled =
+                    mode === "sell" &&
+                    (!userHolding || userHolding.shares <= 0);
+                  return (
+                    <Button
+                      key={mode}
+                      variant={tradeMode === mode ? "default" : "outline"}
+                      size="sm"
+                      disabled={isSellDisabled}
+                      onClick={() => {
+                        setTradeMode(mode);
+                        setBuyInput("");
+                        setBuyError(null);
+                        setSellInput("");
+                        setSellError(null);
+                      }}
+                      className={cn(
+                        "h-8 px-4 text-xs capitalize",
+                        tradeMode === mode
+                          ? "bg-black text-white"
+                          : "border-neutral-200 text-muted-foreground hover:bg-neutral-100",
+                        isSellDisabled && "opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      {mode}
+                    </Button>
+                  );
+                })}
+              </div>
+
               <h3 className="mb-4 text-base font-semibold text-black">
-                Buy {symbol}
+                {tradeMode === "buy" ? "Buy" : "Sell"} {symbol}
               </h3>
 
-              {/* Mode Toggle */}
-              <div className="mb-4 flex items-center gap-2">
-                {(["shares", "abx"] as const).map((mode) => (
-                  <Button
-                    key={mode}
-                    variant={buyMode === mode ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => {
-                      setBuyMode(mode);
-                      setBuyInput("");
-                      setBuyError(null);
-                      setBuySuccess(false);
-                    }}
-                    className={cn(
-                      "h-8 px-4 text-xs capitalize",
-                      buyMode === mode
-                        ? "bg-black text-white"
-                        : "border-neutral-200 text-muted-foreground hover:bg-neutral-100"
-                    )}
-                  >
-                    {mode === "shares" ? "Shares" : "ABX Amount"}
-                  </Button>
-                ))}
-              </div>
+              {/* ── BUY FORM ────────────────────────────── */}
+              {tradeMode === "buy" && (
+                <>
+                  {/* Mode Toggle */}
+                  <div className="mb-4 flex items-center gap-2">
+                    {(["shares", "abx"] as const).map((mode) => (
+                      <Button
+                        key={mode}
+                        variant={buyMode === mode ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          setBuyMode(mode);
+                          setBuyInput("");
+                          setBuyError(null);
+                        }}
+                        className={cn(
+                          "h-8 px-4 text-xs capitalize",
+                          buyMode === mode
+                            ? "bg-black text-white"
+                            : "border-neutral-200 text-muted-foreground hover:bg-neutral-100"
+                        )}
+                      >
+                        {mode === "shares" ? "Shares" : "ABX Amount"}
+                      </Button>
+                    ))}
+                  </div>
 
-              {/* Price display */}
-              {quoteData && (
-                <p className="mb-1 text-sm text-muted-foreground">
-                  Current price:{" "}
-                  <span className="font-semibold text-black">
-                    ${formatCurrency(quoteData.currentPrice)}
-                  </span>
-                </p>
-              )}
-              <p className="mb-4 text-xs text-muted-foreground">
-                Available:{" "}
-                <span className="font-medium text-black">
-                  {formatCurrency(effectiveBalance)} ABX
-                </span>
-              </p>
-
-              {/* Input */}
-              <div className="mb-3">
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                  {buyMode === "shares"
-                    ? "Number of shares"
-                    : "ABX to spend"}
-                </label>
-                <Input
-                  type="number"
-                  min="0"
-                  step={buyMode === "shares" ? "1" : "0.01"}
-                  value={buyInput}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                    setBuyInput(e.target.value);
-                    setBuyError(null);
-                    setBuySuccess(false);
-                  }}
-                  placeholder={
-                    buyMode === "shares" ? "e.g. 10" : "e.g. 500"
-                  }
-                  className="h-10"
-                  disabled={!quoteData}
-                />
-              </div>
-
-              {/* Calculated values */}
-              {buyInput && quoteData && !isNaN(parseFloat(buyInput)) && (
-                <p className="mb-3 text-xs text-muted-foreground">
-                  {buyMode === "shares" ? (
-                    <>
-                      Total cost:{" "}
-                      <span className="font-medium text-black">
-                        {formatCurrency(computedCost)} ABX
+                  {/* Price display */}
+                  {quoteData && (
+                    <p className="mb-1 text-sm text-muted-foreground">
+                      Current price:{" "}
+                      <span className="font-semibold text-black">
+                        ${formatCurrency(quoteData.currentPrice)}
                       </span>
-                    </>
-                  ) : (
-                    <>
-                      You&apos;ll get approx.{" "}
-                      <span className="font-medium text-black">
-                        {computedShares < 1
-                          ? computedShares.toFixed(4)
-                          : computedShares.toFixed(2)}{" "}
-                        share{computedShares !== 1 ? "s" : ""}
-                      </span>
-                    </>
+                    </p>
                   )}
-                </p>
+                  <p className="mb-4 text-xs text-muted-foreground">
+                    Available:{" "}
+                    <span className="font-medium text-black">
+                      {formatCurrency(effectiveBalance)} ABX
+                    </span>
+                  </p>
+
+                  {/* Input */}
+                  <div className="mb-3">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      {buyMode === "shares"
+                        ? "Number of shares"
+                        : "ABX to spend"}
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step={buyMode === "shares" ? "1" : "0.01"}
+                      value={buyInput}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                        setBuyInput(e.target.value);
+                        setBuyError(null);
+                      }}
+                      placeholder={
+                        buyMode === "shares" ? "e.g. 10" : "e.g. 500"
+                      }
+                      className="h-10"
+                      disabled={!quoteData}
+                    />
+                  </div>
+
+                  {/* Calculated values */}
+                  {buyInput && quoteData && !isNaN(parseFloat(buyInput)) && (
+                    <p className="mb-3 text-xs text-muted-foreground">
+                      {buyMode === "shares" ? (
+                        <>
+                          Total cost:{" "}
+                          <span className="font-medium text-black">
+                            {formatCurrency(computedCost)} ABX
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          You&apos;ll get approx.{" "}
+                          <span className="font-medium text-black">
+                            {computedShares < 1
+                              ? computedShares.toFixed(4)
+                              : computedShares.toFixed(2)}{" "}
+                            share{computedShares !== 1 ? "s" : ""}
+                          </span>
+                        </>
+                      )}
+                    </p>
+                  )}
+
+                  {/* Buy button */}
+                  <Button
+                    onClick={handleBuy}
+                    disabled={!buyInput || buyLoading || !quoteData}
+                    className="h-11 w-full bg-black text-base text-white hover:bg-neutral-800"
+                  >
+                    {buyLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Buying...
+                      </>
+                    ) : (
+                      "Buy"
+                    )}
+                  </Button>
+
+                  {/* Buy Error */}
+                  {buyError && (
+                    <p className="mt-3 text-xs font-medium text-[#FF4444]">
+                      {buyError}
+                    </p>
+                  )}
+                </>
               )}
 
-              {/* Buy button — black */}
-              <Button
-                onClick={handleBuy}
-                disabled={!buyInput || buyLoading || !quoteData}
-                className="h-11 w-full bg-black text-base text-white hover:bg-neutral-800"
-              >
-                {buyLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Buying...
-                  </>
-                ) : (
-                  <>
-                    Buy
-                  </>
-                )}
-              </Button>
+              {/* ── SELL FORM ───────────────────────────── */}
+              {tradeMode === "sell" && userHolding && (
+                <>
+                  {/* Mode Toggle */}
+                  <div className="mb-4 flex items-center gap-2">
+                    {(["shares", "abx"] as const).map((mode) => (
+                      <Button
+                        key={mode}
+                        variant={sellMode === mode ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          setSellMode(mode);
+                          setSellInput("");
+                          setSellError(null);
+                        }}
+                        className={cn(
+                          "h-8 px-4 text-xs capitalize",
+                          sellMode === mode
+                            ? "bg-black text-white"
+                            : "border-neutral-200 text-muted-foreground hover:bg-neutral-100"
+                        )}
+                      >
+                        {mode === "shares" ? "Shares" : "ABX to receive"}
+                      </Button>
+                    ))}
+                  </div>
 
-              {/* Buy Error */}
-              {buyError && (
-                <p className="mt-3 text-xs font-medium text-[#FF4444]">
-                  {buyError}
-                </p>
-              )}
+                  {/* Price display */}
+                  {quoteData && (
+                    <p className="mb-1 text-sm text-muted-foreground">
+                      Current price:{" "}
+                      <span className="font-semibold text-black">
+                        ${formatCurrency(quoteData.currentPrice)}
+                      </span>
+                    </p>
+                  )}
+                  <p className="mb-4 text-xs text-muted-foreground">
+                    Available to sell:{" "}
+                    <span className="font-medium text-black">
+                      {userHolding.shares} share{userHolding.shares !== 1 ? "s" : ""}
+                    </span>
+                  </p>
 
-              {/* Buy Success */}
-              {buySuccess && (
-                <p className="mt-3 text-xs font-medium text-[#00C805]">
-                  Purchase successful!
-                  {balance !== null &&
-                    ` New balance: ${formatCurrency(balance)} ABX`}
-                </p>
+                  {/* Input */}
+                  <div className="mb-3">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      {sellMode === "shares"
+                        ? "Number of shares to sell"
+                        : "ABX to receive"}
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step={sellMode === "shares" ? "1" : "0.01"}
+                      value={sellInput}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                        setSellInput(e.target.value);
+                        setSellError(null);
+                      }}
+                      placeholder={
+                        sellMode === "shares"
+                          ? `e.g. ${Math.min(userHolding.shares, 10)}`
+                          : "e.g. 500"
+                      }
+                      className="h-10"
+                      disabled={!quoteData}
+                    />
+                  </div>
+
+                  {/* Calculated values */}
+                  {sellInput && quoteData && !isNaN(parseFloat(sellInput)) && (
+                    <p className="mb-3 text-xs text-muted-foreground">
+                      {sellMode === "shares" ? (
+                        <>
+                          You&apos;ll receive approx.{" "}
+                          <span className="font-medium text-black">
+                            {formatCurrency(computedSellProceeds)} ABX
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          You&apos;ll sell approx.{" "}
+                          <span className="font-medium text-black">
+                            {computedSellShares < 1
+                              ? computedSellShares.toFixed(4)
+                              : computedSellShares.toFixed(2)}{" "}
+                            share{computedSellShares !== 1 ? "s" : ""}
+                          </span>
+                        </>
+                      )}
+                    </p>
+                  )}
+
+                  {/* Sell button */}
+                  <Button
+                    onClick={handleSell}
+                    disabled={!sellInput || sellLoading || !quoteData}
+                    className="h-11 w-full bg-black text-base text-white hover:bg-neutral-800"
+                  >
+                    {sellLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Selling...
+                      </>
+                    ) : (
+                      "Sell"
+                    )}
+                  </Button>
+
+                  {/* Sell Error */}
+                  {sellError && (
+                    <p className="mt-3 text-xs font-medium text-[#FF4444]">
+                      {sellError}
+                    </p>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
