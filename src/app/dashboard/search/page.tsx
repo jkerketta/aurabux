@@ -28,6 +28,7 @@ function SearchPageInner() {
   );
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstRender = useRef(true);
 
@@ -69,6 +70,7 @@ function SearchPageInner() {
     }
 
     setSearchLoading(true);
+    setSearchError(null);
 
     debounceTimer.current = setTimeout(async () => {
       try {
@@ -79,6 +81,7 @@ function SearchPageInner() {
         setSearchResults(data.results ?? []);
       } catch {
         setSearchResults([]);
+        setSearchError("Failed to search stocks. Try again.");
       } finally {
         setSearchLoading(false);
       }
@@ -110,6 +113,11 @@ function SearchPageInner() {
           <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
         )}
       </div>
+
+      {/* Error message */}
+      {searchError && (
+        <p className="mb-4 text-sm text-[#FF4444]">{searchError}</p>
+      )}
 
       {/* Search Results */}
       <AnimatePresence mode="popLayout">

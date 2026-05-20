@@ -47,6 +47,10 @@ export async function GET(request: NextRequest) {
 
     const json = await response.json();
 
+    if (process.env.NODE_ENV === "development") {
+      console.log("Yahoo Finance candles response:", JSON.stringify(json, null, 2));
+    }
+
     const result = json?.chart?.result?.[0];
     const error = json?.chart?.error;
 

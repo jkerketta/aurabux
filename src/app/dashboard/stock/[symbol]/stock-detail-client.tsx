@@ -158,7 +158,7 @@ export function StockDetailClient({
           `/api/stocks/candles?symbol=${encodeURIComponent(sym)}&range=${range}`
         );
         const data = await res.json();
-        if (data.status === "no_data" || data.error) {
+        if (data.error) {
           setCandleData(null);
         } else {
           setCandleData(data);
@@ -345,6 +345,10 @@ export function StockDetailClient({
                   <div className="flex h-full items-center justify-center">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
+                ) : candleData?.status === "no_data" ? (
+                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                    No historical data for this stock
+                  </div>
                 ) : chartData.length > 1 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
@@ -412,7 +416,7 @@ export function StockDetailClient({
                   </ResponsiveContainer>
                 ) : (
                   <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                    No chart data available
+                    Failed to load chart data
                   </div>
                 )}
               </div>
