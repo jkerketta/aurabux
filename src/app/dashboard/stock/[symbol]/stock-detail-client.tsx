@@ -863,23 +863,40 @@ export function StockDetailClient({
                         ? "Number of shares to sell"
                         : "ABX to receive"}
                     </label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step={sellMode === "shares" ? "1" : "0.01"}
-                      value={sellInput}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                        setSellInput(e.target.value);
-                        setSellError(null);
-                      }}
-                      placeholder={
-                        sellMode === "shares"
-                          ? `e.g. ${Math.min(userHolding.shares, 10)}`
-                          : "e.g. 500"
-                      }
-                      className="h-10"
-                      disabled={!quoteData}
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        step={sellMode === "shares" ? "1" : "0.01"}
+                        value={sellInput}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                          setSellInput(e.target.value);
+                          setSellError(null);
+                        }}
+                        placeholder={
+                          sellMode === "shares"
+                            ? `e.g. ${Math.min(userHolding.shares, 10)}`
+                            : "e.g. 500"
+                        }
+                        className="h-10 flex-1"
+                        disabled={!quoteData}
+                      />
+                      {sellMode === "shares" && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSellInput(String(userHolding.shares));
+                            setSellError(null);
+                          }}
+                          className="h-10 shrink-0 border-neutral-200 text-xs text-muted-foreground hover:bg-neutral-100"
+                          disabled={!quoteData}
+                        >
+                          Max
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Calculated values */}

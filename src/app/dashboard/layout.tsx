@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
 
@@ -12,8 +11,9 @@ export default async function DashboardLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Middleware already handles auth redirects, but we need user for Navbar
   if (!user) {
-    redirect("/login");
+    return null;
   }
 
   return (

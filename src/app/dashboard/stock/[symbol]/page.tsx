@@ -45,7 +45,7 @@ export default async function StockDetailPage({ params }: Props) {
           .maybeSingle(),
         supabase
           .from("holdings")
-          .select("shares, avg_buy_price")
+          .select("ticker, shares, avg_buy_price")
           .eq("user_id", user.id),
       ]);
 
@@ -66,6 +66,34 @@ export default async function StockDetailPage({ params }: Props) {
       0,
     );
     portfolioTotalValue = balance + holdingsCostBasis;
+
+    // Fetch live prices for all holdings to calculate accurate total value
+    if (allHoldingsResult.data && allHoldingsResult.data.length > 0) {
+      const pricePromises = allHoldingsResult.data.map(async (h: { ticker: string; shares: number; avg_buy_price: number }) => {
+        try {
+          const res = await fetch(
+            `${baseUrl}/api/stocks/quote?symbol=${encodeURIComponent(h.ticker)}`,
+            { cache: "no-store" }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            return Number(data.currentPrice) ?? Number(h.avg_buy_price);
+          }
+        } catch {
+          // network error, fall through to fallback
+        }
+        return Number(h.avg_buy_price);
+      });
+
+      const prices = await Promise.all(pricePromises);
+      const holdingsValue = allHoldingsResult.data.reduce(
+        (sum: number, h: { shares: number; avg_buy_price: number }, i: number) =>
+          sum + Number(h.shares) * prices[i],
+        0
+      );
+
+      portfolioTotalValue = balance + holdingsValue;
+    }
   }
 
   const [quoteRes, candleRes, searchRes, profileRes] = await Promise.all([
