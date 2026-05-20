@@ -25,13 +25,27 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
   - Toast notification on success (top-center, 3s, white box, black text)
   - `router.refresh()` after buy/sell to refetch server data
 
-### 2. Portfolio Total Value with Live Prices
-- Currently `initialTotalValue` passed to dashboard is calculated on server
-- Dashboard server component (`src/app/dashboard/page.tsx`) fetches live prices for all holdings
+### 2. ~~Portfolio Total Value with Live Prices~~ ✅ DONE
+- Dashboard and stock detail page both fetch live prices for all holdings
 - `total_value = abx_balance + Σ(shares × current_price)`
-- Works but may be slow with many holdings (parallel fetches help)
+- Investments card now shows current value (not cost basis)
 
-### 3. End-of-Day Portfolio Recalculation (DEFERRED)
+### 3. ~~Social & Competition Phase~~ ✅ DONE
+- **Database**: `supabase/migrations/006_social.sql`
+  - `friendships` table with requester/addressee/status
+  - `users.display_number` column (#000, #001, etc.)
+  - Auto-assign via trigger, backfill existing users
+  - RLS policies for friendships CRUD
+- **Friends System**:
+  - API routes: `/api/friends` (list, request), `/api/friends/accept`, `/api/friends/decline`, `/api/friends/remove`, `/api/friends/cancel`, `/api/friends/search`
+  - Friends modal via navbar dropdown (3 tabs: Friends, Search, Pending)
+  - 50 friend max, username search, friendship status indicators
+- **Leaderboard**:
+  - API: `/api/leaderboard?type=global|friends` with live price calculation
+  - Page: `/dashboard/leaderboard` with Global/Friends tabs
+  - Gold/silver/bronze rank badges, current user highlight, gain/loss %
+
+### 4. End-of-Day Portfolio Recalculation (DEFERRED)
 - Not implemented. Would require Supabase Edge Function + cron
 - For now, total value is calculated on each page load
 
@@ -47,6 +61,9 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
 - ✅ Buy Flow: Balance validation, holdings upsert, transaction recording
 - ✅ Sell Flow: Share validation, holdings update/delete, transaction recording, compensation on failure
 - ✅ Toast Notifications: Sonner (top-center, 3s, white box, black text)
+- ✅ Friends System: Friendships table, modal with Search/Friends/Pending tabs, 50 friend max
+- ✅ Leaderboard: Global + Friends tabs, live price calculation, gold/silver/bronze ranks
+- ✅ Navbar Dropdown: Username + display_number trigger, Friends modal, Sign out
 - ✅ Portfolio auto-create on first buy (service role bypasses RLS)
 - ✅ Canadian stocks (.TO) blocked at search, buy, and sell level
 - ✅ Holdings table: Clickable rows, simplified 2-column layout
@@ -62,6 +79,12 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
 | `src/app/dashboard/stock/[symbol]/stock-detail-client.tsx` | Stock detail client UI (chart, buy panel, position panel, company info) |
 | `src/app/api/stocks/buy/route.ts` | Buy logic with service role fallback for portfolio creation |
 | `src/app/api/stocks/sell/route.ts` | Sell logic: validate shares, update holdings, record transaction, compensation |
+| `src/lib/cache.ts` | In-memory cache with TTL for API responses |
+| `src/app/api/friends/route.ts` | Friends list + send request API |
+| `src/app/api/friends/search/route.ts` | Search users by username with friendship status |
+| `src/app/api/leaderboard/route.ts` | Leaderboard with live price calculation (global + friends) |
+| `src/components/friends/friends-modal.tsx` | Friends modal with Search/Friends/Pending tabs |
+| `src/app/dashboard/leaderboard/page.tsx` | Leaderboard page with Global/Friends tabs |
 | `src/app/api/stocks/quote/route.ts` | Quote API: Finnhub → Yahoo fallback chain |
 | `src/app/api/stocks/candles/route.ts` | Chart data via Yahoo Finance `/v8/finance/chart` |
 | `src/app/api/stocks/search/route.ts` | Search via Finnhub, filters out .TO stocks |
