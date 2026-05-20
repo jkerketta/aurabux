@@ -55,6 +55,14 @@ interface StockDetailClientProps {
   initialQuote: Record<string, unknown> | null;
   initialCandles: Record<string, unknown> | null;
   quoteError: string | null;
+  availableBalance: number;
+  userHolding: { shares: number; avg_buy_price: number } | null;
+  portfolioTotalValue: number;
+  companyInfo: {
+    marketCap: number | null;
+    exchange: string | null;
+    weburl: string | null;
+  } | null;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────
@@ -64,6 +72,14 @@ function formatCurrency(value: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+}
+
+function formatMarketCap(value: number | null): string {
+  if (!value) return "\u2014";
+  if (value >= 1_000_000_000_000) return `$${(value / 1_000_000_000_000).toFixed(2)}T`;
+  if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(2)}B`;
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
+  return `$${value.toLocaleString()}`;
 }
 
 function formatCompact(value: number): string {
@@ -113,6 +129,10 @@ export function StockDetailClient({
   initialQuote: rawInitialQuote,
   initialCandles: rawInitialCandles,
   quoteError: initialQuoteError,
+  availableBalance,
+  userHolding,
+  portfolioTotalValue,
+  companyInfo,
 }: StockDetailClientProps) {
   const router = useRouter();
 
@@ -521,8 +541,17 @@ export function StockDetailClient({
           </Card>
         </div>
 
-        {/* ── Right column: Buy Panel ───────────────────── */}
-        <div className="lg:col-span-2">
+        {/* ── Right column: Buy Panel + Position + Company Info ── */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Available Balance */}
+          <p className="text-xs text-muted-foreground">
+            Available:{" "}
+            <span className="font-semibold text-black">
+              {formatCurrency(availableBalance)} ABX
+            </span>
+          </p>
+
+          {/* Buy Panel */}
           <Card>
             <CardContent className="p-6">
               <h3 className="mb-4 text-base font-semibold text-black">
@@ -613,11 +642,11 @@ export function StockDetailClient({
                 </p>
               )}
 
-              {/* Buy button */}
+              {/* Buy button — black */}
               <Button
                 onClick={handleBuy}
                 disabled={!buyInput || buyLoading || !quoteData}
-                className="h-11 w-full bg-[#00C805] text-base text-white hover:bg-[#00b805]"
+                className="h-11 w-full bg-black text-base text-white hover:bg-neutral-800"
               >
                 {buyLoading ? (
                   <>
@@ -646,6 +675,146 @@ export function StockDetailClient({
                     ` New balance: ${formatCurrency(balance)} ABX`}
                 </p>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Your Position Panel */}
+          {userHolding && quoteData && (
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="mb-4 text-base font-semibold text-black">
+                  Your Position
+                </h3>
+
+                <div className="space-y-3">
+                  {/* Shares */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Shares</span>
+                    <span className="text-sm font-semibold text-black">
+                      {userHolding.shares}
+                    </span>
+                  </div>
+
+                  {/* Avg Buy Price */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Avg Buy Price</span>
+                    <span className="text-sm font-semibold text-black">
+                      ${formatCurrency(userHolding.avg_buy_price)}
+                    </span>
+                  </div>
+
+                  {/* Current Value */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Current Value</span>
+                    <span className="text-sm font-semibold text-black">
+                      ${formatCurrency(quoteData.currentPrice * userHolding.shares)}
+                    </span>
+                  </div>
+
+                  {/* Total Return */}
+                  {(() => {
+                    const totalReturnDollars =
+                      (quoteData.currentPrice - userHolding.avg_buy_price) *
+                      userHolding.shares;
+                    const totalReturnPct =
+                      userHolding.avg_buy_price !== 0
+                        ? ((quoteData.currentPrice - userHolding.avg_buy_price) /
+                            userHolding.avg_buy_price) *
+                          100
+                        : 0;
+                    const isTotalPositive = totalReturnDollars >= 0;
+                    return (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">Total Return</span>
+                        <span
+                          className={cn(
+                            "text-sm font-semibold",
+                            isTotalPositive ? "text-[#00C805]" : "text-[#FF4444]"
+                          )}
+                        >
+                          {isTotalPositive ? "+" : ""}$
+                          {formatCurrency(Math.abs(totalReturnDollars))} (
+                          {totalReturnPct >= 0 ? "+" : ""}
+                          {totalReturnPct.toFixed(2)}%)
+                        </span>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Today's Return */}
+                  {firstClose !== null && lastClose !== null && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Today&apos;s Return</span>
+                      <span
+                        className={cn(
+                          "text-sm font-semibold",
+                          absReturn >= 0 ? "text-[#00C805]" : "text-[#FF4444]"
+                        )}
+                      >
+                        {absReturn >= 0 ? "+" : ""}$
+                        {formatCurrency(Math.abs(absReturn * userHolding.shares))} (
+                        {pctReturn >= 0 ? "+" : ""}
+                        {pctReturn.toFixed(2)}%)
+                      </span>
+                    </div>
+                  )}
+
+                  {/* % of Portfolio */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">% of Portfolio</span>
+                    <span className="text-sm font-semibold text-black">
+                      {portfolioTotalValue > 0
+                        ? (
+                            ((quoteData.currentPrice * userHolding.shares) /
+                              portfolioTotalValue) *
+                            100
+                          ).toFixed(2)
+                        : "0.00"}
+                      %
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Company Info Panel */}
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="mb-4 text-base font-semibold text-black">
+                Company Info
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Market Cap</span>
+                  <span className="text-sm font-semibold text-black">
+                    {formatMarketCap(companyInfo?.marketCap ?? null)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Exchange</span>
+                  <span className="text-sm font-semibold text-black">
+                    {companyInfo?.exchange ?? "\u2014"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Website</span>
+                  <span className="text-sm font-semibold text-black">
+                    {companyInfo?.weburl ? (
+                      <a
+                        href={companyInfo.weburl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline underline-offset-2 hover:text-blue-800"
+                      >
+                        {new URL(companyInfo.weburl).hostname}
+                      </a>
+                    ) : (
+                      "\u2014"
+                    )}
+                  </span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

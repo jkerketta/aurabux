@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 import { StockDetailClient } from "./stock-detail-client";
 
 interface Props {
@@ -18,7 +19,56 @@ export default async function StockDetailPage({ params }: Props) {
 
   const encoded = encodeURIComponent(symbolUpper);
 
-  const [quoteRes, candleRes, searchRes] = await Promise.all([
+  // ── Supabase data ──────────────────────────────────────
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let availableBalance = 1000;
+  let userHolding: { shares: number; avg_buy_price: number } | null = null;
+  let portfolioTotalValue = 1000;
+
+  if (user) {
+    const [portfolioResult, holdingResult, allHoldingsResult] =
+      await Promise.all([
+        supabase
+          .from("portfolios")
+          .select("abx_balance")
+          .eq("user_id", user.id)
+          .single(),
+        supabase
+          .from("holdings")
+          .select("shares, avg_buy_price")
+          .eq("user_id", user.id)
+          .eq("ticker", symbolUpper)
+          .maybeSingle(),
+        supabase
+          .from("holdings")
+          .select("shares, avg_buy_price")
+          .eq("user_id", user.id),
+      ]);
+
+    const balance = Number(portfolioResult.data?.abx_balance ?? 1000);
+    availableBalance = balance;
+
+    if (holdingResult.data) {
+      userHolding = {
+        shares: Number(holdingResult.data.shares),
+        avg_buy_price: Number(holdingResult.data.avg_buy_price),
+      };
+    }
+
+    // Approximate total portfolio value using cost basis
+    const holdingsCostBasis = (allHoldingsResult.data ?? []).reduce(
+      (sum: number, h: { shares: unknown; avg_buy_price: unknown }) =>
+        sum + Number(h.shares) * Number(h.avg_buy_price),
+      0,
+    );
+    portfolioTotalValue = balance + holdingsCostBasis;
+  }
+
+  const [quoteRes, candleRes, searchRes, profileRes] = await Promise.all([
     fetch(`${baseUrl}/api/stocks/quote?symbol=${encoded}`, {
       cache: "no-store",
     }),
@@ -26,6 +76,9 @@ export default async function StockDetailPage({ params }: Props) {
       cache: "no-store",
     }),
     fetch(`${baseUrl}/api/stocks/search?q=${encoded}`, {
+      cache: "no-store",
+    }),
+    fetch(`${baseUrl}/api/stocks/profile?symbol=${encoded}`, {
       cache: "no-store",
     }),
   ]);
@@ -90,6 +143,19 @@ export default async function StockDetailPage({ params }: Props) {
     }
   }
 
+  // ── Company profile ────────────────────────────────────
+  let companyInfo: {
+    marketCap: number | null;
+    exchange: string | null;
+    weburl: string | null;
+  } | null = null;
+  if (profileRes.ok) {
+    const profileData = await profileRes.json();
+    if (!profileData.error) {
+      companyInfo = profileData;
+    }
+  }
+
   return (
     <StockDetailClient
       symbol={symbolUpper}
@@ -97,6 +163,10 @@ export default async function StockDetailPage({ params }: Props) {
       initialQuote={quote}
       initialCandles={candles}
       quoteError={quoteError}
+      availableBalance={availableBalance}
+      userHolding={userHolding}
+      portfolioTotalValue={portfolioTotalValue}
+      companyInfo={companyInfo}
     />
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -80,6 +81,7 @@ export function DashboardContent({
   holdings,
   transactions,
 }: DashboardContentProps) {
+  const router = useRouter();
   const [showValues, setShowValues] = useState(true);
 
   const displayBalance = showValues ? formatCurrency(initialBalance) : "••••••";
@@ -218,59 +220,42 @@ export function DashboardContent({
         ) : (
           <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
             <table className="w-full">
-              <thead>
-                <tr className="border-b border-neutral-100">
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Ticker
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Shares
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Avg Buy Price
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Current Price
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Current Value
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    P&amp;L
-                  </th>
-                </tr>
-              </thead>
               <tbody className="divide-y divide-neutral-100">
                 {holdings.map((h) => {
                   const currentValue = h.shares * h.current_price;
                   const costBasis = h.shares * h.avg_buy_price;
                   const pnl = currentValue - costBasis;
+                  const pnlPercent = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
                   const isPnlPositive = pnl >= 0;
                   return (
-                    <tr key={h.ticker} className="group">
-                      <td className="px-6 py-4 text-sm font-semibold text-black">
-                        {h.ticker}
+                    <tr
+                      key={h.ticker}
+                      className="group cursor-pointer hover:bg-neutral-50 transition-colors"
+                      onClick={() => router.push(`/dashboard/stock/${h.ticker}`)}
+                    >
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-semibold text-black">{h.ticker}</p>
+                        <p className="text-xs text-muted-foreground">{h.shares} shares</p>
                       </td>
-                      <td className="px-6 py-4 text-right text-sm text-neutral-700">
-                        {h.shares}
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm text-neutral-700">
-                        {formatCurrency(h.avg_buy_price)}
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm text-neutral-700">
-                        {formatCurrency(h.current_price)}
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm font-medium text-black">
-                        {formatCurrency(currentValue)}
-                      </td>
-                      <td
-                        className={cn(
-                          "px-6 py-4 text-right text-sm font-medium",
-                          isPnlPositive ? "text-[#00C805]" : "text-[#FF4444]"
-                        )}
-                      >
-                        {isPnlPositive ? "+" : ""}
-                        {formatCurrency(pnl)}
+                      <td className="px-6 py-4 text-right">
+                        <p
+                          className={cn(
+                            "text-sm font-medium",
+                            isPnlPositive ? "text-[#00C805]" : "text-[#FF4444]"
+                          )}
+                        >
+                          {isPnlPositive ? "+" : ""}
+                          {formatCurrency(pnl)}
+                        </p>
+                        <p
+                          className={cn(
+                            "text-xs",
+                            isPnlPositive ? "text-[#00C805]" : "text-[#FF4444]"
+                          )}
+                        >
+                          ({isPnlPositive ? "+" : ""}
+                          {pnlPercent.toFixed(2)}%)
+                        </p>
                       </td>
                     </tr>
                   );
