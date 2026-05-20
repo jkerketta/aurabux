@@ -10,17 +10,20 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
 
 ## Next Goals (Priority Order)
 
-### 1. Sell Feature (NOT YET IMPLEMENTED)
+### 1. ~~Sell Feature~~ ✅ DONE
 - **API Route**: `src/app/api/stocks/sell/route.ts`
-  - Validate user owns the stock and has enough shares
-  - Deduct shares from `holdings` table (or delete row if shares = 0)
-  - Add ABX back to `portfolios.abx_balance`
-  - Record transaction in `transactions` table
-  - Use user-scoped Supabase client (RLS applies)
-- **UI**: Add "Sell" button/toggle in stock detail buy panel (similar to Buy but reversed logic)
-  - Show available shares to sell
-  - Mode toggle: "Shares" or "ABX to receive"
-  - Black button (same as Buy)
+  - Validates user owns the stock and has enough shares
+  - Deducts shares from `holdings` table (deletes row if shares = 0)
+  - Adds ABX back to `portfolios.abx_balance`
+  - Records transaction in `transactions` table with `type: "sell"`
+  - Compensation pattern: reverts balance if holdings/txn fails
+  - Blocks `.TO` Canadian stocks
+- **UI**: Buy/Sell toggle in trading panel (`stock-detail-client.tsx`)
+  - Sell button disabled/grayed out when user has no position
+  - Mode toggle: "Shares to sell" or "ABX to receive"
+  - Shows available shares to sell
+  - Toast notification on success (top-center, 3s, white box, black text)
+  - `router.refresh()` after buy/sell to refetch server data
 
 ### 2. Portfolio Total Value with Live Prices
 - Currently `initialTotalValue` passed to dashboard is calculated on server
@@ -42,6 +45,8 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
 - ✅ Stock Search: Debounced search via Finnhub, preserves `?q=` in URL
 - ✅ Stock Detail: Chart (1D/1M/1Y/5Y), Buy panel, Position panel, Company Info
 - ✅ Buy Flow: Balance validation, holdings upsert, transaction recording
+- ✅ Sell Flow: Share validation, holdings update/delete, transaction recording, compensation on failure
+- ✅ Toast Notifications: Sonner (top-center, 3s, white box, black text)
 - ✅ Portfolio auto-create on first buy (service role bypasses RLS)
 - ✅ Canadian stocks (.TO) blocked at search and buy level
 - ✅ Holdings table: Clickable rows, simplified 2-column layout
@@ -56,6 +61,7 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
 | `src/app/dashboard/stock/[symbol]/page.tsx` | Stock detail server component (fetches quote, candles, profile, user holding) |
 | `src/app/dashboard/stock/[symbol]/stock-detail-client.tsx` | Stock detail client UI (chart, buy panel, position panel, company info) |
 | `src/app/api/stocks/buy/route.ts` | Buy logic with service role fallback for portfolio creation |
+| `src/app/api/stocks/sell/route.ts` | Sell logic: validate shares, update holdings, record transaction, compensation |
 | `src/app/api/stocks/quote/route.ts` | Quote API: Finnhub → Yahoo fallback chain |
 | `src/app/api/stocks/candles/route.ts` | Chart data via Yahoo Finance `/v8/finance/chart` |
 | `src/app/api/stocks/search/route.ts` | Search via Finnhub, filters out .TO stocks |
