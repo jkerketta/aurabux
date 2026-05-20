@@ -38,7 +38,7 @@ create policy "Users can delete friendships they are part of"
 alter table public.users add column display_number text;
 
 -- Create a sequence for display numbers
-create sequence public.user_display_number_seq start with 0;
+create sequence public.user_display_number_seq start with 0 minvalue 0;
 
 -- Function to assign display number on new user
 create or replace function public.assign_display_number()

@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Loader2, Trophy, Users } from "lucide-react";
+import { Loader2, Crown } from "lucide-react";
 
 interface LeaderboardEntry {
   rank: number;
@@ -77,40 +76,26 @@ function LeaderboardSkeleton() {
 }
 
 export default function LeaderboardPage() {
-  const [globalData, setGlobalData] = useState<LeaderboardEntry[]>([]);
-  const [friendsData, setFriendsData] = useState<LeaderboardEntry[]>([]);
+  const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [friendsLoading, setFriendsLoading] = useState(false);
 
-  const fetchLeaderboard = useCallback(async (type: "global" | "friends") => {
-    if (type === "friends") {
-      setFriendsLoading(true);
-    } else {
-      setLoading(true);
-    }
+  const fetchLeaderboard = useCallback(async () => {
+    setLoading(true);
     try {
-      const res = await fetch(`/api/leaderboard?type=${type}`);
+      const res = await fetch("/api/leaderboard?type=global");
       if (res.ok) {
-        const data = await res.json();
-        if (type === "friends") {
-          setFriendsData(data.leaderboard ?? []);
-        } else {
-          setGlobalData(data.leaderboard ?? []);
-        }
+        const result = await res.json();
+        setData(result.leaderboard ?? []);
       }
     } catch {
       // silent fail
     } finally {
-      if (type === "friends") {
-        setFriendsLoading(false);
-      } else {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchLeaderboard("global");
+    fetchLeaderboard();
   }, [fetchLeaderboard]);
 
   const renderRow = (entry: LeaderboardEntry) => (
@@ -125,15 +110,16 @@ export default function LeaderboardPage() {
     >
       {/* Rank */}
       <div className="flex-shrink-0">
-        {entry.rank === 1 && (
-          <Trophy className="h-5 w-5 text-[#FFD700]" />
+        {entry.rank === 1 ? (
+          <Crown className="h-5 w-5 text-[#FFD700]" />
+        ) : (
+          <RankBadge rank={entry.rank} />
         )}
-        {entry.rank !== 1 && <RankBadge rank={entry.rank} />}
       </div>
 
       {/* Username */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-black truncate">
+        <div className="text-sm font-medium text-black truncate">
           {entry.username}
           {entry.display_number && (
             <span className="ml-1.5 text-xs text-neutral-400">
@@ -145,7 +131,7 @@ export default function LeaderboardPage() {
               You
             </Badge>
           )}
-        </p>
+        </div>
       </div>
 
       {/* Value + Return */}
@@ -172,54 +158,17 @@ export default function LeaderboardPage() {
         Leaderboard
       </h1>
 
-      <Tabs defaultValue="global" onValueChange={(v) => {
-        if (v === "friends" && friendsData.length === 0) {
-          fetchLeaderboard("friends");
-        }
-      }}>
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="global">Global</TabsTrigger>
-          <TabsTrigger value="friends">Friends</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="global">
-          {loading ? (
-            <LeaderboardSkeleton />
-          ) : globalData.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center text-sm text-muted-foreground">
-                No players yet. Be the first!
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-2">
-              {globalData.map(renderRow)}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="friends">
-          {friendsLoading ? (
-            <LeaderboardSkeleton />
-          ) : friendsData.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center py-12 text-center">
-                <Users className="mb-3 h-10 w-10 text-muted-foreground" />
-                <p className="text-sm font-medium text-black">
-                  No friends yet
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Add friends to see how you compare
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-2">
-              {friendsData.map(renderRow)}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+      {loading ? (
+        <LeaderboardSkeleton />
+      ) : data.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            No players yet. Be the first!
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-2">{data.map(renderRow)}</div>
+      )}
     </div>
   );
 }

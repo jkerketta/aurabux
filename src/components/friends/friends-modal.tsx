@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -12,20 +12,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, UserPlus, UserCheck, UserX, Clock, Loader2, X } from "lucide-react";
+import {
+  UserPlus,
+  UserCheck,
+  UserX,
+  Loader2,
+  X,
+  Send,
+} from "lucide-react";
 
 interface FriendUser {
   id: string;
   username: string;
   display_number: string | null;
   friendship_id: string;
-}
-
-interface SearchUser {
-  id: string;
-  username: string;
-  display_number: string | null;
-  friendship_status: string | null;
 }
 
 interface FriendsData {
@@ -39,6 +39,8 @@ interface FriendsModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const FORMAT_REGEX = /^[^#]+#\d{3}$/;
+
 export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
   const [friendsData, setFriendsData] = useState<FriendsData>({
     friends: [],
@@ -47,12 +49,10 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
   });
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [sendingRequest, setSendingRequest] = useState(false);
 
-  // Fetch friends data
   const fetchFriends = useCallback(async () => {
     setLoading(true);
     try {
@@ -68,79 +68,41 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
     }
   }, []);
 
-  // Fetch on open
   useEffect(() => {
     if (open) {
       fetchFriends();
       setSearchQuery("");
-      setSearchResults([]);
+      setSearchError(null);
     }
   }, [open, fetchFriends]);
 
-  // Debounced search
-  useEffect(() => {
-    if (debounceTimer.current) {
-      clearTimeout(debounceTimer.current);
-    }
-
-    const trimmed = searchQuery.trim();
-    if (!trimmed) {
-      setSearchResults([]);
+  const handleSendRequest = async () => {
+    if (!FORMAT_REGEX.test(searchQuery.trim())) {
+      setSearchError("Must be display name followed by # and 3 digits");
       return;
     }
 
-    setSearchLoading(true);
-    debounceTimer.current = setTimeout(async () => {
-      try {
-        const res = await fetch(
-          `/api/friends/search?q=${encodeURIComponent(trimmed)}`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setSearchResults(data.results ?? []);
-        }
-      } catch {
-        // silent fail
-      } finally {
-        setSearchLoading(false);
-      }
-    }, 300);
+    setSendingRequest(true);
+    setSearchError(null);
 
-    return () => {
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
-    };
-  }, [searchQuery]);
-
-  // Actions
-  const handleSendRequest = async (username: string) => {
-    setActionLoading(username);
     try {
       const res = await fetch("/api/friends", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username }),
+        body: JSON.stringify({ username: searchQuery.trim() }),
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success(`Friend request sent to ${username}`);
+        toast.success("Friend request sent");
+        setSearchQuery("");
         fetchFriends();
-        // Update search result status
-        setSearchResults((prev) =>
-          prev.map((u) =>
-            u.username === username
-              ? { ...u, friendship_status: "pending" }
-              : u
-          )
-        );
       } else {
-        toast.error(data.error ?? "Failed to send request");
+        setSearchError(data.error ?? "Failed to send request");
       }
     } catch {
-      toast.error("Network error");
+      setSearchError("Network error");
     } finally {
-      setActionLoading(null);
+      setSendingRequest(false);
     }
   };
 
@@ -250,11 +212,10 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
         </DialogHeader>
 
         <Tabs defaultValue="friends" className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="friends">Friends</TabsTrigger>
-            <TabsTrigger value="search">Search</TabsTrigger>
-            <TabsTrigger value="pending">
-              Pending
+            <TabsTrigger value="requests">
+              Requests
               {friendsData.incoming.length > 0 && (
                 <Badge
                   variant="default"
@@ -274,7 +235,7 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
               </div>
             ) : friendsData.friends.length === 0 ? (
               <div className="py-8 text-center text-sm text-muted-foreground">
-                No friends yet. Search for users to add them.
+                No friends yet. Add friends in the Requests tab.
               </div>
             ) : (
               <div className="space-y-2">
@@ -299,157 +260,124 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
             )}
           </TabsContent>
 
-          {/* Search Tab */}
-          <TabsContent value="search" className="flex-1 overflow-y-auto mt-4">
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by username..."
-                className="h-10 pl-10"
-              />
-            </div>
-
-            {searchLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : searchResults.length === 0 && searchQuery.trim() ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">
-                No users found for &ldquo;{searchQuery}&rdquo;
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {searchResults.map((user) => {
-                  const isFriend = user.friendship_status === "accepted";
-                  const isPending = user.friendship_status === "pending";
-                  const isOutgoing = user.friendship_status === "declined";
-
-                  let action: React.ReactNode;
-                  if (isFriend) {
-                    action = (
-                      <span className="flex items-center gap-1 text-xs text-neutral-400">
-                        <UserCheck className="h-3.5 w-3.5" />
-                        Friends
-                      </span>
-                    );
-                  } else if (isPending) {
-                    action = (
-                      <span className="flex items-center gap-1 text-xs text-neutral-400">
-                        <Clock className="h-3.5 w-3.5" />
-                        Pending
-                      </span>
-                    );
-                  } else {
-                    action = (
-                      <Button
-                        size="sm"
-                        onClick={() => handleSendRequest(user.username)}
-                        disabled={actionLoading === user.username}
-                        className="h-8 gap-1 text-xs"
-                      >
-                        {actionLoading === user.username ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <UserPlus className="h-3.5 w-3.5" />
-                        )}
-                        Add
-                      </Button>
-                    );
-                  }
-
-                  return renderUserRow(user, action);
-                })}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Pending Tab */}
-          <TabsContent value="pending" className="flex-1 overflow-y-auto mt-4">
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Incoming */}
-                {friendsData.incoming.length > 0 && (
-                  <div>
-                    <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Incoming Requests
-                    </h4>
-                    <div className="space-y-2">
-                      {friendsData.incoming.map((req) =>
-                        renderUserRow(req, (
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              onClick={() => handleAccept(req.friendship_id)}
-                              disabled={actionLoading === req.friendship_id}
-                              className="h-8 gap-1 text-xs bg-black text-white hover:bg-neutral-800"
-                            >
-                              {actionLoading === req.friendship_id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <UserCheck className="h-3.5 w-3.5" />
-                              )}
-                              Accept
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDecline(req.friendship_id)}
-                              disabled={actionLoading === req.friendship_id}
-                              className="h-8 gap-1 text-xs"
-                            >
-                              <UserX className="h-3.5 w-3.5" />
-                              Decline
-                            </Button>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
+          {/* Requests Tab */}
+          <TabsContent value="requests" className="flex-1 overflow-y-auto mt-4">
+            <div className="space-y-4">
+              {/* Search bar */}
+              <div>
+                <div className="relative">
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setSearchError(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleSendRequest();
+                      }
+                    }}
+                    placeholder="e.g. testing#002"
+                    className="h-10 pr-12"
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleSendRequest}
+                    disabled={sendingRequest || !searchQuery.trim()}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+                  >
+                    {sendingRequest ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                {searchError && (
+                  <p className="mt-1.5 text-xs font-medium text-[#FF4444]">
+                    {searchError}
+                  </p>
                 )}
+              </div>
 
-                {/* Outgoing */}
-                {friendsData.outgoing.length > 0 && (
-                  <div>
-                    <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Sent Requests
-                    </h4>
-                    <div className="space-y-2">
-                      {friendsData.outgoing.map((req) =>
-                        renderUserRow(req, (
+              {/* Incoming */}
+              {friendsData.incoming.length > 0 && (
+                <div>
+                  <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Incoming Requests
+                  </h4>
+                  <div className="space-y-2">
+                    {friendsData.incoming.map((req) =>
+                      renderUserRow(req, (
+                        <div className="flex gap-1">
                           <Button
                             size="sm"
-                            variant="outline"
-                            onClick={() => handleCancel(req.friendship_id)}
+                            onClick={() => handleAccept(req.friendship_id)}
                             disabled={actionLoading === req.friendship_id}
-                            className="h-8 gap-1 text-xs"
+                            className="h-8 gap-1 text-xs bg-black text-white hover:bg-neutral-800"
                           >
                             {actionLoading === req.friendship_id ? (
                               <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             ) : (
-                              <X className="h-3.5 w-3.5" />
+                              <UserCheck className="h-3.5 w-3.5" />
                             )}
-                            Cancel
+                            Accept
                           </Button>
-                        ))
-                      )}
-                    </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDecline(req.friendship_id)}
+                            disabled={actionLoading === req.friendship_id}
+                            className="h-8 gap-1 text-xs"
+                          >
+                            <UserX className="h-3.5 w-3.5" />
+                            Decline
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Outgoing */}
+              {friendsData.outgoing.length > 0 && (
+                <div>
+                  <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Sent Requests
+                  </h4>
+                  <div className="space-y-2">
+                    {friendsData.outgoing.map((req) =>
+                      renderUserRow(req, (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleCancel(req.friendship_id)}
+                          disabled={actionLoading === req.friendship_id}
+                          className="h-8 gap-1 text-xs"
+                        >
+                          {actionLoading === req.friendship_id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <X className="h-3.5 w-3.5" />
+                          )}
+                          Cancel
+                        </Button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {friendsData.incoming.length === 0 &&
+                friendsData.outgoing.length === 0 &&
+                !searchError && (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    No pending requests
                   </div>
                 )}
-
-                {friendsData.incoming.length === 0 &&
-                  friendsData.outgoing.length === 0 && (
-                    <div className="py-8 text-center text-sm text-muted-foreground">
-                      No pending requests
-                    </div>
-                  )}
-              </div>
-            )}
+            </div>
           </TabsContent>
         </Tabs>
       </DialogContent>
