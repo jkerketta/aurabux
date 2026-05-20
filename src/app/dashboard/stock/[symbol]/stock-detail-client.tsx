@@ -302,6 +302,7 @@ export function StockDetailClient({
     buyMode === "shares" && buyInput
       ? parseFloat(buyInput) * currentPrice
       : 0;
+  const effectiveBalance = balance ?? availableBalance;
 
   // ── Render ─────────────────────────────────────────────
 
@@ -539,18 +540,50 @@ export function StockDetailClient({
               </div>
             </CardContent>
           </Card>
+
+          {/* Company Info */}
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="mb-4 text-base font-semibold text-black">
+                Company Info
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Market Cap</span>
+                  <span className="text-sm font-semibold text-black">
+                    {formatMarketCap(companyInfo?.marketCap ?? null)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Exchange</span>
+                  <span className="text-sm font-semibold text-black">
+                    {companyInfo?.exchange ?? "\u2014"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Website</span>
+                  <span className="text-sm font-semibold text-black">
+                    {companyInfo?.weburl ? (
+                      <a
+                        href={companyInfo.weburl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline underline-offset-2 hover:text-blue-800"
+                      >
+                        {new URL(companyInfo.weburl).hostname}
+                      </a>
+                    ) : (
+                      "\u2014"
+                    )}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* ── Right column: Buy Panel + Position + Company Info ── */}
+        {/* ── Right column: Buy Panel + Position ── */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Available Balance */}
-          <p className="text-xs text-muted-foreground">
-            Available:{" "}
-            <span className="font-semibold text-black">
-              {formatCurrency(availableBalance)} ABX
-            </span>
-          </p>
-
           {/* Buy Panel */}
           <Card>
             <CardContent className="p-6">
@@ -585,13 +618,19 @@ export function StockDetailClient({
 
               {/* Price display */}
               {quoteData && (
-                <p className="mb-4 text-sm text-muted-foreground">
+                <p className="mb-1 text-sm text-muted-foreground">
                   Current price:{" "}
                   <span className="font-semibold text-black">
                     ${formatCurrency(quoteData.currentPrice)}
                   </span>
                 </p>
               )}
+              <p className="mb-4 text-xs text-muted-foreground">
+                Available:{" "}
+                <span className="font-medium text-black">
+                  {formatCurrency(effectiveBalance)} ABX
+                </span>
+              </p>
 
               {/* Input */}
               <div className="mb-3">
@@ -635,7 +674,7 @@ export function StockDetailClient({
                         {computedShares < 1
                           ? computedShares.toFixed(4)
                           : computedShares.toFixed(2)}{" "}
-                        shares
+                        share{computedShares !== 1 ? "s" : ""}
                       </span>
                     </>
                   )}
@@ -691,7 +730,7 @@ export function StockDetailClient({
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Shares</span>
                     <span className="text-sm font-semibold text-black">
-                      {userHolding.shares}
+                      {userHolding.shares} share{userHolding.shares !== 1 ? "s" : ""}
                     </span>
                   </div>
 
@@ -778,45 +817,7 @@ export function StockDetailClient({
             </Card>
           )}
 
-          {/* Company Info Panel */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="mb-4 text-base font-semibold text-black">
-                Company Info
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Market Cap</span>
-                  <span className="text-sm font-semibold text-black">
-                    {formatMarketCap(companyInfo?.marketCap ?? null)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Exchange</span>
-                  <span className="text-sm font-semibold text-black">
-                    {companyInfo?.exchange ?? "\u2014"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Website</span>
-                  <span className="text-sm font-semibold text-black">
-                    {companyInfo?.weburl ? (
-                      <a
-                        href={companyInfo.weburl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 underline underline-offset-2 hover:text-blue-800"
-                      >
-                        {new URL(companyInfo.weburl).hostname}
-                      </a>
-                    ) : (
-                      "\u2014"
-                    )}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+
         </div>
       </div>
     </div>

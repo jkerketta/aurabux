@@ -90,6 +90,8 @@ export function DashboardContent({
   // All-time portfolio return
   const allTimeReturn = ((initialTotalValue - 1000) / 1000) * 100;
   const isAllTimePositive = allTimeReturn >= 0;
+  const investmentsValue = holdings.reduce((sum, h) => sum + h.shares * h.avg_buy_price, 0);
+  const displayInvestments = showValues ? formatCurrency(investmentsValue) : "••••••";
 
   return (
     <motion.div
@@ -111,54 +113,6 @@ export function DashboardContent({
             day: "numeric",
           })}
         </p>
-      </motion.div>
-
-      {/* Stats Row */}
-      <motion.div variants={itemVariants} className="grid gap-4 sm:grid-cols-3 mb-8">
-        {/* ABX Balance Card */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              ABX Balance
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold tracking-tight text-[#00C805]">
-              {displayBalance}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">ABX</p>
-          </CardContent>
-        </Card>
-
-        {/* Total Value Card */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Total Value
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold tracking-tight text-black">
-              {displayTotalValue}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">ABX</p>
-          </CardContent>
-        </Card>
-
-        {/* Starting Balance Card */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Starting Balance
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold tracking-tight text-muted-foreground">
-              1,000.00
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">ABX</p>
-          </CardContent>
-        </Card>
       </motion.div>
 
       {/* Portfolio Value Section */}
@@ -187,20 +141,49 @@ export function DashboardContent({
             <p className="text-5xl font-bold tracking-tight text-black">
               {displayTotalValue} ABX
             </p>
-            <div className="mt-2 flex items-center gap-2">
-              <Badge
-                variant="outline"
-                className={cn(
-                  isAllTimePositive
-                    ? "text-[#00C805] border-[#00C805]"
-                    : "text-[#FF4444] border-[#FF4444]"
-                )}
-              >
-                {isAllTimePositive ? "+" : ""}
-                {allTimeReturn.toFixed(2)}%
-              </Badge>
-              <span className="text-sm text-muted-foreground">All time</span>
+            <div className="mt-4">
+              <div className={cn(
+                "inline-flex items-center rounded-full px-3 py-1.5 text-sm font-semibold",
+                isAllTimePositive
+                  ? "bg-[#00C805]/10 text-[#00A804]"
+                  : "bg-[#FF4444]/10 text-[#CC3333]"
+              )}>
+                {isAllTimePositive ? "+" : ""}{allTimeReturn.toFixed(2)}% all time
+              </div>
             </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Stats Row */}
+      <motion.div variants={itemVariants} className="grid gap-4 sm:grid-cols-2 mb-8">
+        {/* ABX Balance Card */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              ABX Balance
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold tracking-tight text-[#00C805]">
+              {displayBalance}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">ABX</p>
+          </CardContent>
+        </Card>
+
+        {/* Investments Card */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Investments
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold tracking-tight text-black">
+              {displayInvestments}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">ABX</p>
           </CardContent>
         </Card>
       </motion.div>
@@ -235,7 +218,7 @@ export function DashboardContent({
                     >
                       <td className="px-6 py-4">
                         <p className="text-sm font-semibold text-black">{h.ticker}</p>
-                        <p className="text-xs text-muted-foreground">{h.shares} shares</p>
+                        <p className="text-xs text-muted-foreground">{h.shares} share{h.shares !== 1 ? "s" : ""}</p>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <p
@@ -294,13 +277,13 @@ export function DashboardContent({
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
                     Shares
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
                     Price
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
                     Total
                   </th>
                 </tr>
@@ -319,23 +302,22 @@ export function DashboardContent({
                       </td>
                       <td className="px-6 py-4">
                         <Badge
-                          variant="outline"
                           className={
                             isBuy
-                              ? "border-[#00C805] text-[#00C805]"
+                              ? "bg-[#00C805] text-white border-[#00C805]"
                               : "border-[#FF4444] text-[#FF4444]"
                           }
                         >
                           {isBuy ? "Buy" : "Sell"}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4 text-right text-sm text-neutral-700">
+                      <td className="px-6 py-4 text-left text-sm text-neutral-700">
                         {t.shares}
                       </td>
-                      <td className="px-6 py-4 text-right text-sm text-neutral-700">
+                      <td className="px-6 py-4 text-left text-sm text-neutral-700">
                         {formatCurrency(t.price_per_share)}
                       </td>
-                      <td className="px-6 py-4 text-right text-sm font-medium text-black">
+                      <td className="px-6 py-4 text-left text-sm font-medium text-black">
                         {formatCurrency(total)}
                       </td>
                     </tr>

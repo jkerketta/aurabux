@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      marketCap: data.marketCapitalization ?? null,
+      marketCap: data.marketCapitalization ? data.marketCapitalization * 1_000_000 : null,
       exchange: data.exchange ?? null,
       weburl: data.weburl ?? null,
     });
