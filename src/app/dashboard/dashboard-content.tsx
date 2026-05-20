@@ -90,7 +90,7 @@ export function DashboardContent({
   // All-time portfolio return
   const allTimeReturn = ((initialTotalValue - 1000) / 1000) * 100;
   const isAllTimePositive = allTimeReturn >= 0;
-  const investmentsValue = holdings.reduce((sum, h) => sum + h.shares * h.avg_buy_price, 0);
+  const investmentsValue = holdings.reduce((sum, h) => sum + h.shares * h.current_price, 0);
   const displayInvestments = showValues ? formatCurrency(investmentsValue) : "••••••";
 
   return (
