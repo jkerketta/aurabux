@@ -20,7 +20,6 @@ import {
   Loader2,
   TrendingUp,
   TrendingDown,
-  DollarSign,
   ArrowLeft,
 } from "lucide-react";
 
@@ -627,7 +626,6 @@ export function StockDetailClient({
                   </>
                 ) : (
                   <>
-                    <DollarSign className="mr-2 h-4 w-4" />
                     Buy
                   </>
                 )}

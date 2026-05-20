@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const FINNHUB_BASE = "https://finnhub.io/api/v1";
+const YAHOO_BASE = "https://query1.finance.yahoo.com/v7/finance/quote";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,23 +14,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const apiKey = process.env.FINNHUB_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "Finnhub API key not configured" },
-        { status: 500 }
-      );
-    }
+    const url = `${YAHOO_BASE}?symbols=${encodeURIComponent(symbol)}`;
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+      },
+    });
 
-    const url = `${FINNHUB_BASE}/quote?symbol=${encodeURIComponent(symbol)}&token=${apiKey}`;
-    const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`Finnhub API responded with ${response.status}`);
+      throw new Error(`Yahoo Finance API responded with ${response.status}`);
     }
 
     const data = await response.json();
 
-    if (data.c === undefined || data.c === null) {
+    const result = data?.quoteResponse?.result?.[0];
+
+    if (!result || result.regularMarketPrice === undefined) {
       return NextResponse.json(
         { error: `No quote data found for symbol: ${symbol}` },
         { status: 404 }
@@ -39,13 +38,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       symbol,
-      currentPrice: data.c,
-      change: data.d,
-      changePercent: data.dp,
-      high: data.h,
-      low: data.l,
-      open: data.o,
-      previousClose: data.pc,
+      currentPrice: result.regularMarketPrice,
+      change: result.regularMarketChange ?? 0,
+      changePercent: result.regularMarketChangePercent ?? 0,
+      high: result.regularMarketDayHigh ?? 0,
+      low: result.regularMarketDayLow ?? 0,
+      open: result.regularMarketOpen ?? 0,
+      previousClose: result.regularMarketPreviousClose ?? 0,
     });
   } catch (error) {
     console.error("Stock quote error:", error);

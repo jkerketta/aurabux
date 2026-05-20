@@ -56,14 +56,31 @@ export async function POST(request: NextRequest) {
       .eq("user_id", user.id)
       .single();
 
+    let currentBalance: number;
+
     if (portfolioError || !portfolio) {
-      return NextResponse.json(
-        { error: "Portfolio not found" },
-        { status: 404 }
-      );
+      // Auto-heal: create portfolio if missing
+      const { error: insertError } = await supabase
+        .from("portfolios")
+        .insert({
+          user_id: user.id,
+          abx_balance: 1000,
+          total_value: 1000,
+        });
+
+      if (insertError) {
+        console.error("Failed to create portfolio:", insertError);
+        return NextResponse.json(
+          { error: "Failed to initialize portfolio" },
+          { status: 500 }
+        );
+      }
+
+      currentBalance = 1000;
+    } else {
+      currentBalance = Number(portfolio.abx_balance);
     }
 
-    const currentBalance = Number(portfolio.abx_balance);
     if (currentBalance < totalCost) {
       return NextResponse.json(
         {
