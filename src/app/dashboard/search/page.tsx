@@ -77,6 +77,12 @@ function SearchPageInner() {
         const res = await fetch(
           `/api/stocks/search?q=${encodeURIComponent(trimmed)}`
         );
+        if (!res.ok) {
+          setSearchResults([]);
+          setSearchError("Failed to search stocks");
+          setSearchLoading(false);
+          return;
+        }
         const data = await res.json();
         setSearchResults(data.results ?? []);
       } catch {

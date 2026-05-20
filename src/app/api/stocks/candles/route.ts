@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const symbol = searchParams.get("symbol")?.trim().toUpperCase();
-    const range = (searchParams.get("range") ?? "1M") as Range;
+    const range = (searchParams.get("range") ?? "1D") as Range;
 
     if (!symbol) {
       return NextResponse.json(

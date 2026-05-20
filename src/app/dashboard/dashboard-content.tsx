@@ -5,6 +5,7 @@ import type { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Plus } from "lucide-react";
 
@@ -82,6 +83,10 @@ export function DashboardContent({
 
   const displayBalance = showValues ? formatCurrency(initialBalance) : "••••••";
   const displayTotalValue = showValues ? formatCurrency(initialTotalValue) : "••••••";
+
+  // All-time portfolio return
+  const allTimeReturn = ((initialTotalValue - 1000) / 1000) * 100;
+  const isAllTimePositive = allTimeReturn >= 0;
 
   return (
     <motion.div
@@ -180,8 +185,16 @@ export function DashboardContent({
               {displayTotalValue} ABX
             </p>
             <div className="mt-2 flex items-center gap-2">
-              <Badge variant="outline" className="text-[#00C805] border-[#00C805]">
-                +0.00%
+              <Badge
+                variant="outline"
+                className={cn(
+                  isAllTimePositive
+                    ? "text-[#00C805] border-[#00C805]"
+                    : "text-[#FF4444] border-[#FF4444]"
+                )}
+              >
+                {isAllTimePositive ? "+" : ""}
+                {allTimeReturn.toFixed(2)}%
               </Badge>
               <span className="text-sm text-muted-foreground">All time</span>
             </div>
@@ -219,7 +232,7 @@ export function DashboardContent({
                     Avg Buy Price
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Current Value
+                    Cost Basis
                   </th>
                 </tr>
               </thead>

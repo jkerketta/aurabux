@@ -137,6 +137,7 @@ export function StockDetailClient({
   const [candleData, setCandleData] = useState<CandleData | null>(
     typedInitialCandles
   );
+  const [candleError, setCandleError] = useState<string | null>(null);
   const [chartRange, setChartRange] = useState<TimeRange>("1D");
   const [candleLoading, setCandleLoading] = useState(false);
 
@@ -153,18 +154,26 @@ export function StockDetailClient({
     async (sym: string, range: TimeRange) => {
       setCandleLoading(true);
       setCandleData(null);
+      setCandleError(null);
       try {
         const res = await fetch(
           `/api/stocks/candles?symbol=${encodeURIComponent(sym)}&range=${range}`
         );
+        if (!res.ok) {
+          setCandleData(null);
+          setCandleError("Failed to load chart data");
+          return;
+        }
         const data = await res.json();
         if (data.error) {
           setCandleData(null);
+          setCandleError(data.error);
         } else {
           setCandleData(data);
         }
       } catch {
         setCandleData(null);
+        setCandleError("Failed to load chart data");
       } finally {
         setCandleLoading(false);
       }
@@ -191,10 +200,6 @@ export function StockDetailClient({
       return;
     }
 
-    setBuyLoading(true);
-    setBuyError(null);
-    setBuySuccess(false);
-
     let shares: number;
     let totalCost: number;
 
@@ -205,6 +210,16 @@ export function StockDetailClient({
       totalCost = parsedInput;
       shares = totalCost / quoteData.currentPrice;
     }
+
+    // Client-side balance check for fast feedback
+    if (balance !== null && totalCost > balance) {
+      setBuyError("Insufficient ABX balance");
+      return;
+    }
+
+    setBuyLoading(true);
+    setBuyError(null);
+    setBuySuccess(false);
 
     try {
       const res = await fetch("/api/stocks/buy", {
@@ -343,7 +358,7 @@ export function StockDetailClient({
                     <div key={range} className="relative flex flex-col items-center">
                       {/* Return badge */}
                       {showBadge && (
-                        <div className="absolute -top-8 mb-1">
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 mb-1">
                           <div className={cn(
                             "rounded px-2 py-1 text-xs font-semibold text-black",
                             isReturnPositive ? "bg-[#00C805]" : "bg-[#FF4444]"
@@ -380,6 +395,10 @@ export function StockDetailClient({
                 {candleLoading ? (
                   <div className="flex h-full items-center justify-center">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : candleError ? (
+                  <div className="flex h-full items-center justify-center text-sm text-[#FF4444]">
+                    {candleError}
                   </div>
                 ) : candleData?.status === "no_data" ? (
                   <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
