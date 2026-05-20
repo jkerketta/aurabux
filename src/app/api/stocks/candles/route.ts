@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 
 const YAHOO_BASE = "https://query1.finance.yahoo.com/v8/finance/chart";
 
-type Range = "1D" | "1M" | "1Y" | "ALL";
+type Range = "1D" | "1M" | "1Y" | "5Y";
 
 const RANGE_MAP: Record<Range, { yahooRange: string; interval: string }> = {
   "1D": { yahooRange: "1d", interval: "5m" },
   "1M": { yahooRange: "1mo", interval: "1d" },
   "1Y": { yahooRange: "1y", interval: "1d" },
-  ALL: { yahooRange: "5y", interval: "1d" },
+  "5Y": { yahooRange: "5y", interval: "1d" },
 };
 
 export async function GET(request: NextRequest) {
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     if (!(range in RANGE_MAP)) {
       return NextResponse.json(
-        { error: "Range must be one of: 1D, 1M, 1Y, ALL" },
+        { error: "Range must be one of: 1D, 1M, 1Y, 5Y" },
         { status: 400 }
       );
     }

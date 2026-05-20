@@ -48,7 +48,7 @@ interface ChartPoint {
   price: number;
 }
 
-type TimeRange = "1D" | "1M" | "1Y" | "ALL";
+type TimeRange = "1D" | "1M" | "1Y" | "5Y";
 
 interface StockDetailClientProps {
   symbol: string;
@@ -335,7 +335,7 @@ export function StockDetailClient({
             <CardContent className="p-6">
               {/* Time range buttons */}
               <div className="mb-4 flex items-center gap-2">
-                {(["1D", "1M", "1Y", "ALL"] as const).map((range) => {
+                {(["1D", "1M", "1Y", "5Y"] as const).map((range) => {
                   const isActive = chartRange === range;
                   const showBadge = isActive && range !== "1D" && chartData.length >= 2;
 
