@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Plus } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 interface Holding {
   ticker: string;
@@ -208,9 +208,6 @@ export function DashboardContent({
         {holdings.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-100">
-                <Plus className="h-8 w-8 text-neutral-400" />
-              </div>
               <p className="text-sm font-medium text-black">No holdings yet</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Start trading to build your portfolio
@@ -270,9 +267,6 @@ export function DashboardContent({
         {transactions.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-100">
-                <Plus className="h-8 w-8 text-neutral-400" />
-              </div>
               <p className="text-sm font-medium text-black">No transactions yet</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Your trade history will appear here
