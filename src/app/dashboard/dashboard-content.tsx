@@ -148,7 +148,7 @@ export function DashboardContent({
       {/* Stats Row */}
       <motion.div variants={itemVariants} className="grid gap-4 sm:grid-cols-2 mb-8">
         {/* ABX Balance Card */}
-        <Card>
+        <Card className="min-h-[120px]">
           <CardHeader className="pb-2">
             <CardDescription className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               ABX Balance
@@ -156,14 +156,13 @@ export function DashboardContent({
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold tracking-tight text-black">
-              {displayBalance}
+              {displayBalance} <span className="text-lg font-normal text-muted-foreground">ABX</span>
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">ABX</p>
           </CardContent>
         </Card>
 
         {/* Investments Card */}
-        <Card>
+        <Card className="min-h-[120px]">
           <CardHeader className="pb-2">
             <CardDescription className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Investments
@@ -171,21 +170,20 @@ export function DashboardContent({
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold tracking-tight text-black">
-              {displayInvestments}
+              {displayInvestments} <span className="text-lg font-normal text-muted-foreground">ABX</span>
             </p>
-            {showValues && (
-              <div className="mt-2">
-                <div className={cn(
-                  "inline-flex items-center rounded-full px-3 py-1.5 text-sm font-semibold",
-                  isAllTimePositive
-                    ? "bg-[#00C805]/10 text-[#00A804]"
-                    : "bg-[#FF4444]/10 text-[#CC3333]"
-                )}>
-                  {isAllTimePositive ? "+" : ""}{allTimeReturn.toFixed(2)}% all time
-                </div>
+            <div className="mt-2">
+              <div className={cn(
+                "inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold",
+                showValues
+                  ? (isAllTimePositive ? "bg-[#00C805]/10 text-[#00A804]" : "bg-[#FF4444]/10 text-[#CC3333]")
+                  : "bg-neutral-100 text-neutral-400"
+              )}>
+                {showValues
+                  ? `${isAllTimePositive ? "+" : ""}${allTimeReturn.toFixed(2)}% all time`
+                  : "••••••"}
               </div>
-            )}
-            <p className="mt-1 text-xs text-muted-foreground">ABX</p>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
@@ -304,11 +302,12 @@ export function DashboardContent({
                       </td>
                       <td className="px-6 py-4">
                         <Badge
-                          className={
+                          className={cn(
+                            "rounded-full px-3 py-1.5 text-xs font-semibold",
                             isBuy
-                              ? "bg-[#00C805] text-white border-[#00C805]"
-                              : "border-[#FF4444] text-[#FF4444]"
-                          }
+                              ? "bg-[#00C805]/10 text-[#00A804]"
+                              : "bg-[#FF4444]/10 text-[#CC3333]"
+                          )}
                         >
                           {isBuy ? "Buy" : "Sell"}
                         </Badge>
