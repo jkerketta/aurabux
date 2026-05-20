@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 
 const YAHOO_BASE = "https://query1.finance.yahoo.com/v8/finance/chart";
 
-type Range = "1M" | "1Y" | "ALL";
+type Range = "1D" | "1M" | "1Y" | "ALL";
 
-const RANGE_MAP: Record<Range, string> = {
-  "1M": "1mo",
-  "1Y": "1y",
-  ALL: "5y",
+const RANGE_MAP: Record<Range, { yahooRange: string; interval: string }> = {
+  "1D": { yahooRange: "1d", interval: "5m" },
+  "1M": { yahooRange: "1mo", interval: "1d" },
+  "1Y": { yahooRange: "1y", interval: "1d" },
+  ALL: { yahooRange: "5y", interval: "1d" },
 };
 
 export async function GET(request: NextRequest) {
@@ -25,13 +26,13 @@ export async function GET(request: NextRequest) {
 
     if (!(range in RANGE_MAP)) {
       return NextResponse.json(
-        { error: "Range must be one of: 1M, 1Y, ALL" },
+        { error: "Range must be one of: 1D, 1M, 1Y, ALL" },
         { status: 400 }
       );
     }
 
-    const yahooRange = RANGE_MAP[range];
-    const url = `${YAHOO_BASE}/${encodeURIComponent(symbol)}?interval=1d&range=${yahooRange}`;
+    const config = RANGE_MAP[range];
+    const url = `${YAHOO_BASE}/${encodeURIComponent(symbol)}?interval=${config.interval}&range=${config.yahooRange}`;
     const response = await fetch(url, {
       headers: {
         // Mimic a browser to avoid bare-minimum blocking

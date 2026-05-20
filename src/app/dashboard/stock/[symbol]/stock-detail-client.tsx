@@ -48,7 +48,7 @@ interface ChartPoint {
   price: number;
 }
 
-type TimeRange = "1M" | "1Y" | "ALL";
+type TimeRange = "1D" | "1M" | "1Y" | "ALL";
 
 interface StockDetailClientProps {
   symbol: string;
@@ -137,7 +137,7 @@ export function StockDetailClient({
   const [candleData, setCandleData] = useState<CandleData | null>(
     typedInitialCandles
   );
-  const [chartRange, setChartRange] = useState<TimeRange>("1M");
+  const [chartRange, setChartRange] = useState<TimeRange>("1D");
   const [candleLoading, setCandleLoading] = useState(false);
 
   const [buyMode, setBuyMode] = useState<"shares" | "abx">("shares");
@@ -242,6 +242,20 @@ export function StockDetailClient({
       price: candleData.closes[i],
     })) ?? [];
 
+  // ── Return calculation ────────────────────────────────
+  const firstClose =
+    candleData && candleData.closes.length > 0 ? candleData.closes[0] : null;
+  const lastClose =
+    candleData && candleData.closes.length > 0
+      ? candleData.closes[candleData.closes.length - 1]
+      : null;
+  const pctReturn =
+    firstClose && lastClose && firstClose !== 0
+      ? ((lastClose - firstClose) / firstClose) * 100
+      : 0;
+  const absReturn = firstClose && lastClose ? lastClose - firstClose : 0;
+  const isReturnPositive = absReturn >= 0;
+
   const isUp = quoteData ? quoteData.change >= 0 : true;
   const chartColor = isUp ? "#00C805" : "#FF4444";
 
@@ -319,9 +333,28 @@ export function StockDetailClient({
           {/* Chart */}
           <Card className="mb-6">
             <CardContent className="p-6">
+              {/* Return badge - centered */}
+              {chartData.length >= 2 && (
+                <div className="mb-3 flex justify-center">
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "text-sm font-semibold",
+                      isReturnPositive
+                        ? "border-[#00C805] bg-[#00C805]/10 text-[#00C805]"
+                        : "border-[#FF4444] bg-[#FF4444]/10 text-[#FF4444]"
+                    )}
+                  >
+                    {pctReturn >= 0 ? "+" : ""}
+                    {pctReturn.toFixed(2)}% &nbsp;
+                    {absReturn >= 0 ? "+" : ""}${absReturn.toFixed(2)}
+                  </Badge>
+                </div>
+              )}
+
               {/* Time range buttons */}
-              <div className="mb-4 flex items-center gap-2">
-                {(["1M", "1Y", "ALL"] as const).map((range) => (
+              <div className="mb-4 flex items-center justify-center gap-2">
+                {(["1D", "1M", "1Y", "ALL"] as const).map((range) => (
                   <Button
                     key={range}
                     variant={chartRange === range ? "default" : "outline"}

@@ -22,7 +22,7 @@ export default async function StockDetailPage({ params }: Props) {
     fetch(`${baseUrl}/api/stocks/quote?symbol=${encoded}`, {
       cache: "no-store",
     }),
-    fetch(`${baseUrl}/api/stocks/candles?symbol=${encoded}&range=1M`, {
+    fetch(`${baseUrl}/api/stocks/candles?symbol=${encoded}&range=1D`, {
       cache: "no-store",
     }),
     fetch(`${baseUrl}/api/stocks/search?q=${encoded}`, {
