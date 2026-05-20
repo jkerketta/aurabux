@@ -333,43 +333,46 @@ export function StockDetailClient({
           {/* Chart */}
           <Card className="mb-6">
             <CardContent className="p-6">
-              {/* Return badge - centered */}
-              {chartData.length >= 2 && (
-                <div className="mb-3 flex justify-center">
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "text-sm font-semibold",
-                      isReturnPositive
-                        ? "border-[#00C805] bg-[#00C805]/10 text-[#00C805]"
-                        : "border-[#FF4444] bg-[#FF4444]/10 text-[#FF4444]"
-                    )}
-                  >
-                    {pctReturn >= 0 ? "+" : ""}
-                    {pctReturn.toFixed(2)}% &nbsp;
-                    {absReturn >= 0 ? "+" : ""}${absReturn.toFixed(2)}
-                  </Badge>
-                </div>
-              )}
-
               {/* Time range buttons */}
-              <div className="mb-4 flex items-center justify-center gap-2">
-                {(["1D", "1M", "1Y", "ALL"] as const).map((range) => (
-                  <Button
-                    key={range}
-                    variant={chartRange === range ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleRangeChange(range)}
-                    className={cn(
-                      "h-7 px-3 text-xs",
-                      chartRange === range
-                        ? "bg-black text-white"
-                        : "border-neutral-200 text-muted-foreground hover:bg-neutral-100"
-                    )}
-                  >
-                    {range}
-                  </Button>
-                ))}
+              <div className="mb-4 flex items-center gap-2">
+                {(["1D", "1M", "1Y", "ALL"] as const).map((range) => {
+                  const isActive = chartRange === range;
+                  const showBadge = isActive && range !== "1D" && chartData.length >= 2;
+
+                  return (
+                    <div key={range} className="relative flex flex-col items-center">
+                      {/* Return badge */}
+                      {showBadge && (
+                        <div className="absolute -top-8 mb-1">
+                          <div className={cn(
+                            "rounded px-2 py-1 text-xs font-semibold text-black",
+                            isReturnPositive ? "bg-[#00C805]" : "bg-[#FF4444]"
+                          )}>
+                            {pctReturn >= 0 ? "+" : ""}{pctReturn.toFixed(2)}%
+                          </div>
+                          <div className={cn(
+                            "absolute left-1/2 -bottom-1 -translate-x-1/2 h-2 w-2 rotate-45",
+                            isReturnPositive ? "bg-[#00C805]" : "bg-[#FF4444]"
+                          )} />
+                        </div>
+                      )}
+
+                      <Button
+                        variant={isActive ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleRangeChange(range)}
+                        className={cn(
+                          "h-7 px-3 text-xs",
+                          isActive
+                            ? "bg-black text-white"
+                            : "border-neutral-200 text-muted-foreground hover:bg-neutral-100"
+                        )}
+                      >
+                        {range}
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Chart area */}
