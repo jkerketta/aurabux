@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const FINNHUB_BASE = "https://finnhub.io/api/v1";
+const YAHOO_BASE = "https://query1.finance.yahoo.com/v8/finance/chart";
 
 type Range = "1M" | "1Y" | "ALL";
 
-const RANGE_CONFIG: Record<
-  Range,
-  { resolution: string; days: number }
-> = {
-  "1M": { resolution: "D", days: 30 },
-  "1Y": { resolution: "W", days: 365 },
-  ALL: { resolution: "M", days: 1825 }, // 5 years
+const RANGE_MAP: Record<Range, string> = {
+  "1M": "1mo",
+  "1Y": "1y",
+  ALL: "5y",
 };
 
 export async function GET(request: NextRequest) {
@@ -26,34 +23,54 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!(range in RANGE_CONFIG)) {
+    if (!(range in RANGE_MAP)) {
       return NextResponse.json(
         { error: "Range must be one of: 1M, 1Y, ALL" },
         { status: 400 }
       );
     }
 
-    const apiKey = process.env.FINNHUB_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "Finnhub API key not configured" },
-        { status: 500 }
-      );
-    }
+    const yahooRange = RANGE_MAP[range];
+    const url = `${YAHOO_BASE}/${encodeURIComponent(symbol)}?interval=1d&range=${yahooRange}`;
+    const response = await fetch(url, {
+      headers: {
+        // Mimic a browser to avoid bare-minimum blocking
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept: "application/json",
+      },
+    });
 
-    const config = RANGE_CONFIG[range];
-    const now = Math.floor(Date.now() / 1000);
-    const from = now - config.days * 24 * 60 * 60;
-
-    const url = `${FINNHUB_BASE}/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=${config.resolution}&from=${from}&to=${now}&token=${apiKey}`;
-    const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`Finnhub API responded with ${response.status}`);
+      throw new Error(`Yahoo Finance API responded with ${response.status}`);
     }
 
-    const data = await response.json();
+    const json = await response.json();
 
-    if (data.s === "no_data" || !data.t || !data.c) {
+    const result = json?.chart?.result?.[0];
+    const error = json?.chart?.error;
+
+    if (!result || error) {
+      return NextResponse.json({
+        timestamps: [],
+        closes: [],
+        status: "no_data",
+      });
+    }
+
+    const timestamps: number[] = result.timestamp ?? [];
+    const closes: (number | null)[] =
+      result.indicators?.quote?.[0]?.close ?? [];
+
+    // Pair and filter out nulls (Yahoo returns null for holidays/weekends)
+    const paired: { t: number; c: number }[] = [];
+    for (let i = 0; i < Math.min(timestamps.length, closes.length); i++) {
+      if (timestamps[i] != null && closes[i] != null) {
+        paired.push({ t: timestamps[i], c: closes[i] as number });
+      }
+    }
+
+    if (paired.length === 0) {
       return NextResponse.json({
         timestamps: [],
         closes: [],
@@ -62,9 +79,9 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      timestamps: data.t,
-      closes: data.c,
-      status: data.s,
+      timestamps: paired.map((p) => p.t),
+      closes: paired.map((p) => p.c),
+      status: "ok",
     });
   } catch (error) {
     console.error("Stock candles error:", error);
