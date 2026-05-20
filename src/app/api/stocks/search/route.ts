@@ -27,14 +27,16 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json();
 
-    const results = (data.result ?? []).map(
-      (item: { symbol: string; description: string; displaySymbol: string; type: string }) => ({
-        symbol: item.symbol,
-        description: item.description,
-        displaySymbol: item.displaySymbol,
-        type: item.type,
-      })
-    );
+    const results = (data.result ?? [])
+      .map(
+        (item: { symbol: string; description: string; displaySymbol: string; type: string }) => ({
+          symbol: item.symbol,
+          description: item.description,
+          displaySymbol: item.displaySymbol,
+          type: item.type,
+        })
+      )
+      .filter((r: { symbol: string }) => !r.symbol.endsWith(".TO"));
 
     return NextResponse.json({ results });
   } catch (error) {

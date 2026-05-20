@@ -47,6 +47,11 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedSymbol = symbol.trim().toUpperCase();
+
+    if (normalizedSymbol.endsWith(".TO")) {
+      return NextResponse.json({ error: "Canadian stocks (.TO) are not supported" }, { status: 400 });
+    }
+
     const totalCost = shares * pricePerShare;
 
     // Fetch user's portfolio

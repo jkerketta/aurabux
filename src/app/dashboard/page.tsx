@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardContent } from "./dashboard-content";
 
@@ -16,7 +17,7 @@ export default async function DashboardPage() {
 
   const { data: portfolio } = await supabase
     .from("portfolios")
-    .select("abx_balance, total_value")
+    .select("abx_balance")
     .eq("user_id", user.id)
     .single();
 
@@ -39,9 +40,53 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
     .limit(10);
 
-  const balance = portfolio?.abx_balance ?? 1000;
-  const totalValue = portfolio?.total_value ?? 1000;
+  const balance = Number(portfolio?.abx_balance ?? 1000);
   const username = profile?.username ?? "";
+
+  // Fetch current prices for each holding and calculate total value
+  let enrichedHoldings: Array<{
+    ticker: string;
+    shares: number;
+    avg_buy_price: number;
+    current_price: number;
+  }> = [];
+  let totalValue = balance;
+
+  if (holdings && holdings.length > 0) {
+    const headersList = await headers();
+    const host = headersList.get("host") ?? "localhost:3000";
+    const protocol = host.includes("localhost") ? "http" : "https";
+    const baseUrl = `${protocol}://${host}`;
+
+    const pricePromises = holdings.map(async (h: { ticker: string; shares: number; avg_buy_price: number }) => {
+      try {
+        const res = await fetch(
+          `${baseUrl}/api/stocks/quote?symbol=${encodeURIComponent(h.ticker)}`,
+          { cache: "no-store" }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          return Number(data.currentPrice) ?? Number(h.avg_buy_price);
+        }
+      } catch {
+        // network error, fall through to fallback
+      }
+      return Number(h.avg_buy_price);
+    });
+
+    const prices = await Promise.all(pricePromises);
+    const holdingsValue = holdings.reduce(
+      (sum: number, h: { ticker: string; shares: number; avg_buy_price: number }, i: number) => sum + Number(h.shares) * prices[i],
+      0
+    );
+
+    enrichedHoldings = holdings.map((h: { ticker: string; shares: number; avg_buy_price: number }, i: number) => ({
+      ticker: h.ticker,
+      shares: Number(h.shares),
+      avg_buy_price: Number(h.avg_buy_price),
+      current_price: prices[i],
+    }));
+  }
 
   // Time-aware greeting (computed on the server)
   const hour = new Date().getHours();
@@ -63,7 +108,7 @@ export default async function DashboardPage() {
           initialTotalValue={totalValue}
           username={username}
           greeting={greeting}
-          holdings={holdings ?? []}
+          holdings={enrichedHoldings}
           transactions={transactions ?? []}
         />
       </div>

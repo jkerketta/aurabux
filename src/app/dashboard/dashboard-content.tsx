@@ -13,6 +13,7 @@ interface Holding {
   ticker: string;
   shares: number;
   avg_buy_price: number;
+  current_price: number;
 }
 
 interface Transaction {
@@ -229,13 +230,22 @@ export function DashboardContent({
                     Avg Buy Price
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Cost Basis
+                    Current Price
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
+                    Current Value
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-neutral-500">
+                    P&amp;L
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
                 {holdings.map((h) => {
-                  const currentValue = h.shares * h.avg_buy_price;
+                  const currentValue = h.shares * h.current_price;
+                  const costBasis = h.shares * h.avg_buy_price;
+                  const pnl = currentValue - costBasis;
+                  const isPnlPositive = pnl >= 0;
                   return (
                     <tr key={h.ticker} className="group">
                       <td className="px-6 py-4 text-sm font-semibold text-black">
@@ -247,8 +257,20 @@ export function DashboardContent({
                       <td className="px-6 py-4 text-right text-sm text-neutral-700">
                         {formatCurrency(h.avg_buy_price)}
                       </td>
+                      <td className="px-6 py-4 text-right text-sm text-neutral-700">
+                        {formatCurrency(h.current_price)}
+                      </td>
                       <td className="px-6 py-4 text-right text-sm font-medium text-black">
                         {formatCurrency(currentValue)}
+                      </td>
+                      <td
+                        className={cn(
+                          "px-6 py-4 text-right text-sm font-medium",
+                          isPnlPositive ? "text-[#00C805]" : "text-[#FF4444]"
+                        )}
+                      >
+                        {isPnlPositive ? "+" : ""}
+                        {formatCurrency(pnl)}
                       </td>
                     </tr>
                   );
