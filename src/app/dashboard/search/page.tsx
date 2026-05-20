@@ -139,9 +139,9 @@ function SearchPageInner() {
           </motion.p>
         )}
 
-        {searchResults.map((result: SearchResult) => (
+        {searchResults.map((result: SearchResult, index: number) => (
           <motion.div
-            key={result.symbol}
+            key={`${result.symbol}-${result.displaySymbol}-${index}`}
             layout
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
