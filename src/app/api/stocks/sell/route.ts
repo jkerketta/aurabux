@@ -33,14 +33,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!shares || typeof shares !== "number" || shares <= 0) {
+    if (typeof shares !== "number" || shares <= 0) {
       return NextResponse.json(
         { error: "shares must be a positive number" },
         { status: 400 }
       );
     }
 
-    if (!pricePerShare || typeof pricePerShare !== "number" || pricePerShare <= 0) {
+    if (typeof pricePerShare !== "number" || pricePerShare <= 0) {
       return NextResponse.json(
         { error: "pricePerShare must be a positive number" },
         { status: 400 }

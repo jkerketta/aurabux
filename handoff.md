@@ -48,7 +48,7 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
 - ✅ Sell Flow: Share validation, holdings update/delete, transaction recording, compensation on failure
 - ✅ Toast Notifications: Sonner (top-center, 3s, white box, black text)
 - ✅ Portfolio auto-create on first buy (service role bypasses RLS)
-- ✅ Canadian stocks (.TO) blocked at search and buy level
+- ✅ Canadian stocks (.TO) blocked at search, buy, and sell level
 - ✅ Holdings table: Clickable rows, simplified 2-column layout
 - ✅ Transactions table: Left-aligned, tinted badges
 - ✅ Eye icon: Hides values with dots, fixed card heights
@@ -156,5 +156,5 @@ When starting a new session:
 1. Read this `handoff.md` file
 2. Check current branch: `git branch` (should be `feat/stock-search`)
 3. Check recent commits: `git log --oneline -5`
-4. Next task: Implement Sell feature (see "Next Goals" above)
+4. Next task: Portfolio Total Value with Live Prices (see "Next Goals" above)
 5. Use `@fixer` for bounded implementation work, `@oracle` for architecture decisions

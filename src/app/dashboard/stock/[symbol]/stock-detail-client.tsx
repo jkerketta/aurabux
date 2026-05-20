@@ -236,7 +236,7 @@ export function StockDetailClient({
     }
 
     // Client-side balance check for fast feedback
-    if (totalCost > effectiveBalance) {
+    if (totalCost > availableBalance) {
       setBuyError("Insufficient ABX balance");
       return;
     }
@@ -360,7 +360,6 @@ export function StockDetailClient({
   const chartColor = isUp ? "#00C805" : "#FF4444";
 
   const currentPrice = quoteData?.currentPrice ?? 0;
-  const effectiveBalance = availableBalance;
   const computedShares =
     buyMode === "abx" && buyInput
       ? parseFloat(buyInput) / currentPrice
@@ -737,7 +736,7 @@ export function StockDetailClient({
                   <p className="mb-4 text-xs text-muted-foreground">
                     Available:{" "}
                     <span className="font-medium text-black">
-                      {formatCurrency(effectiveBalance)} ABX
+                      {formatCurrency(availableBalance)} ABX
                     </span>
                   </p>
 
