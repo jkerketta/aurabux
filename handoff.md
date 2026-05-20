@@ -38,12 +38,14 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
   - RLS policies for friendships CRUD
 - **Friends System**:
   - API routes: `/api/friends` (list, request), `/api/friends/accept`, `/api/friends/decline`, `/api/friends/remove`, `/api/friends/cancel`, `/api/friends/search`
-  - Friends modal via navbar dropdown (3 tabs: Friends, Search, Pending)
-  - 50 friend max, username search, friendship status indicators
+  - Friends modal via navbar dropdown (2 tabs: Friends, Requests)
+  - Requests tab: search bar with format validation (`displayname#002`), send button, incoming/outgoing sections
+  - 50 friend max, exact match search, friendship status indicators
 - **Leaderboard**:
-  - API: `/api/leaderboard?type=global|friends` with live price calculation
-  - Page: `/dashboard/leaderboard` with Global/Friends tabs
-  - Gold/silver/bronze rank badges, current user highlight, gain/loss %
+  - API: `/api/leaderboard?type=global` with live price calculation
+  - Page: `/dashboard/leaderboard` (Global only, no Friends tab)
+  - Crown icon for rank 1, gold/silver/bronze badges for 2/3
+  - Current user highlight, gain/loss %
 
 ### 4. End-of-Day Portfolio Recalculation (DEFERRED)
 - Not implemented. Would require Supabase Edge Function + cron
@@ -57,18 +59,19 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
 - ✅ Auth (login/signup with email + Google, Supabase SSR)
 - ✅ Dashboard: Portfolio Value, ABX Balance, Investments, Holdings, Transactions
 - ✅ Stock Search: Debounced search via Finnhub, preserves `?q=` in URL
-- ✅ Stock Detail: Chart (1D/1M/1Y/5Y), Buy panel, Position panel, Company Info
+- ✅ Stock Detail: Chart (1D/1M/1Y/5Y), Buy/Sell panel, Position panel, Company Info
 - ✅ Buy Flow: Balance validation, holdings upsert, transaction recording
 - ✅ Sell Flow: Share validation, holdings update/delete, transaction recording, compensation on failure
 - ✅ Toast Notifications: Sonner (top-center, 3s, white box, black text)
-- ✅ Friends System: Friendships table, modal with Search/Friends/Pending tabs, 50 friend max
-- ✅ Leaderboard: Global + Friends tabs, live price calculation, gold/silver/bronze ranks
+- ✅ Friends System: Friendships table, modal with Friends/Requests tabs, 50 friend max
+- ✅ Leaderboard: Global tab only, live price calculation, crown for #1, gold/silver/bronze ranks
 - ✅ Navbar Dropdown: Username + display_number trigger, Friends modal, Sign out
 - ✅ Portfolio auto-create on first buy (service role bypasses RLS)
 - ✅ Canadian stocks (.TO) blocked at search, buy, and sell level
 - ✅ Holdings table: Clickable rows, simplified 2-column layout
 - ✅ Transactions table: Left-aligned, tinted badges
 - ✅ Eye icon: Hides values with dots, fixed card heights
+- ✅ Performance: In-memory caching for all stock API routes (30s-1hr TTL)
 
 ### Key Files
 | File | Purpose |
@@ -76,15 +79,16 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
 | `src/app/dashboard/page.tsx` | Dashboard server component, fetches portfolio + holdings + live prices |
 | `src/app/dashboard/dashboard-content.tsx` | Dashboard client UI (stats, holdings, transactions) |
 | `src/app/dashboard/stock/[symbol]/page.tsx` | Stock detail server component (fetches quote, candles, profile, user holding) |
-| `src/app/dashboard/stock/[symbol]/stock-detail-client.tsx` | Stock detail client UI (chart, buy panel, position panel, company info) |
+| `src/app/dashboard/stock/[symbol]/stock-detail-client.tsx` | Stock detail client UI (chart, buy/sell panel, position panel, company info) |
+| `src/app/dashboard/stock/[symbol]/loading.tsx` | Loading skeleton for stock detail page |
 | `src/app/api/stocks/buy/route.ts` | Buy logic with service role fallback for portfolio creation |
 | `src/app/api/stocks/sell/route.ts` | Sell logic: validate shares, update holdings, record transaction, compensation |
 | `src/lib/cache.ts` | In-memory cache with TTL for API responses |
 | `src/app/api/friends/route.ts` | Friends list + send request API |
-| `src/app/api/friends/search/route.ts` | Search users by username with friendship status |
+| `src/app/api/friends/search/route.ts` | Search users by exact `displayname#002` format |
 | `src/app/api/leaderboard/route.ts` | Leaderboard with live price calculation (global + friends) |
-| `src/components/friends/friends-modal.tsx` | Friends modal with Search/Friends/Pending tabs |
-| `src/app/dashboard/leaderboard/page.tsx` | Leaderboard page with Global/Friends tabs |
+| `src/components/friends/friends-modal.tsx` | Friends modal with Friends/Requests tabs |
+| `src/app/dashboard/leaderboard/page.tsx` | Leaderboard page (Global only) |
 | `src/app/api/stocks/quote/route.ts` | Quote API: Finnhub → Yahoo fallback chain |
 | `src/app/api/stocks/candles/route.ts` | Chart data via Yahoo Finance `/v8/finance/chart` |
 | `src/app/api/stocks/search/route.ts` | Search via Finnhub, filters out .TO stocks |
@@ -96,6 +100,7 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
 | `supabase/migrations/002_holdings_and_transactions.sql` | Holdings + transactions tables, RLS |
 | `supabase/migrations/004_grant_service_role_permissions.sql` | GRANT table permissions to service_role |
 | `supabase/migrations/005_grant_authenticated_permissions.sql` | GRANT table permissions to authenticated |
+| `supabase/migrations/006_social.sql` | Friendships table, display_number, RLS policies |
 
 ---
 
@@ -111,6 +116,9 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
 | Market cap shows millions instead of trillions | Finnhub `marketCapitalization` is in millions | Multiply by `1_000_000` in profile route |
 | Webpack runtime error on specific tickers | Server component passed invalid data to client | Price fallback from candles when quote APIs fail |
 | LSP errors on Windows | UNC paths (`\\wsl.localhost\...`) break module resolution | Run builds/commands via `wsl -d Ubuntu -- bash -c "..."` |
+| Next.js 9.3.3 in package.json | Wrong version, doesn't support App Router | Changed to `^15.1.0` |
+| `next.config.ts` not supported | Next.js 15.1.0 doesn't support `.ts` config | Renamed to `next.config.js` |
+| Sequence START value < MINVALUE | PostgreSQL sequence defaults minvalue=1 | Added `minvalue 0` to sequence creation |
 
 ---
 
@@ -129,9 +137,10 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
 
 ### UI Patterns
 - **Tailwind CSS v4** — Uses `@tailwindcss/postcss` plugin, no `tailwind.config.js`
-- **shadcn/ui** — Card, Button, Input, Badge primitives at `@/components/ui/`
+- **shadcn/ui** — Card, Button, Input, Badge, Dialog, DropdownMenu, Tabs primitives at `@/components/ui/`
 - **Recharts** — AreaChart for stock price visualization
 - **Framer Motion** — Staggered animations on dashboard sections
+- **Sonner** — Toast notifications (top-center, 3s, white box, black text)
 - **Wealthsimple aesthetic** — Monotone base, green `#00C805`/red `#FF4444` for P&L, tinted pills
 
 ---
@@ -169,7 +178,7 @@ Required env vars (see `.env.example`):
 - `FINNHUB_API_KEY`
 
 ## Database
-- Run migrations in Supabase SQL Editor in order: `001` → `002` → `004` → `005`
+- Run migrations in Supabase SQL Editor in order: `001` → `002` → `004` → `005` → `006`
 - `003` was deleted (no longer needed after service role fix)
 
 ---
@@ -179,5 +188,5 @@ When starting a new session:
 1. Read this `handoff.md` file
 2. Check current branch: `git branch` (should be `feat/stock-search`)
 3. Check recent commits: `git log --oneline -5`
-4. Next task: Portfolio Total Value with Live Prices (see "Next Goals" above)
+4. Next task: TBD (all current goals complete)
 5. Use `@fixer` for bounded implementation work, `@oracle` for architecture decisions
