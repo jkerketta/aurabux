@@ -141,16 +141,6 @@ export function DashboardContent({
             <p className="text-5xl font-bold tracking-tight text-black">
               {displayTotalValue} ABX
             </p>
-            <div className="mt-4">
-              <div className={cn(
-                "inline-flex items-center rounded-full px-3 py-1.5 text-sm font-semibold",
-                isAllTimePositive
-                  ? "bg-[#00C805]/10 text-[#00A804]"
-                  : "bg-[#FF4444]/10 text-[#CC3333]"
-              )}>
-                {isAllTimePositive ? "+" : ""}{allTimeReturn.toFixed(2)}% all time
-              </div>
-            </div>
           </CardContent>
         </Card>
       </motion.div>
@@ -165,7 +155,7 @@ export function DashboardContent({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold tracking-tight text-[#00C805]">
+            <p className="text-3xl font-bold tracking-tight text-black">
               {displayBalance}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">ABX</p>
@@ -183,6 +173,18 @@ export function DashboardContent({
             <p className="text-3xl font-bold tracking-tight text-black">
               {displayInvestments}
             </p>
+            {showValues && (
+              <div className="mt-2">
+                <div className={cn(
+                  "inline-flex items-center rounded-full px-3 py-1.5 text-sm font-semibold",
+                  isAllTimePositive
+                    ? "bg-[#00C805]/10 text-[#00A804]"
+                    : "bg-[#FF4444]/10 text-[#CC3333]"
+                )}>
+                  {isAllTimePositive ? "+" : ""}{allTimeReturn.toFixed(2)}% all time
+                </div>
+              </div>
+            )}
             <p className="mt-1 text-xs text-muted-foreground">ABX</p>
           </CardContent>
         </Card>
