@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cache, TTL } from "@/lib/cache";
 
 const YAHOO_BASE = "https://query1.finance.yahoo.com/v8/finance/chart";
 
@@ -56,6 +57,13 @@ export async function GET(request: NextRequest) {
     }
 
     const config = RANGE_MAP[range];
+    const cacheKey = `candles:${symbol}:${range}`;
+
+    // Check cache first
+    const cached = cache.get<Record<string, unknown>>(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
 
     // Single request — no retry
     const response = await fetchCandles(
@@ -68,11 +76,13 @@ export async function GET(request: NextRequest) {
     // If Yahoo returns 404, log and return no_data directly
     if (response.status === 404) {
       console.warn(`Yahoo Finance returned 404 for ${symbol}, no data available`);
-      return NextResponse.json({
+      const result = {
         timestamps: [],
         closes: [],
         status: "no_data",
-      });
+      };
+      cache.set(cacheKey, result, TTL.CANDLES);
+      return NextResponse.json(result);
     }
 
     // Log request details and response status in dev mode
@@ -83,11 +93,13 @@ export async function GET(request: NextRequest) {
     }
 
     if (!response.ok) {
-      return NextResponse.json({
+      const result = {
         timestamps: [],
         closes: [],
         status: "no_data",
-      });
+      };
+      cache.set(cacheKey, result, TTL.CANDLES);
+      return NextResponse.json(result);
     }
 
     const json = await response.json();
@@ -103,11 +115,13 @@ export async function GET(request: NextRequest) {
     const error = json?.chart?.error;
 
     if (!result || error) {
-      return NextResponse.json({
+      const noData = {
         timestamps: [],
         closes: [],
         status: "no_data",
-      });
+      };
+      cache.set(cacheKey, noData, TTL.CANDLES);
+      return NextResponse.json(noData);
     }
 
     const timestamps: number[] = result.timestamp ?? [];
@@ -123,18 +137,25 @@ export async function GET(request: NextRequest) {
     }
 
     if (paired.length === 0) {
-      return NextResponse.json({
+      const noData = {
         timestamps: [],
         closes: [],
         status: "no_data",
-      });
+      };
+      cache.set(cacheKey, noData, TTL.CANDLES);
+      return NextResponse.json(noData);
     }
 
-    return NextResponse.json({
+    const resultData = {
       timestamps: paired.map((p) => p.t),
       closes: paired.map((p) => p.c),
       status: "ok",
-    });
+    };
+
+    // Cache the result
+    cache.set(cacheKey, resultData, TTL.CANDLES);
+
+    return NextResponse.json(resultData);
   } catch (error) {
     console.error("Stock candles error:", error);
     const message =

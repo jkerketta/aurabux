@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cache, TTL } from "@/lib/cache";
 
 const FINNHUB_BASE = "https://finnhub.io/api/v1";
 
@@ -28,6 +29,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Check cache first
+    const cached = cache.get<Record<string, unknown>>(`profile:${symbol}`);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
+
     const apiKey = process.env.FINNHUB_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
@@ -41,7 +48,9 @@ export async function GET(request: NextRequest) {
 
     // 403 = free tier limitation, 404 = symbol not found → return null
     if (response.status === 403 || response.status === 404) {
-      return NextResponse.json({ marketCap: null, exchange: null, weburl: null });
+      const result = { marketCap: null, exchange: null, weburl: null };
+      cache.set(`profile:${symbol}`, result, TTL.PROFILE);
+      return NextResponse.json(result);
     }
 
     if (!response.ok) {
@@ -52,14 +61,21 @@ export async function GET(request: NextRequest) {
 
     // Finnhub returns an empty object for unknown symbols
     if (!data || Object.keys(data).length === 0) {
-      return NextResponse.json({ marketCap: null, exchange: null, weburl: null });
+      const result = { marketCap: null, exchange: null, weburl: null };
+      cache.set(`profile:${symbol}`, result, TTL.PROFILE);
+      return NextResponse.json(result);
     }
 
-    return NextResponse.json({
+    const result = {
       marketCap: data.marketCapitalization ? data.marketCapitalization * 1_000_000 : null,
       exchange: data.exchange ?? null,
       weburl: data.weburl ?? null,
-    });
+    };
+
+    // Cache the result
+    cache.set(`profile:${symbol}`, result, TTL.PROFILE);
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Stock profile error:", error);
     return NextResponse.json(

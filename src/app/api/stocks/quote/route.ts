@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cache, TTL } from "@/lib/cache";
 
 const FINNHUB_BASE = "https://finnhub.io/api/v1";
 const YAHOO_QUOTE_BASE = "https://query1.finance.yahoo.com/v7/finance/quote";
@@ -136,6 +137,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Check cache first
+    const cached = cache.get<Record<string, unknown>>(`quote:${symbol}`);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
+
     const quote = await fetchQuote(symbol);
 
     if (!quote) {
@@ -146,6 +153,9 @@ export async function GET(request: NextRequest) {
         { status: 404 },
       );
     }
+
+    // Cache the result
+    cache.set(`quote:${symbol}`, quote, TTL.QUOTE);
 
     return NextResponse.json(quote);
   } catch (error) {

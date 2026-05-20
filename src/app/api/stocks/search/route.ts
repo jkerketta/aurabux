@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cache, TTL } from "@/lib/cache";
 
 const FINNHUB_BASE = "https://finnhub.io/api/v1";
 
@@ -9,6 +10,12 @@ export async function GET(request: NextRequest) {
 
     if (!query) {
       return NextResponse.json({ results: [] });
+    }
+
+    // Check cache first
+    const cached = cache.get<{ results: unknown[] }>(`search:${query.toLowerCase()}`);
+    if (cached) {
+      return NextResponse.json(cached);
     }
 
     const apiKey = process.env.FINNHUB_API_KEY;
@@ -38,7 +45,12 @@ export async function GET(request: NextRequest) {
       )
       .filter((r: { symbol: string }) => !r.symbol.endsWith(".TO"));
 
-    return NextResponse.json({ results });
+    const responseData = { results };
+
+    // Cache the result
+    cache.set(`search:${query.toLowerCase()}`, responseData, TTL.SEARCH);
+
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error("Stock search error:", error);
     return NextResponse.json(
