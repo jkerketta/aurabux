@@ -55,8 +55,9 @@ export async function POST(request: NextRequest) {
 
     const totalCost = shares * pricePerShare;
 
-    // Fetch user's portfolio
-    const { data: portfolio, error: portfolioError } = await supabase
+    // Fetch user's portfolio (use admin client to bypass RLS for reliable read)
+    const adminClient = createAdminClient();
+    const { data: portfolio, error: portfolioError } = await adminClient
       .from("portfolios")
       .select("abx_balance, total_value")
       .eq("user_id", user.id)
@@ -65,25 +66,44 @@ export async function POST(request: NextRequest) {
     let currentBalance: number;
 
     if (portfolioError || !portfolio) {
-      // Auto-heal: create portfolio if missing (use admin client to bypass RLS)
-      const adminClient = createAdminClient();
-      const { error: insertError } = await adminClient
+      // Auto-heal: create portfolio if missing
+      console.log("Portfolio not found for user, creating one...");
+      const { data: newPortfolio, error: insertError } = await adminClient
         .from("portfolios")
         .insert({
           user_id: user.id,
           abx_balance: 1000,
           total_value: 1000,
-        });
+        })
+        .select("abx_balance")
+        .single();
 
       if (insertError) {
         console.error("Failed to create portfolio:", insertError);
-        return NextResponse.json(
-          { error: "Failed to initialize portfolio" },
-          { status: 500 }
-        );
+        // If insert failed due to unique constraint, portfolio exists — try reading again
+        if (insertError.code === "23505") {
+          const { data: retryPortfolio } = await adminClient
+            .from("portfolios")
+            .select("abx_balance")
+            .eq("user_id", user.id)
+            .single();
+          if (retryPortfolio) {
+            currentBalance = Number(retryPortfolio.abx_balance);
+          } else {
+            return NextResponse.json(
+              { error: "Failed to initialize portfolio" },
+              { status: 500 }
+            );
+          }
+        } else {
+          return NextResponse.json(
+            { error: "Failed to initialize portfolio" },
+            { status: 500 }
+          );
+        }
+      } else {
+        currentBalance = Number(newPortfolio.abx_balance);
       }
-
-      currentBalance = 1000;
     } else {
       currentBalance = Number(portfolio.abx_balance);
     }
