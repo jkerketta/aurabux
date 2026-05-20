@@ -615,7 +615,7 @@ export function StockDetailClient({
           </Card>
 
           {/* Company Info */}
-          <Card>
+          <Card className="mt-6">
             <CardContent className="p-6">
               <h3 className="mb-4 text-base font-semibold text-black">
                 Company Info

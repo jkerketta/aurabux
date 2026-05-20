@@ -11,14 +11,24 @@ export default async function DashboardLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Middleware already handles auth redirects, but we need user for Navbar
   if (!user) {
     return null;
   }
 
+  // Fetch display_number from users table
+  const { data: profile } = await supabase
+    .from("users")
+    .select("username, display_number")
+    .eq("id", user.id)
+    .single();
+
   return (
     <div className="min-h-screen bg-white">
-      <Navbar user={user} />
+      <Navbar
+        user={user}
+        username={profile?.username ?? user.email?.split("@")[0] ?? "User"}
+        displayNumber={profile?.display_number ?? ""}
+      />
       <main className="mx-auto max-w-5xl px-8 py-12">{children}</main>
     </div>
   );

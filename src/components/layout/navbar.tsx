@@ -1,13 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Users, LogOut } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { FriendsModal } from "@/components/friends/friends-modal";
 
 interface NavbarProps {
   user: User;
+  username: string;
+  displayNumber: string;
 }
 
 const navLinks = [
@@ -16,10 +26,11 @@ const navLinks = [
   { href: "/dashboard/leaderboard", label: "Leaderboard" },
 ];
 
-export default function Navbar({ user }: NavbarProps) {
-  const supabase = createClient();
+export default function Navbar({ user, username, displayNumber }: NavbarProps) {
+  const [friendsOpen, setFriendsOpen] = useState(false);
 
   const handleLogout = async () => {
+    const supabase = createClient();
     await supabase.auth.signOut();
     window.location.href = "/login";
   };
@@ -45,19 +56,29 @@ export default function Navbar({ user }: NavbarProps) {
       </div>
 
       {/* User Menu - Right */}
-      <div className="flex items-center gap-4">
-        <button className="flex items-center gap-1 text-sm text-muted-foreground transition hover:text-foreground">
-          {user.email?.split("@")[0]}
-          <ChevronDown className="h-4 w-4" />
-        </button>
-        <Button
-          onClick={handleLogout}
-          variant="ghost"
-          className="text-muted-foreground hover:text-foreground hover:bg-neutral-100"
-        >
-          Sign out
-        </Button>
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="flex items-center gap-1 text-sm text-muted-foreground transition hover:text-foreground">
+            {username}
+            {displayNumber && (
+              <span className="text-xs text-neutral-400">({displayNumber})</span>
+            )}
+            <ChevronDown className="h-4 w-4" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem onClick={() => setFriendsOpen(true)}>
+            <Users className="mr-2 h-4 w-4" />
+            Friends
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <FriendsModal open={friendsOpen} onOpenChange={setFriendsOpen} />
     </nav>
   );
 }
