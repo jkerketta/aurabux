@@ -86,6 +86,8 @@ export default async function DashboardPage() {
       avg_buy_price: Number(h.avg_buy_price),
       current_price: prices[i],
     }));
+
+    totalValue = balance + holdingsValue;
   }
 
   // Time-aware greeting (computed on the server)
