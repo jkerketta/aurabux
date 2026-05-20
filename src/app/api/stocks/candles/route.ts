@@ -11,6 +11,30 @@ const RANGE_MAP: Record<Range, { yahooRange: string; interval: string }> = {
   "5Y": { yahooRange: "5y", interval: "1d" },
 };
 
+/** Headers that mimic a real browser to reduce blocking likelihood. */
+function buildHeaders(userAgent?: string) {
+  return {
+    "User-Agent":
+      userAgent ??
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    Accept: "application/json",
+    "Accept-Language": "en-US,en;q=0.9",
+    Referer: "https://finance.yahoo.com/",
+  };
+}
+
+async function fetchCandles(
+  symbol: string,
+  interval: string,
+  yahooRange: string,
+  headers: Record<string, string>,
+) {
+  const url = `${YAHOO_BASE}/${encodeURIComponent(symbol)}?interval=${interval}&range=${yahooRange}`;
+  const response = await fetch(url, { headers });
+
+  return response;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -20,36 +44,76 @@ export async function GET(request: NextRequest) {
     if (!symbol) {
       return NextResponse.json(
         { error: "Symbol query parameter is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!(range in RANGE_MAP)) {
       return NextResponse.json(
         { error: "Range must be one of: 1D, 1M, 1Y, 5Y" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const config = RANGE_MAP[range];
-    const url = `${YAHOO_BASE}/${encodeURIComponent(symbol)}?interval=${config.interval}&range=${config.yahooRange}`;
-    const response = await fetch(url, {
-      headers: {
-        // Mimic a browser to avoid bare-minimum blocking
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        Accept: "application/json",
-      },
-    });
+
+    // Attempt with primary headers
+    let response = await fetchCandles(
+      symbol,
+      config.interval,
+      config.yahooRange,
+      buildHeaders(),
+    );
+
+    // If Yahoo returns 404, try with an alternative User-Agent in case of blocking
+    if (response.status === 404) {
+      console.warn(
+        `Yahoo Finance returned 404 for ${symbol}, retrying with alternate User-Agent...`,
+      );
+
+      // Log the full response for debugging in dev mode
+      if (process.env.NODE_ENV === "development") {
+        try {
+          const errorBody = await response.clone().text();
+          console.warn(
+            `Yahoo Finance 404 response body for ${symbol}:`,
+            errorBody,
+          );
+        } catch {
+          // ignore clone error
+        }
+      }
+
+      response = await fetchCandles(
+        symbol,
+        config.interval,
+        config.yahooRange,
+        buildHeaders(
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
+        ),
+      );
+    }
+
+    // Log request details and response status in dev mode
+    if (process.env.NODE_ENV === "development") {
+      console.log(
+        `Yahoo Finance candles request for ${symbol}: status=${response.status}, url=${response.url}`,
+      );
+    }
 
     if (!response.ok) {
-      throw new Error(`Yahoo Finance API responded with ${response.status}`);
+      throw new Error(
+        `Yahoo Finance API responded with ${response.status} for symbol ${symbol}`,
+      );
     }
 
     const json = await response.json();
 
     if (process.env.NODE_ENV === "development") {
-      console.log("Yahoo Finance candles response:", JSON.stringify(json, null, 2));
+      console.log(
+        "Yahoo Finance candles response:",
+        JSON.stringify(json, null, 2),
+      );
     }
 
     const result = json?.chart?.result?.[0];
@@ -90,9 +154,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Stock candles error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch price history" },
-      { status: 500 }
-    );
+    const message =
+      error instanceof Error ? error.message : "Failed to fetch price history";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

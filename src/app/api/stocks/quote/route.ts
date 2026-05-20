@@ -1,97 +1,66 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const YAHOO_BASE_V7 = "https://query1.finance.yahoo.com/v7/finance/quote";
-const YAHOO_BASE_V8 = "https://query1.finance.yahoo.com/v8/finance/chart";
+const FINNHUB_BASE = "https://finnhub.io/api/v1";
 
-/** Shared headers that mimic a real browser request. */
-const FETCH_HEADERS = {
-  "User-Agent":
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-  Accept: "application/json",
-  "Accept-Language": "en-US,en;q=0.9",
-};
+// ─── Finnhub Quote endpoint ──────────────────────────────────────────
 
-// ─── V7 Quote endpoint ────────────────────────────────────────────────
+interface FinnhubQuoteResponse {
+  c: number; // current price
+  d: number | null; // change
+  dp: number | null; // percent change
+  h: number; // high
+  l: number; // low
+  o: number; // open
+  pc: number; // previous close
+  t: number; // timestamp
+}
 
-async function fetchQuoteV7(symbol: string) {
-  const url = `${YAHOO_BASE_V7}?symbols=${encodeURIComponent(symbol)}`;
-  const response = await fetch(url, { headers: FETCH_HEADERS });
+async function fetchQuote(symbol: string) {
+  const apiKey = process.env.FINNHUB_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("FINNHUB_API_KEY is not configured");
+  }
+
+  const url = `${FINNHUB_BASE}/quote?symbol=${encodeURIComponent(symbol)}&token=${apiKey}`;
+  const response = await fetch(url);
+
+  // Handle specific HTTP status codes
+  if (response.status === 403) {
+    throw new Error(
+      "Finnhub API authentication failed. Check your FINNHUB_API_KEY.",
+    );
+  }
+
+  if (response.status === 404) {
+    return null; // symbol not found
+  }
 
   if (!response.ok) {
-    throw new Error(`Yahoo Finance v7 responded with ${response.status}`);
+    throw new Error(`Finnhub API responded with ${response.status}`);
   }
 
-  const data = await response.json();
+  const data: FinnhubQuoteResponse = await response.json();
 
-  // Dev-mode logging to inspect response shape
-  console.log("Yahoo quote response:", JSON.stringify(data, null, 2));
-
-  const result = data?.quoteResponse?.result?.[0];
-
-  if (!result) {
-    return null;
-  }
-
-  const currentPrice = result.regularMarketPrice;
-
-  if (currentPrice === undefined || currentPrice === null) {
+  // Finnhub returns an empty object or missing fields for unknown symbols
+  // The `c` field is 0 when no data is available (or symbol is invalid)
+  if (data.c === undefined || data.c === null || data.c === 0) {
     return null;
   }
 
   return {
     symbol,
-    currentPrice,
-    change: result.regularMarketChange ?? 0,
-    changePercent: result.regularMarketChangePercent ?? 0,
-    high: result.regularMarketDayHigh ?? 0,
-    low: result.regularMarketDayLow ?? 0,
-    open: result.regularMarketOpen ?? 0,
-    previousClose: result.regularMarketPreviousClose ?? 0,
+    currentPrice: data.c,
+    change: data.d ?? 0,
+    changePercent: data.dp ?? 0,
+    high: data.h ?? 0,
+    low: data.l ?? 0,
+    open: data.o ?? 0,
+    previousClose: data.pc ?? 0,
   };
 }
 
-// ─── V8 Chart fallback (extracts last close price) ────────────────────
-
-async function fetchQuoteV8(symbol: string) {
-  const url = `${YAHOO_BASE_V8}/${encodeURIComponent(symbol)}?range=1d&interval=1d`;
-  const response = await fetch(url, { headers: FETCH_HEADERS });
-
-  if (!response.ok) {
-    throw new Error(`Yahoo Finance v8 responded with ${response.status}`);
-  }
-
-  const data = await response.json();
-
-  // Dev-mode logging for v8 fallback as well
-  console.log("Yahoo v8 chart response:", JSON.stringify(data, null, 2));
-
-  const result = data?.chart?.result?.[0];
-  if (!result) {
-    return null;
-  }
-
-  const meta = result.meta;
-  const closes = result.indicators?.quote?.[0]?.close;
-  const lastClose =
-    closes?.[closes.length - 1] ?? meta?.regularMarketPrice ?? null;
-
-  if (lastClose === undefined || lastClose === null) {
-    return null;
-  }
-
-  return {
-    symbol,
-    currentPrice: lastClose,
-    change: 0,
-    changePercent: 0,
-    high: 0,
-    low: 0,
-    open: 0,
-    previousClose: 0,
-  };
-}
-
-// ─── Route handler ────────────────────────────────────────────────────
+// ─── Route handler ───────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
   try {
@@ -105,18 +74,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Attempt v7 first
-    let quote = await fetchQuoteV7(symbol);
-
-    // Fallback to v8 chart endpoint when v7 returns no data
-    if (!quote) {
-      console.log(`v7 returned no data for ${symbol}, trying v8 fallback...`);
-      quote = await fetchQuoteV8(symbol);
-    }
+    const quote = await fetchQuote(symbol);
 
     if (!quote) {
       return NextResponse.json(
-        { error: `No quote data found for symbol: ${symbol}` },
+        {
+          error: `No quote data found for symbol: ${symbol}. Finnhub free tier supports US stocks and major international exchanges.`,
+        },
         { status: 404 },
       );
     }
@@ -124,9 +88,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(quote);
   } catch (error) {
     console.error("Stock quote error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch stock quote" },
-      { status: 500 },
-    );
+    const message =
+      error instanceof Error ? error.message : "Failed to fetch stock quote";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
