@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,8 +65,9 @@ export async function POST(request: NextRequest) {
     let currentBalance: number;
 
     if (portfolioError || !portfolio) {
-      // Auto-heal: create portfolio if missing
-      const { error: insertError } = await supabase
+      // Auto-heal: create portfolio if missing (use admin client to bypass RLS)
+      const adminClient = createAdminClient();
+      const { error: insertError } = await adminClient
         .from("portfolios")
         .insert({
           user_id: user.id,
