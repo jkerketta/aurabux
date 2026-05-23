@@ -9,8 +9,9 @@ create table public.users (
 create table public.portfolios (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references public.users(id) on delete cascade not null unique,
-  abx_balance numeric not null default 1000,
-  total_value numeric not null default 1000,
+  abx_balance numeric not null default 10000,
+  total_value numeric not null default 10000,
+  total_invested numeric not null default 0,
   created_at timestamptz default now()
 );
 
@@ -50,8 +51,8 @@ begin
     new.id,
     coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1))
   );
-  insert into public.portfolios (user_id, abx_balance, total_value)
-  values (new.id, 1000, 1000);
+  insert into public.portfolios (user_id, abx_balance, total_value, total_invested)
+  values (new.id, 10000, 10000, 0);
   return new;
 end;
 $$;
