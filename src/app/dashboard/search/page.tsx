@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ChangeEvent } from "react";
 
@@ -181,16 +182,10 @@ export default function SearchPage() {
     <Suspense
       fallback={
         <div className="mx-auto max-w-3xl">
-          <h1 className="mb-6 text-3xl font-semibold tracking-tight text-black">
-            Search Stocks
-          </h1>
+          <Skeleton className="h-9 w-48 mb-6" />
           <div className="relative mb-6">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search stocks..."
-              className="h-12 pl-10 text-base"
-              disabled
-            />
+            <Skeleton className="h-12 w-full" />
           </div>
         </div>
       }

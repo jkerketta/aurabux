@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Loader2, Crown } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface LeaderboardEntry {
   rank: number;
@@ -60,14 +61,14 @@ function LeaderboardSkeleton() {
           key={i}
           className="flex items-center gap-4 rounded-lg border border-neutral-100 px-4 py-3"
         >
-          <div className="h-7 w-7 rounded-full bg-neutral-100" />
+          <Skeleton className="h-7 w-7 rounded-full" />
           <div className="flex-1 space-y-1">
-            <div className="h-4 w-24 rounded bg-neutral-100" />
-            <div className="h-3 w-12 rounded bg-neutral-100" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-3 w-12" />
           </div>
           <div className="space-y-1 text-right">
-            <div className="h-4 w-20 rounded bg-neutral-100" />
-            <div className="h-3 w-16 rounded bg-neutral-100" />
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-3 w-16 ml-auto" />
           </div>
         </div>
       ))}
