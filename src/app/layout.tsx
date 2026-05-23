@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Aurabux — Fake Stock Trading Game",
-  description: "Start with 1000 ABX and compete with friends by picking real stocks.",
+  description: "Start with 10000 ABX and compete with friends by picking real stocks.",
 };
 
 export default function RootLayout({
