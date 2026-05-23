@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, RotateCw, Zap, Clock } from "lucide-react";
+import { SpinModal } from "@/components/spinner/spin-modal";
+import { X2ClaimModal } from "@/components/spinner/x2-claim-modal";
 
 interface Holding {
   ticker: string;
@@ -33,6 +35,13 @@ interface DashboardContentProps {
   greeting: string;
   holdings: Holding[];
   transactions: Transaction[];
+  totalInvested: number;
+  canSpin: boolean;
+  hasActivePowerup: boolean;
+  activePowerupExpiresAt: string | null;
+  hasExpiredPowerup: boolean;
+  nextResetAt: string | null;
+  freeSpinsRemaining: number;
 }
 
 // Static objects — extracted outside component to avoid recreation on every render
@@ -80,17 +89,51 @@ export function DashboardContent({
   greeting,
   holdings,
   transactions,
+  totalInvested,
+  canSpin,
+  hasActivePowerup,
+  activePowerupExpiresAt,
+  hasExpiredPowerup,
+  nextResetAt,
+  freeSpinsRemaining,
 }: DashboardContentProps) {
   const router = useRouter();
   const [showValues, setShowValues] = useState(true);
+  const [spinModalOpen, setSpinModalOpen] = useState(false);
+  const [claimModalOpen, setClaimModalOpen] = useState(hasExpiredPowerup);
+  const [x2Countdown, setX2Countdown] = useState("");
+
+  // x2 powerup countdown timer
+  useEffect(() => {
+    if (!activePowerupExpiresAt) {
+      setX2Countdown("");
+      return;
+    }
+    const update = () => {
+      const ms = new Date(activePowerupExpiresAt).getTime() - Date.now();
+      if (ms <= 0) {
+        setX2Countdown("");
+        router.refresh();
+        return;
+      }
+      const totalSeconds = Math.floor(ms / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      setX2Countdown(`${hours}h ${String(minutes).padStart(2, "0")}m ${String(seconds).padStart(2, "0")}s`);
+    };
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [activePowerupExpiresAt, router]);
 
   const displayBalance = showValues ? formatCurrency(initialBalance) : "••••••";
   const displayTotalValue = showValues ? formatCurrency(initialTotalValue) : "••••••";
 
-  // All-time portfolio return
-  const allTimeReturn = ((initialTotalValue - 1000) / 1000) * 100;
-  const isAllTimePositive = allTimeReturn >= 0;
+  // All-time portfolio return: based on total invested, not hardcoded 1000
   const investmentsValue = holdings.reduce((sum, h) => sum + h.shares * h.current_price, 0);
+  const allTimeReturn = totalInvested > 0 ? ((investmentsValue - totalInvested) / totalInvested) * 100 : 0;
+  const isAllTimePositive = allTimeReturn >= 0;
   const displayInvestments = showValues ? formatCurrency(investmentsValue) : "••••••";
 
   return (
@@ -158,6 +201,15 @@ export function DashboardContent({
             <p className="text-3xl font-bold tracking-tight text-black">
               {displayBalance} <span className="text-lg font-normal text-muted-foreground">ABX</span>
             </p>
+            <div className="relative mt-3 inline-flex items-center gap-2 cursor-pointer group" onClick={() => setSpinModalOpen(true)}>
+              <RotateCw className={cn("h-4 w-4 transition-colors", canSpin ? "text-black group-hover:text-neutral-600" : "text-neutral-300")} />
+              <span className={cn("text-xs font-semibold uppercase tracking-wider transition-colors", canSpin ? "text-black group-hover:text-neutral-600" : "text-neutral-300")}>
+                Daily Spin
+              </span>
+              {(canSpin) && (
+                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 border border-white" />
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -190,7 +242,17 @@ export function DashboardContent({
 
       {/* Holdings Section */}
       <motion.div variants={itemVariants} className="mb-8">
-        <h2 className="mb-4 text-lg font-semibold tracking-tight text-black">Holdings</h2>
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="text-lg font-semibold tracking-tight text-black">Holdings</h2>
+          {hasActivePowerup && x2Countdown && (
+            <div className="flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 border border-rose-200">
+              <Zap className="h-3.5 w-3.5 text-rose-600 fill-rose-600" />
+              <span className="text-xs font-semibold text-rose-700">2x Returns</span>
+              <Clock className="h-3 w-3 text-rose-400 ml-1" />
+              <span className="text-xs font-mono text-rose-600">{x2Countdown}</span>
+            </div>
+          )}
+        </div>
         {holdings.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
@@ -291,7 +353,16 @@ export function DashboardContent({
               <tbody className="divide-y divide-neutral-100">
                 {transactions.map((t, i) => {
                   const total = t.shares * t.price_per_share;
-                  const isBuy = t.type === "buy";
+                  const colorMap: Record<string, string> = {
+                    buy: "bg-[#00C805]/10 text-[#00A804]",
+                    sell: "bg-[#FF4444]/10 text-[#CC3333]",
+                    spin: "bg-[#6366F1]/10 text-[#6366F1]",
+                  };
+                  const labelMap: Record<string, string> = {
+                    buy: "Buy",
+                    sell: "Sell",
+                    spin: "Spin",
+                  };
                   return (
                     <tr key={`${t.created_at}-${i}`} className="group">
                       <td className="px-6 py-4 text-sm text-neutral-600">
@@ -304,12 +375,10 @@ export function DashboardContent({
                         <Badge
                           className={cn(
                             "rounded-full px-3 py-1.5 text-xs font-semibold",
-                            isBuy
-                              ? "bg-[#00C805]/10 text-[#00A804]"
-                              : "bg-[#FF4444]/10 text-[#CC3333]"
+                            colorMap[t.type] ?? "bg-neutral-100 text-neutral-700"
                           )}
                         >
-                          {isBuy ? "Buy" : "Sell"}
+                          {labelMap[t.type] ?? t.type}
                         </Badge>
                       </td>
                       <td className="px-6 py-4 text-left text-sm text-neutral-700">
@@ -329,6 +398,21 @@ export function DashboardContent({
           </div>
         )}
       </motion.div>
+
+      <SpinModal
+        open={spinModalOpen}
+        onOpenChange={setSpinModalOpen}
+        onSpinComplete={() => router.refresh()}
+        canSpin={canSpin}
+        nextResetAt={nextResetAt}
+        freeSpinsRemaining={freeSpinsRemaining}
+      />
+
+      <X2ClaimModal
+        open={claimModalOpen}
+        onOpenChange={setClaimModalOpen}
+        onClaimComplete={() => router.refresh()}
+      />
     </motion.div>
   );
 }

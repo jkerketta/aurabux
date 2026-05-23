@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     // Fetch user's holding for this symbol
     const { data: holding, error: holdingError } = await supabase
       .from("holdings")
-      .select("shares")
+      .select("shares, avg_buy_price")
       .eq("user_id", user.id)
       .eq("ticker", normalizedSymbol)
       .single();
@@ -71,6 +71,8 @@ export async function POST(request: NextRequest) {
     }
 
     const ownedShares = Number(holding.shares);
+    const avgBuyPrice = Number(holding.avg_buy_price);
+    const costBasis = shares * avgBuyPrice;
     if (ownedShares < shares) {
       return NextResponse.json(
         {
@@ -86,7 +88,7 @@ export async function POST(request: NextRequest) {
     const adminClient = createAdminClient();
     const { data: portfolio, error: portfolioError } = await adminClient
       .from("portfolios")
-      .select("abx_balance")
+      .select("abx_balance, total_invested")
       .eq("user_id", user.id)
       .single();
 
@@ -99,8 +101,9 @@ export async function POST(request: NextRequest) {
         .from("portfolios")
         .insert({
           user_id: user.id,
-          abx_balance: 1000,
-          total_value: 1000,
+          abx_balance: 10000,
+          total_value: 10000,
+          total_invested: 0,
         })
         .select("abx_balance")
         .single();
@@ -134,12 +137,14 @@ export async function POST(request: NextRequest) {
       currentBalance = Number(portfolio.abx_balance);
     }
 
+    const currentTotalInvested = Number(portfolio?.total_invested ?? 0);
+    const newTotalInvested = Math.max(0, currentTotalInvested - costBasis);
     const newBalance = currentBalance + proceeds;
 
-    // Step 1: Add proceeds to balance
+    // Step 1: Add proceeds to balance and decrement total_invested
     const { error: creditError } = await supabase
       .from("portfolios")
-      .update({ abx_balance: newBalance })
+      .update({ abx_balance: newBalance, total_invested: newTotalInvested })
       .eq("user_id", user.id);
 
     if (creditError) {
@@ -184,10 +189,10 @@ export async function POST(request: NextRequest) {
 
       if (txnError) throw txnError;
     } catch (error) {
-      // Compensate: revert the balance credit
+      // Compensate: revert the balance credit and total_invested
       await supabase
         .from("portfolios")
-        .update({ abx_balance: originalBalance })
+        .update({ abx_balance: originalBalance, total_invested: currentTotalInvested })
         .eq("user_id", user.id);
 
       throw error;

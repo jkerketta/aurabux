@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     const adminClient = createAdminClient();
     const { data: portfolio, error: portfolioError } = await adminClient
       .from("portfolios")
-      .select("abx_balance, total_value")
+      .select("abx_balance, total_value, total_invested")
       .eq("user_id", user.id)
       .single();
 
@@ -72,8 +72,9 @@ export async function POST(request: NextRequest) {
         .from("portfolios")
         .insert({
           user_id: user.id,
-          abx_balance: 1000,
-          total_value: 1000,
+          abx_balance: 10000,
+          total_value: 10000,
+          total_invested: 0,
         })
         .select("abx_balance")
         .single();
@@ -108,7 +109,11 @@ export async function POST(request: NextRequest) {
       currentBalance = Number(portfolio.abx_balance);
     }
 
-    if (currentBalance < totalCost) {
+    // Round to 2 decimals to avoid floating-point drift (e.g., 0.34 * 30.41 ≈ 10.3400000001)
+    const roundedBalance = Math.round(currentBalance * 100) / 100;
+    const roundedCost = Math.round(totalCost * 100) / 100;
+
+    if (roundedBalance < roundedCost) {
       return NextResponse.json(
         {
           error: "Insufficient ABX balance",
@@ -121,10 +126,11 @@ export async function POST(request: NextRequest) {
 
     const newBalance = currentBalance - totalCost;
 
-    // Step 1: Deduct balance
+    // Step 1: Deduct balance and increment total_invested
+    const currentTotalInvested = Number(portfolio?.total_invested ?? 0);
     const { error: deductError } = await supabase
       .from("portfolios")
-      .update({ abx_balance: newBalance })
+      .update({ abx_balance: newBalance, total_invested: currentTotalInvested + totalCost })
       .eq("user_id", user.id);
 
     if (deductError) {
@@ -181,10 +187,10 @@ export async function POST(request: NextRequest) {
 
       if (txnError) throw txnError;
     } catch (error) {
-      // Compensate: revert the balance deduction
+      // Compensate: revert the balance deduction and total_invested
       await supabase
         .from("portfolios")
-        .update({ abx_balance: originalBalance })
+        .update({ abx_balance: originalBalance, total_invested: currentTotalInvested })
         .eq("user_id", user.id);
 
       throw error;

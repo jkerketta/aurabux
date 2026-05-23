@@ -11,6 +11,7 @@ interface Holding {
 interface UserPortfolio {
   user_id: string;
   abx_balance: number;
+  total_invested: number;
   holdings: Holding[];
 }
 
@@ -62,7 +63,8 @@ async function calculateLeaderboard(
       0
     );
     const totalValue = Number(p.abx_balance) + holdingsValue;
-    const gainLossPct = ((totalValue - 1000) / 1000) * 100;
+    const totalInvested = Number(p.total_invested ?? 0);
+    const gainLossPct = totalInvested > 0 ? ((totalValue - totalInvested) / totalInvested) * 100 : 0;
 
     return {
       user_id: p.user_id,
@@ -113,7 +115,7 @@ export async function GET(request: NextRequest) {
       // Fetch portfolios for friends
       const { data: friendPortfolios } = await adminClient
         .from("portfolios")
-        .select("user_id, abx_balance")
+        .select("user_id, abx_balance, total_invested")
         .in("user_id", Array.from(friendIds));
 
       // Fetch holdings for friends
@@ -136,13 +138,14 @@ export async function GET(request: NextRequest) {
       portfolios = (friendPortfolios ?? []).map((p) => ({
         user_id: p.user_id,
         abx_balance: Number(p.abx_balance),
+        total_invested: Number(p.total_invested ?? 0),
         holdings: holdingsByUser.get(p.user_id) ?? [],
       }));
     } else {
       // Global: fetch all portfolios and holdings
       const { data: allPortfolios } = await adminClient
         .from("portfolios")
-        .select("user_id, abx_balance")
+        .select("user_id, abx_balance, total_invested")
         .order("abx_balance", { ascending: false })
         .limit(100);
 
@@ -164,6 +167,7 @@ export async function GET(request: NextRequest) {
       portfolios = (allPortfolios ?? []).map((p) => ({
         user_id: p.user_id,
         abx_balance: Number(p.abx_balance),
+        total_invested: Number(p.total_invested ?? 0),
         holdings: holdingsByUser.get(p.user_id) ?? [],
       }));
     }

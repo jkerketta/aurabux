@@ -25,9 +25,9 @@ export default async function StockDetailPage({ params }: Props) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let availableBalance = 1000;
+  let availableBalance = 10000;
   let userHolding: { shares: number; avg_buy_price: number } | null = null;
-  let portfolioTotalValue = 1000;
+  let portfolioTotalValue = 10000;
 
   if (user) {
     const [portfolioResult, holdingResult, allHoldingsResult] =
@@ -49,7 +49,7 @@ export default async function StockDetailPage({ params }: Props) {
           .eq("user_id", user.id),
       ]);
 
-    const balance = Number(portfolioResult.data?.abx_balance ?? 1000);
+    const balance = Number(portfolioResult.data?.abx_balance ?? 10000);
     availableBalance = balance;
 
     if (holdingResult.data) {

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardContent } from "./dashboard-content";
+import { getSpinStatus } from "@/lib/spin";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -17,7 +17,7 @@ export default async function DashboardPage() {
 
   const { data: portfolio } = await supabase
     .from("portfolios")
-    .select("abx_balance")
+    .select("abx_balance, total_invested")
     .eq("user_id", user.id)
     .single();
 
@@ -40,8 +40,29 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
     .limit(10);
 
-  const balance = Number(portfolio?.abx_balance ?? 1000);
+  const balance = Number(portfolio?.abx_balance ?? 10000);
+  const totalInvested = Number(portfolio?.total_invested ?? 0);
   const username = profile?.username ?? "";
+
+  // Fetch spin status directly (no API route needed — avoids cookie issues)
+  let spinStatus = {
+    canSpin: false,
+    nextResetAt: null as string | null,
+    hasActivePowerup: false,
+    activePowerupExpiresAt: null as string | null,
+    hasExpiredPowerup: false,
+    freeSpinsRemaining: 0,
+  };
+  try {
+    spinStatus = await getSpinStatus(user.id);
+  } catch {}
+
+  // Build base URL for stock quote API (doesn't require auth)
+  const { headers } = await import("next/headers");
+  const headersList = await headers();
+  const host = headersList.get("host") ?? "localhost:3000";
+  const protocol = host.includes("localhost") ? "http" : "https";
+  const baseUrl = `${protocol}://${host}`;
 
   // Fetch current prices for each holding and calculate total value
   let enrichedHoldings: Array<{
@@ -53,11 +74,6 @@ export default async function DashboardPage() {
   let totalValue = balance;
 
   if (holdings && holdings.length > 0) {
-    const headersList = await headers();
-    const host = headersList.get("host") ?? "localhost:3000";
-    const protocol = host.includes("localhost") ? "http" : "https";
-    const baseUrl = `${protocol}://${host}`;
-
     const pricePromises = holdings.map(async (h: { ticker: string; shares: number; avg_buy_price: number }) => {
       try {
         const res = await fetch(
@@ -112,6 +128,13 @@ export default async function DashboardPage() {
           greeting={greeting}
           holdings={enrichedHoldings}
           transactions={transactions ?? []}
+          totalInvested={totalInvested}
+          canSpin={spinStatus.canSpin}
+          hasActivePowerup={spinStatus.hasActivePowerup}
+          activePowerupExpiresAt={spinStatus.activePowerupExpiresAt}
+          hasExpiredPowerup={spinStatus.hasExpiredPowerup}
+          nextResetAt={spinStatus.nextResetAt}
+          freeSpinsRemaining={spinStatus.freeSpinsRemaining}
         />
       </div>
     </div>
