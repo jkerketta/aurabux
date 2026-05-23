@@ -6,8 +6,8 @@ interface FriendshipRow {
   status: string;
   requester_id: string;
   addressee_id: string;
-  requester: { id: string; username: string; display_number: string | null }[];
-  addressee: { id: string; username: string; display_number: string | null }[];
+  requester: { id: string; username: string; display_number: string | null } | null;
+  addressee: { id: string; username: string; display_number: string | null } | null;
 }
 
 // GET /api/friends — list friends, incoming requests, outgoing requests
@@ -49,10 +49,9 @@ export async function GET() {
       friendship_id: string;
     }> = [];
 
-    for (const f of (friendships ?? []) as FriendshipRow[]) {
+    for (const f of (friendships ?? []) as unknown as FriendshipRow[]) {
       const isRequester = f.requester_id === user.id;
-      const otherUsers = isRequester ? f.addressee : f.requester;
-      const otherUser = otherUsers?.[0];
+      const otherUser = isRequester ? f.addressee : f.requester;
       if (!otherUser) continue;
 
       if (f.status === "accepted") {
@@ -119,11 +118,15 @@ export async function POST(request: NextRequest) {
 
     const targetUsername = body.username.trim();
 
+    // Parse displayname#002 format — extract just the username part
+    const hashIndex = targetUsername.lastIndexOf("#");
+    const username = hashIndex !== -1 ? targetUsername.slice(0, hashIndex) : targetUsername;
+
     // Find target user
     const { data: targetUser } = await supabase
       .from("users")
       .select("id")
-      .eq("username", targetUsername)
+      .eq("username", username)
       .single();
 
     if (!targetUser) {
