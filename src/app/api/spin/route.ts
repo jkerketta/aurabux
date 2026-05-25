@@ -118,26 +118,7 @@ export async function POST() {
     const reward = { ...rewardPool[randomIndex] };
     const adminSupabase = createAdminClient();
 
-    // Record the spin FIRST
-    const { error: spinError } = await adminSupabase.from("daily_spins").insert({
-      user_id: user.id,
-      reward_type: reward.type,
-      reward_value: reward.value,
-    });
-
-    if (spinError) throw spinError;
-
-    // Decrement free spins if used
-    if (hasFreeSpins) {
-      const { error: updateError } = await adminSupabase
-        .from("portfolios")
-        .update({ free_spins: freeSpins - 1 })
-        .eq("user_id", user.id);
-
-      if (updateError) throw updateError;
-    }
-
-    // Apply reward
+    // Apply reward FIRST — only record the spin after reward succeeds
     if (reward.type === "abx") {
       const { data: currentPortfolio } = await adminSupabase
         .from("portfolios")
@@ -174,14 +155,37 @@ export async function POST() {
         // fallback to 0
       }
 
-      const { error: insertError } = await adminSupabase.from("holdings").insert({
-        user_id: user.id,
-        ticker,
-        shares: 3,
-        avg_buy_price: currentPrice,
-      });
+      // Upsert holding: handle existing holdings to avoid duplicate key error
+      const { data: existingHolding } = await adminSupabase
+        .from("holdings")
+        .select("shares, avg_buy_price")
+        .eq("user_id", user.id)
+        .eq("ticker", ticker)
+        .maybeSingle();
 
-      if (insertError) throw insertError;
+      if (existingHolding) {
+        const oldShares = Number(existingHolding.shares);
+        const oldAvg = Number(existingHolding.avg_buy_price);
+        const totalShares = oldShares + 3;
+        const newAvg = (oldShares * oldAvg + 3 * currentPrice) / totalShares;
+
+        const { error: updateError } = await adminSupabase
+          .from("holdings")
+          .update({ shares: totalShares, avg_buy_price: Math.round(newAvg * 100) / 100 })
+          .eq("user_id", user.id)
+          .eq("ticker", ticker);
+
+        if (updateError) throw updateError;
+      } else {
+        const { error: insertError } = await adminSupabase.from("holdings").insert({
+          user_id: user.id,
+          ticker,
+          shares: 3,
+          avg_buy_price: Math.round(currentPrice * 100) / 100,
+        });
+
+        if (insertError) throw insertError;
+      }
 
       // Record transaction so it shows up in recent history
       const { error: txnError } = await adminSupabase.from("transactions").insert({
@@ -206,6 +210,25 @@ export async function POST() {
       if (updateError) throw updateError;
     }
     // powerup_x2: do NOT auto-insert. User must activate via /api/spin/activate.
+
+    // Record the spin AFTER reward succeeds
+    const { error: spinError } = await adminSupabase.from("daily_spins").insert({
+      user_id: user.id,
+      reward_type: reward.type,
+      reward_value: reward.value,
+    });
+
+    if (spinError) throw spinError;
+
+    // Decrement free spins if used
+    if (hasFreeSpins) {
+      const { error: updateError } = await adminSupabase
+        .from("portfolios")
+        .update({ free_spins: freeSpins - 1 })
+        .eq("user_id", user.id);
+
+      if (updateError) throw updateError;
+    }
 
     // Get updated free spins count
     const { data: updatedPortfolio } = await adminSupabase
