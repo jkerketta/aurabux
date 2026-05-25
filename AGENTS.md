@@ -12,7 +12,7 @@ For deep work on a specific folder, also read that folder's `codemap.md`.
 ## Project
 
 Next.js 15 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Supabase.
-Fake stock trading game: users get 1000 ABX starting balance, pick real stocks, compete with friends.
+Fake stock trading game: users get **10000 ABX** starting balance, pick real stocks, compete with friends.
 Dark-themed, minimal UI. shadcn/ui (new-york style, zinc base, lucide icons).
 
 ## Commands
@@ -32,6 +32,7 @@ Required env vars (see `.env.example`):
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `FINNHUB_API_KEY`
 
 Copy `.env.local` from `.env.example` and fill in Supabase credentials.
 
@@ -42,20 +43,27 @@ Copy `.env.local` from `.env.example` and fill in Supabase credentials.
 /          → auth check → /dashboard or /login
 /login     → email/password + Google sign-in
 /signup    → email/password + Google sign-up
-/dashboard → protected: portfolio overview (ABX balance, total value)
+/dashboard → protected: portfolio overview (ABX balance, total value, daily spin)
+/dashboard/leaderboard → global leaderboard with live prices
+/dashboard/search      → stock search with debounced input
+/dashboard/stock/[symbol] → stock detail with chart, buy/sell, position
 ```
 
 ### Auth flow
 - `src/middleware.ts` — Supabase SSR cookie handling + route protection. Redirects unauthenticated `/dashboard` → `/login`, authenticated `/login`|`/signup` → `/dashboard`.
-- Signup triggers DB function `handle_new_user()` that auto-creates `users` + `portfolios` rows (1000 ABX starting balance).
+- Signup triggers DB function `handle_new_user()` that auto-creates `users` + `portfolios` rows (**10000 ABX** starting balance).
 
 ### Supabase clients
 - `src/lib/supabase/client.ts` — browser client
 - `src/lib/supabase/server.ts` — server/client-agnostic factory
+- `src/lib/supabase/admin.ts` — service role client (bypasses RLS)
 
 ### Database
 - `supabase/migrations/001_initial_schema.sql` — `users` + `portfolios` tables with RLS policies.
+- `supabase/migrations/002_holdings_and_transactions.sql` — `holdings` + `transactions` tables.
+- `supabase/migrations/008_daily_spinner.sql` — `daily_spins` + `powerups` tables.
 - RLS: users can only read/update their own data.
+- `transactions.type` check constraint: `('buy', 'sell', 'spin')`
 
 ### Path alias
 `@/*` → `./src/*` (tsconfig.json)
@@ -63,10 +71,12 @@ Copy `.env.local` from `.env.example` and fill in Supabase credentials.
 ### UI components
 - shadcn/ui primitives at `@/components/ui/`
 - Layout components (Sidebar, Header) at `@/components/layout/`
+- Spinner components at `@/components/spinner/`
+- Skeleton component at `@/components/ui/skeleton.tsx`
 
 ### Styling
 - Tailwind CSS v4 — uses `@tailwindcss/postcss` plugin (no `tailwind.config.js`).
-- Global styles in `src/app/globals.css`.
+- Global styles in `src/app/globals.css` (includes shimmer keyframes).
 - Dark theme by default.
 
 ## Conventions
@@ -74,3 +84,6 @@ Copy `.env.local` from `.env.example` and fill in Supabase credentials.
 - Server components by default; use `"use client"` only when needed (hooks, interactivity).
 - Keep Supabase server calls in server components or route handlers; use `client.ts` only in client components.
 - Follow existing shadcn/ui patterns for new components.
+- Use `createAdminClient()` (service role) only for admin operations (portfolio auto-create, spin rewards).
+- All-time return uses `total_invested` (running net ABX spent on stocks), not hardcoded baseline.
+- Buy balance check rounds both values to 2 decimals to avoid floating-point drift.

@@ -1,7 +1,7 @@
 # ABX-Aurabux Handoff
 
 ## Project Overview
-Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, compete with friends.
+Fake stock trading game. Users get **10000 ABX** starting balance, pick real stocks, compete with friends.
 **Tech Stack**: Next.js 15 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Supabase
 **UI**: shadcn/ui (new-york style, zinc base, lucide icons), dark-themed minimal UI
 **Branch**: `feat/stock-search`
@@ -47,7 +47,48 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
   - Crown icon for rank 1, gold/silver/bronze badges for 2/3
   - Current user highlight, gain/loss %
 
-### 4. End-of-Day Portfolio Recalculation (DEFERRED)
+### 4. ~~Daily Spinner Feature~~ ✅ DONE
+- **Database**: `supabase/migrations/008_daily_spinner.sql` (daily_spins, powerups tables)
+  - `supabase/migrations/009_grant_spinner_permissions.sql` (service_role grants)
+  - `supabase/migrations/010_free_spins.sql` (free_spins column in portfolios)
+  - `supabase/migrations/011_powerup_snapshot.sql` (snapshot_value column)
+  - `supabase/migrations/012_fix_spinner_constraint.sql` (free_spins in check constraint)
+  - `supabase/migrations/015_add_spin_transactions.sql` (spin type in transactions)
+- **Rewards** (equal probability, 8 types): 500/1000/2500/5000/10000 ABX, 3 Free MAG 7 Shares, x2 Returns, 2 Free Spins
+- **API Routes**:
+  - `GET /api/spin` — spin status (cooldown, free spins, powerup state)
+  - `POST /api/spin` — execute spin, apply reward
+  - `POST /api/spin/activate` — activate x2 powerup (snapshots investments value)
+  - `POST /api/spin/claim` — claim expired x2 powerup (doubles returns)
+- **UI**: `src/components/spinner/spin-modal.tsx` (CSGO-style horizontal spinner), `src/components/spinner/x2-claim-modal.tsx`
+- **x2 Powerup**: Manual activation, 24h countdown badge next to Holdings, claim modal on expiry, excluded from reward pool if active
+- **Free Spins**: "2 Free Spins" reward grants 2 extra spins, excluded from pool until daily reset
+- **Free Stock**: 3 shares of random MAG 7 stock (AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA), avg_buy_price set to current price
+- **Spin Transactions**: Type "spin" appears in recent transactions with current price and total
+
+### 5. ~~Skeleton Loading States~~ ✅ DONE
+- `src/components/ui/skeleton.tsx` — reusable Skeleton component with shimmer animation
+- `src/app/globals.css` — shimmer keyframes + skeleton colors
+- `src/app/dashboard/loading.tsx` — dashboard skeleton
+- `src/app/dashboard/leaderboard/loading.tsx` — leaderboard skeleton
+- `src/app/dashboard/stock/[symbol]/loading.tsx` — stock detail skeleton
+- `src/app/dashboard/search/page.tsx` — Suspense fallback with skeleton
+- `src/app/dashboard/leaderboard/page.tsx` — inline skeleton replaced with component
+
+### 6. ~~total_invested Tracking for Accurate ROI~~ ✅ DONE
+- **Database**: `supabase/migrations/013_total_invested.sql` (total_invested column in portfolios)
+- **Buy Route**: Increments total_invested by totalCost on purchase
+- **Sell Route**: Decrements total_invested by costBasis (shares × avg_buy_price) on sale
+- **All-Time Return**: `(investmentsValue - totalInvested) / totalInvested × 100`
+- **Leaderboard**: Uses total_invested for gain/loss % instead of hardcoded 1000
+- **Buy Hardening**: Floating-point comparison fixed (rounded to 2 decimals before balance check)
+
+### 7. ~~Starting Balance 10000~~ ✅ DONE
+- **Database**: `supabase/migrations/014_starting_balance_10000.sql` (updates handle_new_user trigger + column defaults)
+- **Migration 001**: Updated in-place (abx_balance default 10000, total_invested column)
+- **All fallbacks**: Updated across all routes (1000 → 10000)
+
+### 8. End-of-Day Portfolio Recalculation (DEFERRED)
 - Not implemented. Would require Supabase Edge Function + cron
 - For now, total value is calculated on each page load
 
@@ -60,7 +101,7 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
 - ✅ Dashboard: Portfolio Value, ABX Balance, Investments, Holdings, Transactions
 - ✅ Stock Search: Debounced search via Finnhub, preserves `?q=` in URL
 - ✅ Stock Detail: Chart (1D/1M/1Y/5Y), Buy/Sell panel, Position panel, Company Info
-- ✅ Buy Flow: Balance validation, holdings upsert, transaction recording
+- ✅ Buy Flow: Balance validation (hardened for floating-point), holdings upsert, transaction recording
 - ✅ Sell Flow: Share validation, holdings update/delete, transaction recording, compensation on failure
 - ✅ Toast Notifications: Sonner (top-center, 3s, white box, black text)
 - ✅ Friends System: Friendships table, modal with Friends/Requests tabs, 50 friend max
@@ -69,24 +110,36 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
 - ✅ Portfolio auto-create on first buy (service role bypasses RLS)
 - ✅ Canadian stocks (.TO) blocked at search, buy, and sell level
 - ✅ Holdings table: Clickable rows, simplified 2-column layout
-- ✅ Transactions table: Left-aligned, tinted badges
+- ✅ Transactions table: Left-aligned, tinted badges (Buy/Sell/Spin)
 - ✅ Eye icon: Hides values with dots, fixed card heights
 - ✅ Performance: In-memory caching for all stock API routes (30s-1hr TTL)
+- ✅ Daily Spinner: CSGO-style horizontal animation, 8 rewards, x2 powerup, free spins
+- ✅ Skeleton Loading: Shimmer animation on all page transitions
+- ✅ All-Time Return: Accurate ROI based on total_invested (not hardcoded baseline)
 
 ### Key Files
 | File | Purpose |
 |------|---------|
-| `src/app/dashboard/page.tsx` | Dashboard server component, fetches portfolio + holdings + live prices |
-| `src/app/dashboard/dashboard-content.tsx` | Dashboard client UI (stats, holdings, transactions) |
+| `src/app/dashboard/page.tsx` | Dashboard server component, fetches portfolio + holdings + live prices + spin status |
+| `src/app/dashboard/dashboard-content.tsx` | Dashboard client UI (stats, holdings, transactions, spin button, x2 badge) |
 | `src/app/dashboard/stock/[symbol]/page.tsx` | Stock detail server component (fetches quote, candles, profile, user holding) |
 | `src/app/dashboard/stock/[symbol]/stock-detail-client.tsx` | Stock detail client UI (chart, buy/sell panel, position panel, company info) |
 | `src/app/dashboard/stock/[symbol]/loading.tsx` | Loading skeleton for stock detail page |
-| `src/app/api/stocks/buy/route.ts` | Buy logic with service role fallback for portfolio creation |
+| `src/app/dashboard/loading.tsx` | Loading skeleton for dashboard page |
+| `src/app/dashboard/leaderboard/loading.tsx` | Loading skeleton for leaderboard page |
+| `src/app/api/stocks/buy/route.ts` | Buy logic with balance hardening, total_invested tracking |
 | `src/app/api/stocks/sell/route.ts` | Sell logic: validate shares, update holdings, record transaction, compensation |
+| `src/app/api/spin/route.ts` | Spin status (GET) and execution (POST) |
+| `src/app/api/spin/activate/route.ts` | x2 powerup activation with snapshot |
+| `src/app/api/spin/claim/route.ts` | x2 powerup claim on expiry |
+| `src/components/spinner/spin-modal.tsx` | CSGO-style spinner UI with animation |
+| `src/components/spinner/x2-claim-modal.tsx` | Claim results modal (original vs doubled returns) |
+| `src/components/ui/skeleton.tsx` | Reusable skeleton component with shimmer |
+| `src/lib/spin.ts` | Shared getSpinStatus function (avoids auth cookie issues) |
 | `src/lib/cache.ts` | In-memory cache with TTL for API responses |
-| `src/app/api/friends/route.ts` | Friends list + send request API |
+| `src/app/api/friends/route.ts` | Friends list + send request API (with username parsing fix) |
 | `src/app/api/friends/search/route.ts` | Search users by exact `displayname#002` format |
-| `src/app/api/leaderboard/route.ts` | Leaderboard with live price calculation (global + friends) |
+| `src/app/api/leaderboard/route.ts` | Leaderboard with total_invested-based gain/loss |
 | `src/components/friends/friends-modal.tsx` | Friends modal with Friends/Requests tabs |
 | `src/app/dashboard/leaderboard/page.tsx` | Leaderboard page (Global only) |
 | `src/app/api/stocks/quote/route.ts` | Quote API: Finnhub → Yahoo fallback chain |
@@ -101,6 +154,15 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
 | `supabase/migrations/004_grant_service_role_permissions.sql` | GRANT table permissions to service_role |
 | `supabase/migrations/005_grant_authenticated_permissions.sql` | GRANT table permissions to authenticated |
 | `supabase/migrations/006_social.sql` | Friendships table, display_number, RLS policies |
+| `supabase/migrations/007_allow_user_lookup.sql` | Allow user lookup by username |
+| `supabase/migrations/008_daily_spinner.sql` | daily_spins + powerups tables |
+| `supabase/migrations/009_grant_spinner_permissions.sql` | Service role grants for spinner tables |
+| `supabase/migrations/010_free_spins.sql` | free_spins column in portfolios |
+| `supabase/migrations/011_powerup_snapshot.sql` | snapshot_value column in powerups |
+| `supabase/migrations/012_fix_spinner_constraint.sql` | free_spins in check constraint |
+| `supabase/migrations/013_total_invested.sql` | total_invested column in portfolios |
+| `supabase/migrations/014_starting_balance_10000.sql` | Updated handle_new_user trigger + defaults |
+| `supabase/migrations/015_add_spin_transactions.sql` | spin type in transactions check constraint |
 
 ---
 
@@ -119,6 +181,10 @@ Fake stock trading game. Users get 1000 ABX starting balance, pick real stocks, 
 | Next.js 9.3.3 in package.json | Wrong version, doesn't support App Router | Changed to `^15.1.0` |
 | `next.config.ts` not supported | Next.js 15.1.0 doesn't support `.ts` config | Renamed to `next.config.js` |
 | Sequence START value < MINVALUE | PostgreSQL sequence defaults minvalue=1 | Added `minvalue 0` to sequence creation |
+| Insufficient balance on exact float match | IEEE 754 floating-point drift in `shares * pricePerShare` | Round both balance and cost to 2 decimals before comparison |
+| Auth cookie bug in spin status | Self-fetch from server component loses auth cookies | Extracted shared `getSpinStatus` function in `src/lib/spin.ts` |
+| x2 powerup double-activation | Missing `.eq("claimed", false)` check | Added claimed check to activation route |
+| Cooldown timer stuck | useState/useEffect timing bug | Moved to computed value from nextResetAt with 1s tick re-render |
 
 ---
 
@@ -178,8 +244,9 @@ Required env vars (see `.env.example`):
 - `FINNHUB_API_KEY`
 
 ## Database
-- Run migrations in Supabase SQL Editor in order: `001` → `002` → `004` → `005` → `006`
+- Run migrations in Supabase SQL Editor in order: `001` → `002` → `004` → `005` → `006` → `007` → `008` → `009` → `010` → `011` → `012` → `013` → `014` → `015`
 - `003` was deleted (no longer needed after service role fix)
+- **Migration 014** needs to be run manually from Supabase SQL editor (updates handle_new_user trigger to 10000 starting balance)
 
 ---
 
@@ -188,5 +255,5 @@ When starting a new session:
 1. Read this `handoff.md` file
 2. Check current branch: `git branch` (should be `feat/stock-search`)
 3. Check recent commits: `git log --oneline -5`
-4. Next task: TBD (all current goals complete)
+4. Next task: Run migration 014 from Supabase SQL editor, then push branch
 5. Use `@fixer` for bounded implementation work, `@oracle` for architecture decisions
