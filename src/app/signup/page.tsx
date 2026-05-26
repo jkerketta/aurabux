@@ -85,7 +85,7 @@ export default function SignupPage() {
               <div className="space-y-3">
                 <Input
                   type="text"
-                  placeholder="Username"
+                  placeholder="Display Name"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required

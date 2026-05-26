@@ -32,11 +32,23 @@
   --color-success: #00c805;
   --color-danger: #ff4444;
   
+  --color-skeleton: #e5e5e5;
+  --color-skeleton-highlight: #f0f0f0;
+  
   --radius-lg: 0.5rem;
   --radius-md: calc(var(--radius-lg) - 2px);
   --radius-sm: calc(var(--radius-lg) - 4px);
   
   --font-family-sans: "Inter", system-ui, sans-serif;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: calc(-100% - 1000px) 0;
+  }
+  100% {
+    background-position: calc(100% + 1000px) 0;
+  }
 }
 
 @layer base {
