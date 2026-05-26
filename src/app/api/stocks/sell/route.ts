@@ -73,7 +73,11 @@ export async function POST(request: NextRequest) {
     const ownedShares = Number(holding.shares);
     const avgBuyPrice = Number(holding.avg_buy_price);
     const costBasis = shares * avgBuyPrice;
-    if (ownedShares < shares) {
+
+    // Round to 2 decimals to avoid floating-point drift
+    const roundedOwned = Math.round(ownedShares * 100) / 100;
+    const roundedShares = Math.round(shares * 100) / 100;
+    if (roundedOwned < roundedShares) {
       return NextResponse.json(
         {
           error: "Insufficient shares",
