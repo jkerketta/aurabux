@@ -58,6 +58,11 @@ export async function POST() {
     const nextReset = getNextReset();
     const now = new Date();
 
+    // Current spin period started at the most recent reset
+    const currentPeriodStart = now >= todayReset
+      ? todayReset
+      : new Date(todayReset.getTime() - 24 * 60 * 60 * 1000);
+
     // Get current state
     const { data: lastSpin } = await supabase
       .from("daily_spins")
@@ -77,7 +82,7 @@ export async function POST() {
     const hasFreeSpins = freeSpins > 0;
 
     // Check cooldown (bypassed if user has free spins)
-    if (!hasFreeSpins && lastSpin && new Date(lastSpin.created_at) >= todayReset) {
+    if (!hasFreeSpins && lastSpin && new Date(lastSpin.created_at) >= currentPeriodStart) {
       return NextResponse.json(
         { error: "Spin on cooldown", nextResetAt: nextReset.toISOString() },
         { status: 400 }

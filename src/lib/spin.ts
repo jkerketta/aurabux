@@ -46,8 +46,13 @@ export async function getSpinStatus(userId: string): Promise<SpinStatus> {
   const todayReset = getTodayReset();
   const nextReset = getNextReset();
 
+  // Current spin period started at the most recent reset (today's if after reset, yesterday's if before)
+  const currentPeriodStart = now >= todayReset
+    ? todayReset
+    : new Date(todayReset.getTime() - 24 * 60 * 60 * 1000);
+
   const hasFreeSpins = (portfolio?.free_spins ?? 0) > 0;
-  const canSpin = hasFreeSpins || !lastSpin || new Date(lastSpin.created_at) < todayReset;
+  const canSpin = hasFreeSpins || !lastSpin || new Date(lastSpin.created_at) < currentPeriodStart;
 
   const { data: activePowerup } = await supabase
     .from("powerups")
