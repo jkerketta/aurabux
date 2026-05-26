@@ -81,6 +81,11 @@ function formatDate(dateStr: string) {
   });
 }
 
+function formatShares(value: number): string {
+  const rounded = Math.round(value * 10000) / 10000;
+  return rounded % 1 === 0 ? rounded.toString() : rounded.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
+}
+
 export function DashboardContent({
   user: _user,
   initialBalance,
@@ -201,13 +206,20 @@ export function DashboardContent({
             <p className="text-3xl font-bold tracking-tight text-black">
               {displayBalance} <span className="text-lg font-normal text-muted-foreground">ABX</span>
             </p>
-            <div className="relative mt-3 inline-flex items-center gap-2 cursor-pointer group" onClick={() => setSpinModalOpen(true)}>
-              <RotateCw className={cn("h-4 w-4 transition-colors", canSpin ? "text-black group-hover:text-neutral-600" : "text-neutral-300")} />
-              <span className={cn("text-xs font-semibold uppercase tracking-wider transition-colors", canSpin ? "text-black group-hover:text-neutral-600" : "text-neutral-300")}>
-                Daily Spin
-              </span>
-              {(canSpin) && (
-                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 border border-white" />
+            <div className="mt-3">
+              <div className="relative inline-flex items-center gap-2 cursor-pointer group" onClick={() => setSpinModalOpen(true)}>
+                <RotateCw className={cn("h-4 w-4 transition-colors", canSpin ? "text-black group-hover:text-neutral-600" : "text-neutral-300")} />
+                <span className={cn("text-xs font-semibold uppercase tracking-wider transition-colors", canSpin ? "text-black group-hover:text-neutral-600" : "text-neutral-300")}>
+                  Daily Spin
+                </span>
+                {(canSpin) && (
+                  <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 border border-white" />
+                )}
+              </div>
+              {freeSpinsRemaining > 0 && (
+                <p className="mt-1 text-xs text-cyan-600 font-medium">
+                  {freeSpinsRemaining} free spin{freeSpinsRemaining !== 1 ? "s" : ""} left
+                </p>
               )}
             </div>
           </CardContent>
@@ -280,7 +292,7 @@ export function DashboardContent({
                     >
                       <td className="px-6 py-4">
                         <p className="text-sm font-semibold text-black">{h.ticker}</p>
-                        <p className="text-xs text-muted-foreground">{h.shares} share{h.shares !== 1 ? "s" : ""}</p>
+                        <p className="text-xs text-muted-foreground">{formatShares(h.shares)} share{formatShares(h.shares) !== "1" ? "s" : ""}</p>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <p

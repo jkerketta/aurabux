@@ -90,6 +90,11 @@ function formatCompact(value: number): string {
   return formatCurrency(value);
 }
 
+function formatShares(value: number): string {
+  const rounded = Math.round(value * 10000) / 10000;
+  return rounded % 1 === 0 ? rounded.toString() : rounded.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
+}
+
 function formatDate(timestamp: number): string {
   return new Date(timestamp * 1000).toLocaleDateString("en-US", {
     month: "short",
@@ -852,7 +857,7 @@ export function StockDetailClient({
                   <p className="mb-4 text-xs text-muted-foreground">
                     Available to sell:{" "}
                     <span className="font-medium text-black">
-                      {userHolding.shares} share{userHolding.shares !== 1 ? "s" : ""}
+                      {formatShares(userHolding.shares)} share{formatShares(userHolding.shares) !== "1" ? "s" : ""}
                     </span>
                   </p>
 
@@ -875,7 +880,7 @@ export function StockDetailClient({
                         }}
                         placeholder={
                           sellMode === "shares"
-                            ? `e.g. ${Math.min(userHolding.shares, 10)}`
+                            ? `e.g. ${Math.min(Number(formatShares(userHolding.shares)), 10)}`
                             : "e.g. 500"
                         }
                         className="h-10 flex-1"
@@ -963,7 +968,7 @@ export function StockDetailClient({
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Shares</span>
                     <span className="text-sm font-semibold text-black">
-                      {userHolding.shares} share{userHolding.shares !== 1 ? "s" : ""}
+                      {formatShares(userHolding.shares)} share{formatShares(userHolding.shares) !== "1" ? "s" : ""}
                     </span>
                   </div>
 

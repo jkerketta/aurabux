@@ -187,6 +187,21 @@ export async function POST() {
         if (insertError) throw insertError;
       }
 
+      // Increment total_invested so free stocks don't inflate return %
+      const { data: currentPortfolio } = await adminSupabase
+        .from("portfolios")
+        .select("total_invested")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      const currentTotalInvested = Number(currentPortfolio?.total_invested ?? 0);
+      const { error: investError } = await adminSupabase
+        .from("portfolios")
+        .update({ total_invested: currentTotalInvested + Math.round(3 * currentPrice * 100) / 100 })
+        .eq("user_id", user.id);
+
+      if (investError) throw investError;
+
       // Record transaction so it shows up in recent history
       const { error: txnError } = await adminSupabase.from("transactions").insert({
         user_id: user.id,

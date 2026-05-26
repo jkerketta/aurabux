@@ -64,7 +64,7 @@ async function calculateLeaderboard(
     );
     const totalValue = Number(p.abx_balance) + holdingsValue;
     const totalInvested = Number(p.total_invested ?? 0);
-    const gainLossPct = totalInvested > 0 ? ((totalValue - totalInvested) / totalInvested) * 100 : 0;
+    const gainLossPct = totalInvested > 0 ? ((holdingsValue - totalInvested) / totalInvested) * 100 : 0;
 
     return {
       user_id: p.user_id,
