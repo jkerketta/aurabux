@@ -89,13 +89,13 @@ export async function POST() {
       );
     }
 
-    // Build reward pool — exclude "2 Free Spins" if already won today
+    // Build reward pool — exclude "2 Free Spins" if already won this period
     const { data: wonFreeSpinsToday } = await supabase
       .from("daily_spins")
       .select("id")
       .eq("user_id", user.id)
       .eq("reward_type", "free_spins")
-      .gte("created_at", todayReset.toISOString())
+      .gte("created_at", currentPeriodStart.toISOString())
       .limit(1)
       .maybeSingle();
 
