@@ -23,6 +23,8 @@ Aurabux gives every player **10,000 ABX** to start trading real stocks with fake
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwind-css)](https://tailwindcss.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase)](https://supabase.com/)
+[![Finnhub](https://img.shields.io/badge/Finnhub-Stock%20Data-0052CC?logo=finnhub)](https://finnhub.io/)
+[![Yahoo Finance](https://img.shields.io/badge/Yahoo%20Finance-Chart%20Data-6001D2?logo=yahoo)](https://finance.yahoo.com/)
 [![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000?logo=vercel)](https://vercel.com/)
 
 ## Getting Started
