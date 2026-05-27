@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent } from "react";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ import {
   TrendingUp,
   TrendingDown,
   ArrowLeft,
+  RotateCw,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -127,6 +128,18 @@ function isCandleData(v: unknown): v is CandleData {
   );
 }
 
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) return `Updated ${diffSec}s ago`;
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `Updated ${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `Updated ${diffHr}h ago`;
+  return `Updated ${date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`;
+}
+
 // ─── Component ───────────────────────────────────────────────────────
 
 export function StockDetailClient({
@@ -176,6 +189,43 @@ export function StockDetailClient({
   const [sellInput, setSellInput] = useState("");
   const [sellLoading, setSellLoading] = useState(false);
   const [sellError, setSellError] = useState<string | null>(null);
+
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [, setTick] = useState(0);
+
+  // ── Last updated timer ─────────────────────────────────
+
+  useEffect(() => {
+    setLastUpdated(new Date());
+    const interval = setInterval(() => setTick((t) => t + 1), 10_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ── Refresh quote ──────────────────────────────────────
+
+  const handleRefresh = useCallback(async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      const res = await fetch(`/api/stocks/quote?symbol=${encodeURIComponent(symbol)}`);
+      if (!res.ok) {
+        toast.error("Failed to refresh quote");
+        return;
+      }
+      const data = await res.json();
+      if (isQuoteData(data)) {
+        setQuoteData(data);
+        setLastUpdated(new Date());
+      } else {
+        toast.error("Invalid quote data received");
+      }
+    } catch {
+      toast.error("Network error — could not refresh");
+    } finally {
+      setRefreshing(false);
+    }
+  }, [symbol, refreshing]);
 
   // ── Fetch candles on range change ──────────────────────
 
@@ -438,6 +488,19 @@ export function StockDetailClient({
                       {quoteData.changePercent.toFixed(2)}%)
                     </Badge>
                   </div>
+                  {lastUpdated && (
+                    <div className="mt-1 flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
+                      <span>{formatRelativeTime(lastUpdated)}</span>
+                      <button
+                        onClick={handleRefresh}
+                        disabled={refreshing}
+                        className="rounded p-0.5 transition-colors hover:text-black disabled:opacity-50"
+                        aria-label="Refresh quote"
+                      >
+                        <RotateCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : null}
             </div>
@@ -495,8 +558,16 @@ export function StockDetailClient({
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
                 ) : candleError ? (
-                  <div className="flex h-full items-center justify-center text-sm text-[#FF4444]">
-                    {candleError}
+                  <div className="flex h-full flex-col items-center justify-center gap-3">
+                    <p className="text-sm text-[#FF4444]">{candleError}</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchCandles(symbol, chartRange)}
+                      className="h-7 px-3 text-xs border-neutral-200 text-muted-foreground hover:bg-neutral-100"
+                    >
+                      Retry
+                    </Button>
                   </div>
                 ) : candleData?.status === "no_data" ? (
                   <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
@@ -764,7 +835,7 @@ export function StockDetailClient({
                       placeholder={
                         buyMode === "shares" ? "e.g. 10" : "e.g. 500"
                       }
-                      className="h-10"
+                      className="h-10 focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-1"
                       disabled={!quoteData}
                     />
                   </div>
@@ -883,7 +954,7 @@ export function StockDetailClient({
                             ? `e.g. ${Math.min(Number(formatShares(userHolding.shares)), 10)}`
                             : "e.g. 500"
                         }
-                        className="h-10 flex-1"
+                        className="h-10 flex-1 focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-1"
                         disabled={!quoteData}
                       />
                       {sellMode === "shares" && (
