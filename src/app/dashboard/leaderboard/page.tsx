@@ -154,7 +154,7 @@ export default function LeaderboardPage() {
   );
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-3xl pt-4">
       <h1 className="mb-6 text-3xl font-semibold tracking-tight text-black">
         Leaderboard
       </h1>

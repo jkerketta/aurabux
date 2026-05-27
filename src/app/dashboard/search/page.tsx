@@ -102,7 +102,7 @@ function SearchPageInner() {
   }, [searchQuery]);
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-3xl pt-4">
       <h1 className="mb-6 text-3xl font-semibold tracking-tight text-black">
         Search Stocks
       </h1>

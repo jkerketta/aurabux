@@ -45,7 +45,7 @@ export default function Navbar({ user, username, displayNumber }: NavbarProps) {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-5xl"
       >
-        <div className="flex items-center justify-between backdrop-blur-xl bg-white/70 border border-white/30 rounded-full shadow-lg px-6 py-2.5">
+        <div className="flex items-center justify-between backdrop-blur-xl bg-white/70 border border-white/30 rounded-full shadow-lg px-6 py-3.5">
           {/* Logo - Left */}
           <Link href="/dashboard" className="text-xl font-bold tracking-tight text-black">
             ABX

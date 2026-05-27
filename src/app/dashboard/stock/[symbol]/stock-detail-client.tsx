@@ -452,7 +452,7 @@ export function StockDetailClient({
   // ── Render ─────────────────────────────────────────────
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-5xl pt-4">
       {/* Back button */}
       <button
         onClick={() => router.back()}

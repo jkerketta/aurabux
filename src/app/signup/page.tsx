@@ -64,30 +64,30 @@ export default function SignupPage() {
       {/* Animated gradient blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute -top-20 -left-20 w-[500px] h-[500px] rounded-full"
+          className="absolute -top-[10%] -left-[10%] w-[80vw] h-[80vw] max-w-[900px] max-h-[900px] rounded-full"
           style={{
-            background: "radial-gradient(circle, rgba(6,182,212,0.5) 0%, transparent 70%)",
-            filter: "blur(80px)",
+            background: "radial-gradient(circle, rgba(6,182,212,0.6) 0%, transparent 65%)",
+            filter: "blur(100px)",
             animation: "blob1 20s ease-in-out infinite",
-            opacity: 0.6,
+            opacity: 0.7,
           }}
         />
         <div
-          className="absolute top-1/3 -right-20 w-[450px] h-[450px] rounded-full"
+          className="absolute top-[20%] -right-[10%] w-[70vw] h-[70vw] max-w-[800px] max-h-[800px] rounded-full"
           style={{
-            background: "radial-gradient(circle, rgba(168,85,247,0.5) 0%, transparent 70%)",
-            filter: "blur(80px)",
+            background: "radial-gradient(circle, rgba(168,85,247,0.6) 0%, transparent 65%)",
+            filter: "blur(100px)",
             animation: "blob2 25s ease-in-out infinite",
-            opacity: 0.6,
+            opacity: 0.7,
           }}
         />
         <div
-          className="absolute -bottom-20 left-1/4 w-[400px] h-[400px] rounded-full"
+          className="absolute -bottom-[10%] left-[10%] w-[75vw] h-[75vw] max-w-[850px] max-h-[850px] rounded-full"
           style={{
-            background: "radial-gradient(circle, rgba(34,197,94,0.5) 0%, transparent 70%)",
-            filter: "blur(80px)",
+            background: "radial-gradient(circle, rgba(34,197,94,0.6) 0%, transparent 65%)",
+            filter: "blur(100px)",
             animation: "blob3 22s ease-in-out infinite",
-            opacity: 0.5,
+            opacity: 0.6,
           }}
         />
       </div>
