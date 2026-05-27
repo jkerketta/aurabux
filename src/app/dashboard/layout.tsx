@@ -29,7 +29,7 @@ export default async function DashboardLayout({
         username={profile?.username ?? user.email?.split("@")[0] ?? "User"}
         displayNumber={profile?.display_number ?? ""}
       />
-      <main className="mx-auto max-w-5xl px-8 py-12">{children}</main>
+      <main className="mx-auto max-w-5xl px-8 pt-20 pb-12">{children}</main>
     </div>
   );
 }
