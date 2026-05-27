@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, RotateCw, Zap, Clock } from "lucide-react";
+import { RotateCw, Zap, Clock } from "lucide-react";
 import { SpinModal } from "@/components/spinner/spin-modal";
 import { X2ClaimModal } from "@/components/spinner/x2-claim-modal";
 import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
@@ -108,7 +108,6 @@ export function DashboardContent({
   freeSpinsRemaining,
 }: DashboardContentProps) {
   const router = useRouter();
-  const [showValues, setShowValues] = useState(true);
   const [spinModalOpen, setSpinModalOpen] = useState(false);
   const [claimModalOpen, setClaimModalOpen] = useState(hasExpiredPowerup);
   const [x2Countdown, setX2Countdown] = useState("");
@@ -137,14 +136,10 @@ export function DashboardContent({
     return () => clearInterval(id);
   }, [activePowerupExpiresAt, router]);
 
-  const displayBalance = showValues ? formatCurrency(initialBalance) : "••••••";
-  const displayTotalValue = showValues ? formatCurrency(initialTotalValue) : "••••••";
-
   // All-time portfolio return: based on total invested, not hardcoded 1000
   const investmentsValue = holdings.reduce((sum, h) => sum + h.shares * h.current_price, 0);
   const allTimeReturn = totalInvested > 0 ? ((investmentsValue - totalInvested) / totalInvested) * 100 : 0;
   const isAllTimePositive = allTimeReturn >= 0;
-  const displayInvestments = showValues ? formatCurrency(investmentsValue) : "••••••";
 
   return (
     <motion.div
@@ -172,27 +167,13 @@ export function DashboardContent({
       <motion.div variants={itemVariants} className="mb-8">
         <Card>
           <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardDescription className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Portfolio Value
-              </CardDescription>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowValues(!showValues)}
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              >
-                {showValues ? (
-                  <Eye className="h-4 w-4" />
-                ) : (
-                  <EyeOff className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
+            <CardDescription className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Portfolio Value
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-5xl font-bold tracking-tight text-black">
-              {displayTotalValue} ABX
+              {formatCurrency(initialTotalValue)} ABX
             </p>
           </CardContent>
         </Card>
@@ -209,7 +190,7 @@ export function DashboardContent({
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold tracking-tight text-black">
-              {displayBalance} <span className="text-lg font-normal text-muted-foreground">ABX</span>
+              {formatCurrency(initialBalance)} <span className="text-lg font-normal text-muted-foreground">ABX</span>
             </p>
             <div className="mt-3">
               <div className="relative inline-flex items-center gap-2 cursor-pointer group" onClick={() => setSpinModalOpen(true)}>
@@ -239,18 +220,14 @@ export function DashboardContent({
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold tracking-tight text-black">
-              {displayInvestments} <span className="text-lg font-normal text-muted-foreground">ABX</span>
+              {formatCurrency(investmentsValue)} <span className="text-lg font-normal text-muted-foreground">ABX</span>
             </p>
             <div className="mt-2">
               <div className={cn(
                 "inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold",
-                showValues
-                  ? (isAllTimePositive ? "bg-[#00C805]/10 text-[#00A804]" : "bg-[#FF4444]/10 text-[#CC3333]")
-                  : "bg-neutral-100 text-neutral-400"
+                isAllTimePositive ? "bg-[#00C805]/10 text-[#00A804]" : "bg-[#FF4444]/10 text-[#CC3333]"
               )}>
-                {showValues
-                  ? `${isAllTimePositive ? "+" : ""}${allTimeReturn.toFixed(2)}% all time`
-                  : "••••••"}
+                {isAllTimePositive ? "+" : ""}{allTimeReturn.toFixed(2)}% all time
               </div>
             </div>
           </CardContent>
