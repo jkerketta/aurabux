@@ -11,6 +11,8 @@ import { motion } from "framer-motion";
 import { Eye, EyeOff, RotateCw, Zap, Clock } from "lucide-react";
 import { SpinModal } from "@/components/spinner/spin-modal";
 import { X2ClaimModal } from "@/components/spinner/x2-claim-modal";
+import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
+import { TransactionHistory } from "@/components/transactions/transaction-history";
 
 interface Holding {
   ticker: string;
@@ -21,7 +23,7 @@ interface Holding {
 
 interface Transaction {
   ticker: string;
-  type: "buy" | "sell";
+  type: "buy" | "sell" | "spin";
   shares: number;
   price_per_share: number;
   created_at: string;
@@ -36,6 +38,7 @@ interface DashboardContentProps {
   holdings: Holding[];
   transactions: Transaction[];
   totalInvested: number;
+  hasSeenOnboarding: boolean;
   canSpin: boolean;
   hasActivePowerup: boolean;
   activePowerupExpiresAt: string | null;
@@ -78,6 +81,7 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
+    year: "numeric",
   });
 }
 
@@ -95,6 +99,7 @@ export function DashboardContent({
   holdings,
   transactions,
   totalInvested,
+  hasSeenOnboarding,
   canSpin,
   hasActivePowerup,
   activePowerupExpiresAt,
@@ -196,7 +201,7 @@ export function DashboardContent({
       {/* Stats Row */}
       <motion.div variants={itemVariants} className="grid gap-4 sm:grid-cols-2 mb-8">
         {/* ABX Balance Card */}
-        <Card className="min-h-[120px]">
+        <Card className="min-h-[120px] transition-shadow hover:shadow-md">
           <CardHeader className="pb-2">
             <CardDescription className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               ABX Balance
@@ -226,7 +231,7 @@ export function DashboardContent({
         </Card>
 
         {/* Investments Card */}
-        <Card className="min-h-[120px]">
+        <Card className="min-h-[120px] transition-shadow hover:shadow-md">
           <CardHeader className="pb-2">
             <CardDescription className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Investments
@@ -287,7 +292,7 @@ export function DashboardContent({
                   return (
                     <tr
                       key={h.ticker}
-                      className="group cursor-pointer hover:bg-neutral-50 transition-colors"
+                      className="group cursor-pointer transition-shadow hover:shadow-md hover:bg-neutral-50"
                       onClick={() => router.push(`/dashboard/stock/${h.ticker}`)}
                     >
                       <td className="px-6 py-4">
@@ -323,92 +328,12 @@ export function DashboardContent({
         )}
       </motion.div>
 
-      {/* Recent Transactions Section */}
+      {/* Transaction History Section */}
       <motion.div variants={itemVariants}>
         <h2 className="mb-4 text-lg font-semibold tracking-tight text-black">
-          Recent Transactions
+          Transaction History
         </h2>
-        {transactions.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-sm font-medium text-black">No transactions yet</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Your trade history will appear here
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-neutral-100">
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Ticker
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Shares
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Total
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100">
-                {transactions.map((t, i) => {
-                  const total = t.shares * t.price_per_share;
-                  const colorMap: Record<string, string> = {
-                    buy: "bg-[#00C805]/10 text-[#00A804]",
-                    sell: "bg-[#FF4444]/10 text-[#CC3333]",
-                    spin: "bg-[#6366F1]/10 text-[#6366F1]",
-                  };
-                  const labelMap: Record<string, string> = {
-                    buy: "Buy",
-                    sell: "Sell",
-                    spin: "Spin",
-                  };
-                  return (
-                    <tr key={`${t.created_at}-${i}`} className="group">
-                      <td className="px-6 py-4 text-sm text-neutral-600">
-                        {formatDate(t.created_at)}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-black">
-                        {t.ticker}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge
-                          className={cn(
-                            "rounded-full px-3 py-1.5 text-xs font-semibold",
-                            colorMap[t.type] ?? "bg-neutral-100 text-neutral-700"
-                          )}
-                        >
-                          {labelMap[t.type] ?? t.type}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-left text-sm text-neutral-700">
-                        {t.shares}
-                      </td>
-                      <td className="px-6 py-4 text-left text-sm text-neutral-700">
-                        {formatCurrency(t.price_per_share)}
-                      </td>
-                      <td className="px-6 py-4 text-left text-sm font-medium text-black">
-                        {formatCurrency(total)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <TransactionHistory initialTransactions={transactions} />
       </motion.div>
 
       <SpinModal
@@ -424,6 +349,15 @@ export function DashboardContent({
         open={claimModalOpen}
         onOpenChange={setClaimModalOpen}
         onClaimComplete={() => router.refresh()}
+      />
+
+      <OnboardingModal
+        open={!hasSeenOnboarding}
+        onOpenChange={(open) => {
+          if (!open) {
+            router.refresh();
+          }
+        }}
       />
     </motion.div>
   );

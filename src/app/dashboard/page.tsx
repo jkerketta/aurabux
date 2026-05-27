@@ -23,7 +23,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("username")
+    .select("username, has_seen_onboarding")
     .eq("id", user.id)
     .single();
 
@@ -129,6 +129,7 @@ export default async function DashboardPage() {
           holdings={enrichedHoldings}
           transactions={transactions ?? []}
           totalInvested={totalInvested}
+          hasSeenOnboarding={profile?.has_seen_onboarding ?? true}
           canSpin={spinStatus.canSpin}
           hasActivePowerup={spinStatus.hasActivePowerup}
           activePowerupExpiresAt={spinStatus.activePowerupExpiresAt}
