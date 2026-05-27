@@ -2,38 +2,38 @@
 
 @theme {
   --color-background: #ffffff;
-  --color-foreground: #1a1a1a;
+  --color-foreground: #111827;
   
   --color-card: #ffffff;
-  --color-card-foreground: #1a1a1a;
+  --color-card-foreground: #111827;
   
   --color-popover: #ffffff;
-  --color-popover-foreground: #1a1a1a;
+  --color-popover-foreground: #111827;
   
-  --color-primary: #000000;
+  --color-primary: #2563eb;
   --color-primary-foreground: #ffffff;
   
-  --color-secondary: #f4f4f5;
-  --color-secondary-foreground: #18181b;
+  --color-secondary: #f9fafb;
+  --color-secondary-foreground: #111827;
   
-  --color-muted: #f4f4f5;
-  --color-muted-foreground: #6b6b6b;
+  --color-muted: #f9fafb;
+  --color-muted-foreground: #4b5563;
   
-  --color-accent: #f4f4f5;
-  --color-accent-foreground: #18181b;
+  --color-accent: #f9fafb;
+  --color-accent-foreground: #111827;
   
-  --color-destructive: #ff4444;
+  --color-destructive: #dc2626;
   --color-destructive-foreground: #ffffff;
   
-  --color-border: #e5e5e5;
-  --color-input: #e5e5e5;
-  --color-ring: #1a1a1a;
+  --color-border: #e5e7eb;
+  --color-input: #e5e7eb;
+  --color-ring: #2563eb;
   
-  --color-success: #00c805;
-  --color-danger: #ff4444;
+  --color-success: #16a34a;
+  --color-danger: #dc2626;
   
-  --color-skeleton: #e5e5e5;
-  --color-skeleton-highlight: #f0f0f0;
+  --color-skeleton: #e5e7eb;
+  --color-skeleton-highlight: #f3f4f6;
   
   --radius-lg: 0.5rem;
   --radius-md: calc(var(--radius-lg) - 2px);
@@ -58,9 +58,6 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-family-sans);
-    background-image: url("data:image/svg+xml,%3Csvg width='600' height='600' viewBox='0 0 600 600' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23000000' stroke-width='0.5' opacity='0.03'%3E%3Cpath d='M0 100 Q150 50 300 100 T600 100'/%3E%3Cpath d='M0 200 Q150 150 300 200 T600 200'/%3E%3Cpath d='M0 300 Q150 250 300 300 T600 300'/%3E%3Cpath d='M0 400 Q150 350 300 400 T600 400'/%3E%3Cpath d='M0 500 Q150 450 300 500 T600 500'/%3E%3C/g%3E%3C/svg%3E");
-    background-size: 600px 600px;
-    background-attachment: fixed;
   }
 }
 
