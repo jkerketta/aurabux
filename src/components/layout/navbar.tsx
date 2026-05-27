@@ -61,15 +61,15 @@ export default function Navbar({ user, username, displayNumber }: NavbarProps) {
                   href={link.href}
                   className={`text-sm transition-colors relative $${
                     isActive
-                      ? "text-black font-medium"
-                      : "text-muted-foreground hover:text-black"
+                      ? "text-[#2563EB] font-medium"
+                      : "text-[#4B5563] hover:text-[#2563EB]"
                   }`}
                 >
                   {link.label}
                   {isActive && (
                     <motion.span
                       layoutId="navbar-underline"
-                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-black rounded-full"
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#2563EB] rounded-full"
                     />
                   )}
                 </Link>
@@ -80,7 +80,7 @@ export default function Navbar({ user, username, displayNumber }: NavbarProps) {
           {/* User Menu - Right */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1 text-sm text-muted-foreground transition hover:text-foreground">
+              <button className="flex items-center gap-1 text-sm text-[#4B5563] transition hover:text-[#2563EB]">
                 {username}
                 {displayNumber && (
                   <span className="text-xs text-neutral-400">({displayNumber})</span>
