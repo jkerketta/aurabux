@@ -56,31 +56,34 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-white px-4 overflow-hidden">
+    <div className="relative flex min-h-screen items-center justify-center px-4 overflow-hidden">
       {/* Animated gradient blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute -top-20 -left-20 w-96 h-96 rounded-full opacity-40"
+          className="absolute -top-20 -left-20 w-[500px] h-[500px] rounded-full"
           style={{
-            background: "radial-gradient(circle, rgba(6,182,212,0.4) 0%, transparent 70%)",
-            filter: "blur(60px)",
+            background: "radial-gradient(circle, rgba(6,182,212,0.5) 0%, transparent 70%)",
+            filter: "blur(80px)",
             animation: "blob1 20s ease-in-out infinite",
+            opacity: 0.6,
           }}
         />
         <div
-          className="absolute top-1/2 -right-20 w-80 h-80 rounded-full opacity-40"
+          className="absolute top-1/3 -right-20 w-[450px] h-[450px] rounded-full"
           style={{
-            background: "radial-gradient(circle, rgba(168,85,247,0.4) 0%, transparent 70%)",
-            filter: "blur(60px)",
+            background: "radial-gradient(circle, rgba(168,85,247,0.5) 0%, transparent 70%)",
+            filter: "blur(80px)",
             animation: "blob2 25s ease-in-out infinite",
+            opacity: 0.6,
           }}
         />
         <div
-          className="absolute -bottom-20 left-1/3 w-72 h-72 rounded-full opacity-30"
+          className="absolute -bottom-20 left-1/4 w-[400px] h-[400px] rounded-full"
           style={{
-            background: "radial-gradient(circle, rgba(34,197,94,0.4) 0%, transparent 70%)",
-            filter: "blur(60px)",
+            background: "radial-gradient(circle, rgba(34,197,94,0.5) 0%, transparent 70%)",
+            filter: "blur(80px)",
             animation: "blob3 22s ease-in-out infinite",
+            opacity: 0.5,
           }}
         />
       </div>
