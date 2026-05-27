@@ -1,7 +1,7 @@
 # Repository Atlas: Aurabux (ABX)
 
 ## Project Responsibility
-A Next.js 15 + TypeScript + Tailwind v4 fake stock trading game. Users sign up with email (or Google OAuth), receive **10000 ABX** starting balance, pick real stocks, and compete with friends. Features include a daily spinner with 8 rewards (ABX, free stocks, x2 powerup, free spins), skeleton loading states with shimmer animation, and accurate ROI tracking via `total_invested`. Dark-themed, minimal UI with custom ABX currency symbol.
+A Next.js 15 + TypeScript + Tailwind v4 fake stock trading game. Users sign up with email (or Google OAuth), receive **10000 ABX** starting balance, pick real stocks, and compete with friends. Features include a daily spinner with 8 rewards (ABX, free stocks, x2 powerup, free spins), multi-step onboarding for new users, paginated transaction history, skeleton loading states with smooth shimmer animation, and accurate ROI tracking via `total_invested`. Dark-themed, minimal UI with custom ABX currency symbol.
 
 ## System Entry Points
 - `src/app/page.tsx`: Root route — auth check redirects to `/dashboard` or `/login`
@@ -27,10 +27,10 @@ A Next.js 15 + TypeScript + Tailwind v4 fake stock trading game. Users sign up w
 |-----------|------------------------|--------------|
 | `src/app/api/` | API route handlers for stock trading (buy/sell/quote/candles/search/profile), friends system, leaderboard, and daily spinner. Implements caching, service role fallback, and compensation patterns. | [View Map](src/app/api/codemap.md) |
 | `src/app/dashboard/` | Protected dashboard pages: portfolio overview, leaderboard, stock search, stock detail. Server/client component split, Suspense boundaries, skeleton loading states. | [View Map](src/app/dashboard/codemap.md) |
-| `src/components/` | Reusable UI components: shadcn/ui primitives, custom spinner (CSGO-style), friends modal, navbar layout. Radix UI + Framer Motion integration. | [View Map](src/components/codemap.md) |
+| `src/components/` | Reusable UI components: shadcn/ui primitives, custom spinner (CSGO-style), friends modal, navbar layout, onboarding modal, transaction history, skeleton loaders. Radix UI + Framer Motion integration. | [View Map](src/components/codemap.md) |
 | `src/lib/` | Shared utilities: Supabase client factories (browser/server/admin), in-memory cache with TTL, spin status logic, class merging. | [View Map](src/lib/codemap.md) |
 | `src/middleware.ts` | Supabase SSR middleware. Refreshes sessions via cookies, protects `/dashboard`, redirects authenticated users from auth routes. | Inline (single file) |
-| `supabase/migrations/` | Database schema migrations (001-015). Tables: users, portfolios, holdings, transactions, friendships, daily_spins, powerups. RLS policies, trigger functions, permission grants. | [View Map](supabase/migrations/codemap.md) |
+| `supabase/migrations/` | Database schema migrations (001-016). Tables: users, portfolios, holdings, transactions, friendships, daily_spins, powerups. RLS policies, trigger functions, permission grants. | [View Map](supabase/migrations/codemap.md) |
 
 ## Route Map
 ```
@@ -62,6 +62,8 @@ GET       /api/spin             → Spin status (cooldown, free spins, powerup)
 POST      /api/spin             → Execute spin, apply reward
 POST      /api/spin/activate    → Activate x2 powerup (snapshot investments)
 POST      /api/spin/claim       → Claim expired x2 powerup (double returns)
+PATCH     /api/onboarding       → Mark onboarding as seen for current user
+GET       /api/transactions     → Paginated transaction history (10/page)
 ```
 
 ## Data Flow
@@ -73,11 +75,12 @@ POST      /api/spin/claim       → Claim expired x2 powerup (double returns)
 6. Daily Spin → API checks cooldown → picks random reward → applies (ABX/stock/powerup/free spins)
 7. x2 Powerup → User activates → snapshots investments → 24h countdown → claim doubles returns
 8. Leaderboard → API fetches all portfolios + live prices → calculates gain/loss via `total_invested`
+9. Onboarding → Dashboard checks `users.has_seen_onboarding` → shows 3-step modal if false → dismiss calls `PATCH /api/onboarding` → sets flag to true
 
 ## Key Database Tables
 | Table | Purpose |
 |-------|---------|
-| `users` | User profiles (id, username, display_number) |
+| `users` | User profiles (id, username, display_number, has_seen_onboarding) |
 | `portfolios` | ABX balance, total_value, total_invested, free_spins |
 | `holdings` | Current stock positions (ticker, shares, avg_buy_price) |
 | `transactions` | Permanent record of buys/sells/spins |
