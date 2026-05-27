@@ -114,7 +114,7 @@ function SearchPageInner() {
           value={searchQuery}
           onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
           placeholder="Search stocks..."
-          className="h-12 pl-10 text-base"
+          className="h-12 pl-10 text-base focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-1"
         />
         {searchLoading && (
           <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
@@ -150,7 +150,7 @@ function SearchPageInner() {
             transition={{ duration: 0.2 }}
           >
             <Card
-              className="mb-2 cursor-pointer transition-colors hover:bg-neutral-50"
+              className="mb-2 cursor-pointer transition-shadow hover:shadow-md hover:bg-neutral-50"
               onClick={() =>
                 router.push(`/dashboard/stock/${result.symbol}`)
               }

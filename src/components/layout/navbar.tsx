@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ const navLinks = [
 
 export default function Navbar({ user, username, displayNumber }: NavbarProps) {
   const [friendsOpen, setFriendsOpen] = useState(false);
+  const pathname = usePathname();
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -44,15 +46,22 @@ export default function Navbar({ user, username, displayNumber }: NavbarProps) {
 
       {/* Nav Links - Center */}
       <div className="flex items-center gap-8">
-        {navLinks.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="text-sm text-muted-foreground transition hover:text-foreground"
-          >
-            {link.label}
-          </Link>
-        ))}
+        {navLinks.map((link) => {
+          const isActive = pathname === link.href;
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`text-sm transition hover:text-foreground ${
+                isActive
+                  ? "font-semibold text-black"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {link.label}
+            </Link>
+          );
+        })}
       </div>
 
       {/* User Menu - Right */}
