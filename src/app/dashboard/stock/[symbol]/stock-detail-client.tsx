@@ -45,7 +45,7 @@ interface CandleData {
 }
 
 interface ChartPoint {
-  date: string;
+  timestamp: number;
   price: number;
 }
 
@@ -96,12 +96,29 @@ function formatShares(value: number): string {
   return rounded % 1 === 0 ? rounded.toString() : rounded.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
 }
 
-function formatDate(timestamp: number): string {
-  return new Date(timestamp * 1000).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "2-digit",
-  });
+function formatChartDate(timestamp: number, range: TimeRange): string {
+  const d = new Date(timestamp * 1000);
+  switch (range) {
+    case "1D":
+      return d.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    case "1M":
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "2-digit",
+      });
+    case "1Y":
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+      });
+    case "5Y":
+      return d.getFullYear().toString();
+  }
 }
 
 function isQuoteData(v: unknown): v is QuoteData {
@@ -393,7 +410,7 @@ export function StockDetailClient({
 
   const chartData: ChartPoint[] =
     candleData?.timestamps.map((t, i) => ({
-      date: formatDate(t),
+      timestamp: t,
       price: candleData.closes[i],
     })) ?? [];
 
@@ -577,7 +594,7 @@ export function StockDetailClient({
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
                       data={chartData}
-                      margin={{ top: 5, right: 5, bottom: 5, left: 5 }}
+                      margin={{ top: 5, right: 5, bottom: 30, left: 5 }}
                     >
                       <defs>
                         <linearGradient
@@ -600,12 +617,13 @@ export function StockDetailClient({
                         </linearGradient>
                       </defs>
                       <XAxis
-                        dataKey="date"
+                        dataKey="timestamp"
                         axisLine={false}
                         tickLine={false}
                         tick={{ fontSize: 11, fill: "#6b6b6b" }}
                         interval="preserveStartEnd"
                         minTickGap={40}
+                        tickFormatter={(ts: number) => formatChartDate(ts, chartRange)}
                       />
                       <YAxis
                         domain={["auto", "auto"]}
@@ -624,6 +642,7 @@ export function StockDetailClient({
                           fontSize: "13px",
                         }}
                         labelStyle={{ fontWeight: 600, color: "#1a1a1a" }}
+                        labelFormatter={(ts: number) => formatChartDate(ts, chartRange)}
                         formatter={(value: number) => [
                           `$${formatCurrency(Number(value))}`,
                           "Price",
