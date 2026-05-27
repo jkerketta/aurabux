@@ -118,7 +118,36 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
   - Card hover shadows on holdings rows, stats cards, search results
   - Input focus rings on search and buy/sell inputs
 
-### 9. End-of-Day Portfolio Recalculation (DEFERRED)
+### 9. ~~Chart Formatting~~ ✅ DONE
+- **Range-aware x-axis labels** on stock detail chart:
+  - `1D`: Time only (e.g., "9:30 AM", "2:00 PM")
+  - `1M`: Month + day + year (e.g., "May 27, 25")
+  - `1Y`: Month + year (e.g., "Jan 2025")
+  - `5Y`: Year only (e.g., "2024", "2025")
+- **Increased bottom margin** on AreaChart from 5px → 30px for label spacing
+- **Tooltip labelFormatter** also adapts per range
+
+### 10. ~~UI Redesign (Portfolio Aesthetic)~~ ✅ DONE
+- **Background**: Subtle topography SVG pattern on `body` via `globals.css`
+  - Contour-line curves at 3% opacity, 600px grid, fixed attachment
+- **Floating Navbar Capsule** (`src/components/layout/navbar.tsx`):
+  - Fixed position, centered, `max-w-5xl` width
+  - `backdrop-blur-xl bg-white/70 border-white/30 rounded-full shadow-lg`
+  - Framer Motion entrance animation (`y: -80` → `0`)
+  - Active link has animated underline via `layoutId`
+  - Taller capsule: `py-3.5` (was `py-2.5`)
+- **Login/Signup Pages** (`src/app/login/page.tsx`, `src/app/signup/page.tsx`):
+  - 3 animated gradient blobs (cyan, purple, green) via CSS keyframes
+  - Blobs are `80vw` size, `blur(100px)`, opacity 0.6-0.7
+  - Glass card: `backdrop-blur-xl bg-white/60 border-white/40 shadow-xl`
+  - Removed `bg-white` from root div so blobs show through
+- **Consistent Page Spacing**:
+  - Dashboard layout: `pt-32` (128px) for fixed navbar
+  - All sub-pages (search, leaderboard, stock detail): added `pt-4` for uniform title positioning
+- **Removed Features**:
+  - Eye icon hide-values feature completely removed from dashboard
+
+### 11. End-of-Day Portfolio Recalculation (DEFERRED)
 - Not implemented. Would require Supabase Edge Function + cron
 - For now, total value is calculated on each page load
 
@@ -141,15 +170,19 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 - ✅ Canadian stocks (.TO) blocked at search, buy, and sell level
 - ✅ Holdings table: Clickable rows, simplified 2-column layout
 - ✅ Transactions table: Left-aligned, tinted badges (Buy/Sell/Spin)
-- ✅ Eye icon: Hides values with dots, fixed card heights
 - ✅ Performance: In-memory caching for all stock API routes (30s-1hr TTL)
 - ✅ Daily Spinner: CSGO-style horizontal animation, 8 rewards, x2 powerup, free spins
 - ✅ Skeleton Loading: Shimmer animation on all page transitions (linear timing, 2.5s duration)
 - ✅ Onboarding: Multi-step modal for new users (3 steps, DB-persisted dismissal)
 - ✅ Transaction History: Paginated table (10/page, year in dates, prev/next navigation)
 - ✅ Stock Detail: Last updated timestamp, refresh button, chart retry, input focus rings
+- ✅ Chart Formatting: Range-aware x-axis labels (time for 1D, month+year for 1Y/5Y)
 - ✅ Micro-UI: Navbar active state, card hover shadows, input focus rings
 - ✅ All-Time Return: Accurate ROI based on total_invested (not hardcoded baseline)
+- ✅ Topography Background: Subtle SVG contour pattern on all pages
+- ✅ Floating Navbar: Glassmorphism capsule, centered, animated underline
+- ✅ Login/Signup: Animated gradient blobs (cyan/purple/green) + glass cards
+- ✅ Consistent Page Spacing: All dashboard pages have uniform top padding
 
 ### Key Files
 | File | Purpose |
@@ -247,7 +280,7 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 - **Recharts** — AreaChart for stock price visualization
 - **Framer Motion** — Staggered animations on dashboard sections
 - **Sonner** — Toast notifications (top-center, 3s, white box, black text)
-- **Wealthsimple aesthetic** — Monotone base, green `#00C805`/red `#FF4444` for P&L, tinted pills
+- **Modern aesthetic** — White base with subtle topography pattern, glassmorphism navbar, green `#00C805`/red `#FF4444` for P&L, tinted pills
 
 ---
 
@@ -295,6 +328,12 @@ Required env vars (see `.env.example`):
 When starting a new session:
 1. Read this `handoff.md` file
 2. Check current branch: `git branch` (should be `feat/ui-polish`)
-3. Check recent commits: `git log --oneline -5`
-4. Next task: Run migration 016 from Supabase SQL editor, then `npm run build` to verify
-5. Use `@fixer` for bounded implementation work, `@oracle` for architecture decisions
+3. Check recent commits: `git log --oneline -10`
+4. Check git status: `git status` (should be clean)
+5. Pull latest: `git pull origin feat/ui-polish`
+6. Next tasks (pick one):
+   - **Migration 016**: Run in Supabase SQL editor if not already applied (`supabase/migrations/016_onboarding_flag.sql`)
+   - **Build verification**: `npm run build` to check for TypeScript errors
+   - **UI iteration**: Continue polishing the portfolio aesthetic (glass cards, typography, animations)
+   - **New feature**: Add friends leaderboard tab, stock watchlist, or notifications
+7. Use `@fixer` for bounded implementation work, `@oracle` for architecture decisions
