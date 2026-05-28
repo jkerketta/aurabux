@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { RotateCw, Zap, Clock } from "lucide-react";
+import { RotateCw, Zap, Clock, CircleHelp } from "lucide-react";
 import { SpinModal } from "@/components/spinner/spin-modal";
+import { SpinInfoModal } from "@/components/spinner/spin-info-modal";
 import { X2ClaimModal } from "@/components/spinner/x2-claim-modal";
 import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
 import { TransactionHistory } from "@/components/transactions/transaction-history";
@@ -89,6 +90,7 @@ export function DashboardContent({
   const [spinModalOpen, setSpinModalOpen] = useState(false);
   const [claimModalOpen, setClaimModalOpen] = useState(hasExpiredPowerup);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [spinInfoOpen, setSpinInfoOpen] = useState(false);
   const [x2Countdown, setX2Countdown] = useState("");
 
   // x2 powerup countdown timer
@@ -227,6 +229,13 @@ export function DashboardContent({
                   <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 border border-white" />
                 )}
               </div>
+              <button
+                onClick={() => setSpinInfoOpen(true)}
+                className="inline-flex items-center justify-center h-6 w-6 rounded-full border border-[#E5E7EB] text-[#4B5563] hover:text-[#2563EB] hover:border-[#2563EB] transition-colors"
+                aria-label="Spin info"
+              >
+                <CircleHelp className="h-3.5 w-3.5" />
+              </button>
               {freeSpinsRemaining > 0 && (
                 <p className="mt-1 text-xs text-cyan-600 font-medium">
                   {freeSpinsRemaining} free spin{freeSpinsRemaining !== 1 ? "s" : ""} left
@@ -374,6 +383,11 @@ export function DashboardContent({
             router.refresh();
           }
         }}
+      />
+
+      <SpinInfoModal
+        open={spinInfoOpen}
+        onOpenChange={setSpinInfoOpen}
       />
     </motion.div>
     </>
