@@ -188,13 +188,13 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
   ) => (
     <div
       key={user.username}
-      className="flex items-center justify-between rounded-lg border border-neutral-100 px-4 py-3"
+      className="flex items-center justify-between rounded-lg border border-[#E5E7EB] px-4 py-3"
     >
       <div>
-        <p className="text-sm font-medium text-black">
+        <p className="text-sm font-medium text-[#111827]">
           {user.username}
           {user.display_number && (
-            <span className="ml-1.5 text-xs text-neutral-400">
+            <span className="ml-1.5 text-xs text-[#4B5563]">
               ({user.display_number})
             </span>
           )}
@@ -231,10 +231,10 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
           <TabsContent value="friends" className="flex-1 overflow-y-auto mt-4">
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                <Loader2 className="h-5 w-5 animate-spin text-[#4B5563]" />
               </div>
             ) : friendsData.friends.length === 0 ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">
+              <div className="py-8 text-center text-sm text-[#4B5563]">
                 No friends yet. Add friends in the Requests tab.
               </div>
             ) : (
@@ -246,7 +246,7 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
                       size="sm"
                       onClick={() => handleRemove(friend.friendship_id)}
                       disabled={actionLoading === friend.friendship_id}
-                      className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600"
+                      className="h-8 w-8 p-0 text-[#4B5563] hover:text-red-600"
                     >
                       {actionLoading === friend.friendship_id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -304,7 +304,7 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
               {/* Incoming */}
               {friendsData.incoming.length > 0 && (
                 <div>
-                  <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                     Incoming Requests
                   </h4>
                   <div className="space-y-2">
@@ -315,7 +315,7 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
                             size="sm"
                             onClick={() => handleAccept(req.friendship_id)}
                             disabled={actionLoading === req.friendship_id}
-                            className="h-8 gap-1 text-xs bg-black text-white hover:bg-neutral-800"
+                            className="h-8 gap-1 text-xs bg-[#2563EB] text-white hover:bg-blue-700"
                           >
                             {actionLoading === req.friendship_id ? (
                               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -344,7 +344,7 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
               {/* Outgoing */}
               {friendsData.outgoing.length > 0 && (
                 <div>
-                  <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                     Sent Requests
                   </h4>
                   <div className="space-y-2">
@@ -373,7 +373,7 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
               {friendsData.incoming.length === 0 &&
                 friendsData.outgoing.length === 0 &&
                 !searchError && (
-                  <div className="py-8 text-center text-sm text-muted-foreground">
+                  <div className="py-8 text-center text-sm text-[#4B5563]">
                     No pending requests
                   </div>
                 )}
