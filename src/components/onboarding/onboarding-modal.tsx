@@ -120,14 +120,14 @@ export function OnboardingModal({ open, onOpenChange }: OnboardingModalProps) {
                 transition={{ duration: 0.25, ease: "easeInOut" }}
                 className="absolute inset-0 flex flex-col items-center justify-center gap-4"
               >
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-neutral-100">
-                  <StepIcon className="h-7 w-7 text-neutral-800" />
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#F9FAFB]">
+                  <StepIcon className="h-7 w-7 text-[#111827]" />
                 </div>
                 <div className="flex flex-col items-center gap-2 text-center">
-                  <h3 className="text-lg font-semibold text-black">
+                  <h3 className="text-lg font-semibold text-[#111827]">
                     {STEPS[currentStep].title}
                   </h3>
-                  <p className="text-sm leading-relaxed text-neutral-600 max-w-xs">
+                  <p className="text-sm leading-relaxed text-[#4B5563] max-w-xs">
                     {STEPS[currentStep].description}
                   </p>
                 </div>
@@ -141,7 +141,7 @@ export function OnboardingModal({ open, onOpenChange }: OnboardingModalProps) {
               <div
                 key={i}
                 className={`h-2 w-2 rounded-full transition-colors ${
-                  i === currentStep ? "bg-black" : "bg-neutral-300"
+                  i === currentStep ? "bg-[#2563EB]" : "bg-[#E5E7EB]"
                 }`}
               />
             ))}
@@ -154,7 +154,7 @@ export function OnboardingModal({ open, onOpenChange }: OnboardingModalProps) {
               size="icon"
               onClick={handlePrev}
               disabled={isFirstStep}
-              className="h-10 w-10 border-neutral-200 hover:bg-neutral-100"
+              className="h-10 w-10 border-[#E5E7EB] hover:bg-[#F9FAFB]"
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
@@ -162,7 +162,7 @@ export function OnboardingModal({ open, onOpenChange }: OnboardingModalProps) {
             {isLastStep ? (
               <Button
                 onClick={handleDismiss}
-                className="h-10 px-8 bg-black text-white hover:bg-neutral-800"
+                className="h-10 px-8 bg-[#2563EB] text-white hover:bg-blue-700"
               >
                 Got it
               </Button>
@@ -171,7 +171,7 @@ export function OnboardingModal({ open, onOpenChange }: OnboardingModalProps) {
                 variant="outline"
                 size="icon"
                 onClick={handleNext}
-                className="h-10 w-10 border-neutral-200 hover:bg-neutral-100"
+                className="h-10 w-10 border-[#E5E7EB] hover:bg-[#F9FAFB]"
               >
                 <ChevronRight className="h-5 w-5" />
               </Button>
