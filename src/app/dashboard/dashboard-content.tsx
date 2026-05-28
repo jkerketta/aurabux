@@ -118,6 +118,8 @@ export function DashboardContent({
   const investmentsValue = holdings.reduce((sum, h) => sum + h.shares * h.current_price, 0);
   const allTimeReturn = totalInvested > 0 ? ((investmentsValue - totalInvested) / totalInvested) * 100 : 0;
   const isAllTimePositive = allTimeReturn >= 0;
+  const totalPnl = investmentsValue - totalInvested;
+  const isPnlPositive = totalPnl >= 0;
 
   return (
     <>
@@ -254,6 +256,17 @@ export function DashboardContent({
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-8">
         <div className="flex items-center gap-3 mb-4">
           <h2 className="text-lg font-semibold tracking-tight text-[#111827]">Holdings</h2>
+          {totalInvested > 0 && (
+            <div className={cn(
+              "inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold",
+              isPnlPositive ? "bg-[#00C805]/10 text-[#00A804]" : "bg-[#FF4444]/10 text-[#CC3333]"
+            )}>
+              {isPnlPositive ? "+" : ""}{formatCurrency(totalPnl)}
+            </div>
+          )}
+          <span className="text-xs text-[#4B5563]">
+            ({holdings.length} position{holdings.length !== 1 ? "s" : ""})
+          </span>
           {hasActivePowerup && x2Countdown && (
             <div className="flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 border border-rose-200">
               <Zap className="h-3.5 w-3.5 text-rose-600 fill-rose-600" />
