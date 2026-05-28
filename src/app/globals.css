@@ -69,30 +69,30 @@ a {
 /* Animated gradient blobs for auth pages */
 @keyframes blob1 {
   0% { transform: translate(0, 0) scale(1); }
-  15% { transform: translate(40px, -60px) scale(1.1); }
-  30% { transform: translate(-20px, -100px) scale(0.95); }
-  50% { transform: translate(-60px, -30px) scale(1.05); }
-  70% { transform: translate(30px, 40px) scale(0.9); }
-  85% { transform: translate(60px, -20px) scale(1.08); }
+  15% { transform: translate(300px, -200px) scale(1.15); }
+  30% { transform: translate(-150px, -350px) scale(0.9); }
+  50% { transform: translate(-400px, -100px) scale(1.1); }
+  70% { transform: translate(200px, 250px) scale(0.85); }
+  85% { transform: translate(350px, -150px) scale(1.12); }
   100% { transform: translate(0, 0) scale(1); }
 }
 
 @keyframes blob2 {
   0% { transform: translate(0, 0) scale(1); }
-  15% { transform: translate(-50px, 30px) scale(0.9); }
-  30% { transform: translate(-80px, -20px) scale(1.1); }
-  50% { transform: translate(-30px, -60px) scale(0.95); }
-  70% { transform: translate(40px, -40px) scale(1.05); }
-  85% { transform: translate(20px, 50px) scale(0.92); }
+  15% { transform: translate(-350px, 200px) scale(0.85); }
+  30% { transform: translate(-450px, -150px) scale(1.15); }
+  50% { transform: translate(-200px, -400px) scale(0.9); }
+  70% { transform: translate(250px, -250px) scale(1.1); }
+  85% { transform: translate(150px, 350px) scale(0.88); }
   100% { transform: translate(0, 0) scale(1); }
 }
 
 @keyframes blob3 {
   0% { transform: translate(0, 0) scale(1); }
-  15% { transform: translate(60px, 20px) scale(0.95); }
-  30% { transform: translate(30px, -50px) scale(1.08); }
-  50% { transform: translate(-40px, -30px) scale(0.9); }
-  70% { transform: translate(-60px, 40px) scale(1.05); }
-  85% { transform: translate(-20px, 60px) scale(0.92); }
+  15% { transform: translate(400px, 150px) scale(0.9); }
+  30% { transform: translate(200px, -300px) scale(1.12); }
+  50% { transform: translate(-250px, -200px) scale(0.85); }
+  70% { transform: translate(-400px, 250px) scale(1.1); }
+  85% { transform: translate(-150px, 400px) scale(0.88); }
   100% { transform: translate(0, 0) scale(1); }
 }

@@ -60,7 +60,7 @@ export default function LoginPage() {
       {/* Animated gradient blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute -top-[10%] -left-[10%] w-[80vw] h-[80vw] max-w-[900px] max-h-[900px] rounded-full"
+          className="absolute -top-[20%] -left-[20%] w-[100vw] h-[100vw] max-w-[1200px] max-h-[1200px] rounded-full"
           style={{
             background: "radial-gradient(circle, rgba(6,182,212,0.6) 0%, transparent 65%)",
             filter: "blur(100px)",
@@ -69,7 +69,7 @@ export default function LoginPage() {
           }}
         />
         <div
-          className="absolute top-[20%] -right-[10%] w-[70vw] h-[70vw] max-w-[800px] max-h-[800px] rounded-full"
+          className="absolute top-[10%] -right-[20%] w-[90vw] h-[90vw] max-w-[1100px] max-h-[1100px] rounded-full"
           style={{
             background: "radial-gradient(circle, rgba(168,85,247,0.6) 0%, transparent 65%)",
             filter: "blur(100px)",
@@ -78,7 +78,7 @@ export default function LoginPage() {
           }}
         />
         <div
-          className="absolute -bottom-[10%] left-[10%] w-[75vw] h-[75vw] max-w-[850px] max-h-[850px] rounded-full"
+          className="absolute -bottom-[20%] left-[0%] w-[95vw] h-[95vw] max-w-[1150px] max-h-[1150px] rounded-full"
           style={{
             background: "radial-gradient(circle, rgba(34,197,94,0.6) 0%, transparent 65%)",
             filter: "blur(100px)",
