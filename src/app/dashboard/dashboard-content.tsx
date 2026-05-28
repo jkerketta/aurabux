@@ -326,7 +326,7 @@ export function DashboardContent({
         <h2 className="mb-4 text-lg font-semibold tracking-tight text-[#111827]">
           Transaction History
         </h2>
-        <div className="rounded-lg border border-[#E5E7EB] bg-white">
+        <div className="rounded-lg border border-[#E5E7EB] bg-white pb-8">
           <TransactionHistory initialTransactions={transactions} />
         </div>
       </motion.div>
