@@ -88,6 +88,7 @@ export function DashboardContent({
   const router = useRouter();
   const [spinModalOpen, setSpinModalOpen] = useState(false);
   const [claimModalOpen, setClaimModalOpen] = useState(hasExpiredPowerup);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [x2Countdown, setX2Countdown] = useState("");
 
   // x2 powerup countdown timer
@@ -177,7 +178,13 @@ export function DashboardContent({
 
       {/* Portfolio Value Section */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-8">
-          <Card className="backdrop-blur-xl bg-white/60 border border-white/40 shadow-none">
+          <Card className="relative backdrop-blur-xl bg-white/60 border border-white/40 shadow-none">
+            <button
+              onClick={() => setShowHowToPlay(true)}
+              className="absolute top-4 right-4 text-xs text-[#4B5563] hover:text-[#2563EB] transition-colors"
+            >
+              How it works
+            </button>
             <CardHeader className="pb-2">
               <CardDescription className="text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 Portfolio Value
@@ -360,9 +367,10 @@ export function DashboardContent({
       />
 
       <OnboardingModal
-        open={!hasSeenOnboarding}
+        open={!hasSeenOnboarding || showHowToPlay}
         onOpenChange={(open) => {
           if (!open) {
+            setShowHowToPlay(false);
             router.refresh();
           }
         }}
