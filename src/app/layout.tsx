@@ -6,7 +6,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Aurabux — Fake Stock Trading Game",
+  title: "ABX",
   description: "Start with 10000 ABX and compete with friends by picking real stocks.",
 };
 
