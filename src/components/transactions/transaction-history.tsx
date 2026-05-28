@@ -144,8 +144,8 @@ export function TransactionHistory({ initialTransactions }: TransactionHistoryPr
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-neutral-200 bg-white py-12 text-center">
-        <p className="text-sm font-medium text-black">{error}</p>
+      <div className="flex flex-col items-center justify-center rounded-lg border border-[#E5E7EB] bg-white py-12 text-center">
+        <p className="text-sm font-medium text-[#111827]">{error}</p>
         <Button
           variant="outline"
           size="sm"
@@ -160,26 +160,26 @@ export function TransactionHistory({ initialTransactions }: TransactionHistoryPr
 
   if (loading && transactions.length === 0) {
     return (
-      <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+      <div className="overflow-hidden rounded-lg border border-[#E5E7EB] bg-white">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-neutral-100">
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+            <tr className="border-b border-[#E5E7EB]">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 Date
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 Ticker
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 Type
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 Shares
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 Price
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 Total
               </th>
             </tr>
@@ -192,8 +192,8 @@ export function TransactionHistory({ initialTransactions }: TransactionHistoryPr
 
   if (transactions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-neutral-200 bg-white py-12 text-center">
-        <p className="text-sm font-medium text-black">No transactions yet</p>
+      <div className="flex flex-col items-center justify-center rounded-lg border border-[#E5E7EB] bg-white py-12 text-center">
+        <p className="text-sm font-medium text-[#111827]">No transactions yet</p>
         <p className="mt-1 text-sm text-muted-foreground">
           Your trade history will appear here
         </p>
@@ -203,26 +203,26 @@ export function TransactionHistory({ initialTransactions }: TransactionHistoryPr
 
   return (
     <div>
-      <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+      <div className="overflow-hidden rounded-lg border border-[#E5E7EB] bg-white">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-neutral-100">
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+            <tr className="border-b border-[#E5E7EB]">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 Date
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 Ticker
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 Type
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 Shares
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 Price
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 Total
               </th>
             </tr>
@@ -255,10 +255,10 @@ export function TransactionHistory({ initialTransactions }: TransactionHistoryPr
                   const total = t.shares * t.price_per_share;
                   return (
                     <tr key={`${t.created_at}-${i}`} className="group">
-                      <td className="px-6 py-4 text-sm text-neutral-600">
+                      <td className="px-6 py-4 text-sm text-[#4B5563]">
                         {formatDate(t.created_at)}
                       </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-black">
+                      <td className="px-6 py-4 text-sm font-semibold text-[#111827]">
                         {t.ticker}
                       </td>
                       <td className="px-6 py-4">
@@ -271,13 +271,13 @@ export function TransactionHistory({ initialTransactions }: TransactionHistoryPr
                           {labelMap[t.type] ?? t.type}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4 text-left text-sm text-neutral-700">
+                      <td className="px-6 py-4 text-left text-sm text-[#111827]">
                         {t.shares}
                       </td>
-                      <td className="px-6 py-4 text-left text-sm text-neutral-700">
+                      <td className="px-6 py-4 text-left text-sm text-[#111827]">
                         {formatCurrency(t.price_per_share)}
                       </td>
-                      <td className="px-6 py-4 text-left text-sm font-medium text-black">
+                      <td className="px-6 py-4 text-left text-sm font-medium text-[#111827]">
                         {formatCurrency(total)}
                       </td>
                     </tr>
@@ -298,7 +298,7 @@ export function TransactionHistory({ initialTransactions }: TransactionHistoryPr
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <span className="text-sm text-neutral-600">
+        <span className="text-sm text-[#4B5563]">
           Page {page} of {totalPages}
         </span>
         <Button
