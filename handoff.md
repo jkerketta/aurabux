@@ -3,8 +3,8 @@
 ## Project Overview
 Fake stock trading game. Users get **10000 ABX** starting balance, pick real stocks, compete with friends.
 **Tech Stack**: Next.js 15 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Supabase
-**UI**: shadcn/ui (new-york style, zinc base, lucide icons), dark-themed minimal UI
-**Branch**: `feat/ui-polish`
+**UI**: shadcn/ui (new-york style, zinc base, lucide icons), light theme with blue primary (`#2563EB`), glassmorphism accents, animated gradient blobs
+**Branch**: `feat/ui-polish` (ready for merge to `main`)
 
 ---
 
@@ -127,27 +127,38 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 - **Increased bottom margin** on AreaChart from 5px → 30px for label spacing
 - **Tooltip labelFormatter** also adapts per range
 
-### 10. ~~UI Redesign (Portfolio Aesthetic)~~ ✅ DONE
-- **Background**: Subtle topography SVG pattern on `body` via `globals.css`
-  - Contour-line curves at 3% opacity, 600px grid, fixed attachment
+### 10. ~~UI Redesign (Light Theme + Glassmorphism)~~ ✅ DONE
+- **Color Palette**: White base (`#FFFFFF`), blue primary (`#2563EB`), charcoal headings (`#111827`), grey body text (`#4B5563`), borders (`#E5E7EB`)
+- **Background**: Removed topography SVG pattern. Clean white background.
+- **Animated Blobs**: 3 large gradient blobs (cyan/purple/green) on dashboard and auth pages. Slow random drift animation (35-40s cycles). Visible through glassmorphic cards.
 - **Floating Navbar Capsule** (`src/components/layout/navbar.tsx`):
   - Fixed position, centered, `max-w-5xl` width
   - `backdrop-blur-xl bg-white/70 border-white/30 rounded-full shadow-lg`
   - Framer Motion entrance animation (`y: -80` → `0`)
-  - Active link has animated underline via `layoutId`
-  - Taller capsule: `py-3.5` (was `py-2.5`)
+  - Active link has animated underline via `layoutId` (blue)
+  - Taller capsule: `py-3.5`
 - **Login/Signup Pages** (`src/app/login/page.tsx`, `src/app/signup/page.tsx`):
   - 3 animated gradient blobs (cyan, purple, green) via CSS keyframes
-  - Blobs are `80vw` size, `blur(100px)`, opacity 0.6-0.7
+  - Blobs are `90-100vw` size, `blur(100px)`, opacity 0.6-0.7
   - Glass card: `backdrop-blur-xl bg-white/60 border-white/40 shadow-xl`
   - Removed `bg-white` from root div so blobs show through
+- **Dashboard Glassmorphism**: Stats cards (Portfolio Value, ABX Balance, Investments) use `backdrop-blur-xl bg-white/60 border-white/40` so blobs animate behind them. Holdings table and transaction history remain solid white for readability.
 - **Consistent Page Spacing**:
   - Dashboard layout: `pt-32` (128px) for fixed navbar
   - All sub-pages (search, leaderboard, stock detail): added `pt-4` for uniform title positioning
 - **Removed Features**:
   - Eye icon hide-values feature completely removed from dashboard
 
-### 11. End-of-Day Portfolio Recalculation (DEFERRED)
+### 11. ~~MVP Final Touches~~ ✅ DONE
+- **Buy/Sell Confirmation Dialog**: New `TradeConfirmation` component. Shows trade summary, remaining balance (buy), or cost basis + gain/loss (sell) before execution. Prevents accidental trades.
+- **Market Status Badge**: "Market Open" (green) / "Market Closed" (grey) badge on stock detail page. Based on NYSE hours (Mon-Fri, 9:30 AM - 4:00 PM ET).
+- **Total P&L Badge**: Capsule badge next to "Holdings" heading showing unrealized gain/loss. Green/red based on performance. Only shows when `totalInvested > 0`.
+- **Holdings Count**: Position count displayed next to P&L badge (e.g., "3 positions").
+- **Daily Spin Info Modal**: New `SpinInfoModal` component triggered by `?` icon. Lists all 8 rewards with descriptions (ABX amounts, MAG 7 shares, x2 powerup, free spins).
+- **"How it Works" Button**: Text link on Portfolio Value card that re-opens onboarding modal for existing users.
+- **Loading State Polish**: Buy/Sell buttons show `opacity-60` during API calls for clearer visual feedback.
+
+### 12. End-of-Day Portfolio Recalculation (DEFERRED)
 - Not implemented. Would require Supabase Edge Function + cron
 - For now, total value is calculated on each page load
 
@@ -157,11 +168,11 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 
 ### Working Features
 - ✅ Auth (login/signup with email + Google, Supabase SSR)
-- ✅ Dashboard: Portfolio Value, ABX Balance, Investments, Holdings, Transactions
+- ✅ Dashboard: Portfolio Value, ABX Balance, Investments, Holdings, Transactions, Total P&L
 - ✅ Stock Search: Debounced search via Finnhub, preserves `?q=` in URL
-- ✅ Stock Detail: Chart (1D/1M/1Y/5Y), Buy/Sell panel, Position panel, Company Info
-- ✅ Buy Flow: Balance validation (hardened for floating-point), holdings upsert, transaction recording
-- ✅ Sell Flow: Share validation, holdings update/delete, transaction recording, compensation on failure
+- ✅ Stock Detail: Chart (1D/1M/1Y/5Y), Buy/Sell panel, Position panel, Company Info, Market Status
+- ✅ Buy Flow: Balance validation (hardened for floating-point), holdings upsert, transaction recording, confirmation dialog
+- ✅ Sell Flow: Share validation, holdings update/delete, transaction recording, compensation on failure, confirmation dialog
 - ✅ Toast Notifications: Sonner (top-center, 3s, white box, black text)
 - ✅ Friends System: Friendships table, modal with Friends/Requests tabs, 50 friend max
 - ✅ Leaderboard: Global tab only, live price calculation, crown for #1, gold/silver/bronze ranks
@@ -171,32 +182,34 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 - ✅ Holdings table: Clickable rows, simplified 2-column layout
 - ✅ Transactions table: Left-aligned, tinted badges (Buy/Sell/Spin)
 - ✅ Performance: In-memory caching for all stock API routes (30s-1hr TTL)
-- ✅ Daily Spinner: CSGO-style horizontal animation, 8 rewards, x2 powerup, free spins
+- ✅ Daily Spinner: CSGO-style horizontal animation, 8 rewards, x2 powerup, free spins, info modal
 - ✅ Skeleton Loading: Shimmer animation on all page transitions (linear timing, 2.5s duration)
-- ✅ Onboarding: Multi-step modal for new users (3 steps, DB-persisted dismissal)
+- ✅ Onboarding: Multi-step modal for new users (3 steps, DB-persisted dismissal), re-openable via "How it works"
 - ✅ Transaction History: Paginated table (10/page, year in dates, prev/next navigation)
-- ✅ Stock Detail: Last updated timestamp, refresh button, chart retry, input focus rings
+- ✅ Stock Detail: Last updated timestamp, refresh button, chart retry, input focus rings, market status badge
 - ✅ Chart Formatting: Range-aware x-axis labels (time for 1D, month+year for 1Y/5Y)
-- ✅ Micro-UI: Navbar active state, card hover shadows, input focus rings
+- ✅ Micro-UI: Navbar active state, card hover shadows, input focus rings, loading opacity
 - ✅ All-Time Return: Accurate ROI based on total_invested (not hardcoded baseline)
-- ✅ Topography Background: Subtle SVG contour pattern on all pages
 - ✅ Floating Navbar: Glassmorphism capsule, centered, animated underline
 - ✅ Login/Signup: Animated gradient blobs (cyan/purple/green) + glass cards
 - ✅ Consistent Page Spacing: All dashboard pages have uniform top padding
+- ✅ Light Theme: White base, blue primary (`#2563EB`), glassmorphic stats cards, animated blobs
 
 ### Key Files
 | File | Purpose |
 |------|---------|
 | `src/app/dashboard/page.tsx` | Dashboard server component, fetches portfolio + holdings + live prices + spin status + onboarding flag |
-| `src/app/dashboard/dashboard-content.tsx` | Dashboard client UI (stats, holdings, transaction history, spin button, x2 badge, onboarding modal) |
+| `src/app/dashboard/dashboard-content.tsx` | Dashboard client UI (stats, holdings, transaction history, spin button, x2 badge, onboarding modal, P&L badge, how to play) |
 | `src/app/dashboard/stock/[symbol]/page.tsx` | Stock detail server component (fetches quote, candles, profile, user holding) |
-| `src/app/dashboard/stock/[symbol]/stock-detail-client.tsx` | Stock detail client UI (chart, buy/sell panel, position panel, company info, last updated timestamp, refresh) |
+| `src/app/dashboard/stock/[symbol]/stock-detail-client.tsx` | Stock detail client UI (chart, buy/sell panel, position panel, company info, market status, confirmation dialog) |
 | `src/app/dashboard/stock/[symbol]/loading.tsx` | Loading skeleton for stock detail page |
 | `src/app/dashboard/loading.tsx` | Loading skeleton for dashboard page |
 | `src/app/dashboard/leaderboard/loading.tsx` | Loading skeleton for leaderboard page |
 | `src/components/skeletons/dashboard-skeleton.tsx` | Per-section dashboard skeleton with staggered delays |
 | `src/components/onboarding/onboarding-modal.tsx` | 3-step onboarding modal with framer-motion transitions |
 | `src/components/transactions/transaction-history.tsx` | Paginated transaction history component |
+| `src/components/trade/trade-confirmation.tsx` | Buy/sell confirmation dialog with cost basis and gain/loss |
+| `src/components/spinner/spin-info-modal.tsx` | Daily spin rewards explainer modal |
 | `src/app/api/onboarding/route.ts` | PATCH endpoint to mark onboarding as seen |
 | `src/app/api/transactions/route.ts` | GET endpoint with paginated transactions (10/page) |
 | `src/app/api/stocks/buy/route.ts` | Buy logic with balance hardening, total_invested tracking |
@@ -258,6 +271,7 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 | Auth cookie bug in spin status | Self-fetch from server component loses auth cookies | Extracted shared `getSpinStatus` function in `src/lib/spin.ts` |
 | x2 powerup double-activation | Missing `.eq("claimed", false)` check | Added claimed check to activation route |
 | Cooldown timer stuck | useState/useEffect timing bug | Moved to computed value from nextResetAt with 1s tick re-render |
+| Blobs not visibly moving | Translation distances too small relative to blob size + blur | Increased keyframe translations from 40-100px to 150-450px |
 
 ---
 
@@ -278,9 +292,9 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 - **Tailwind CSS v4** — Uses `@tailwindcss/postcss` plugin, no `tailwind.config.js`
 - **shadcn/ui** — Card, Button, Input, Badge, Dialog, DropdownMenu, Tabs primitives at `@/components/ui/`
 - **Recharts** — AreaChart for stock price visualization
-- **Framer Motion** — Staggered animations on dashboard sections
+- **Framer Motion** — Simple fadeIn animations (`opacity 0→1, y: 10→0, 0.3s`)
 - **Sonner** — Toast notifications (top-center, 3s, white box, black text)
-- **Modern aesthetic** — White base with subtle topography pattern, glassmorphism navbar, green `#00C805`/red `#FF4444` for P&L, tinted pills
+- **Light aesthetic** — White base, blue primary (`#2563EB`), glassmorphism stats cards, animated gradient blobs, green `#00C805`/red `#FF4444` for P&L
 
 ---
 
@@ -327,13 +341,13 @@ Required env vars (see `.env.example`):
 ## Session Resume Instructions
 When starting a new session:
 1. Read this `handoff.md` file
-2. Check current branch: `git branch` (should be `feat/ui-polish`)
+2. Check current branch: `git branch` (should be `main` after merge, or `feat/ui-polish` if not merged)
 3. Check recent commits: `git log --oneline -10`
 4. Check git status: `git status` (should be clean)
-5. Pull latest: `git pull origin feat/ui-polish`
+5. Pull latest: `git pull origin <branch>`
 6. Next tasks (pick one):
-   - **Migration 016**: Run in Supabase SQL editor if not already applied (`supabase/migrations/016_onboarding_flag.sql`)
-   - **Build verification**: `npm run build` to check for TypeScript errors
-   - **UI iteration**: Continue polishing the portfolio aesthetic (glass cards, typography, animations)
-   - **New feature**: Add friends leaderboard tab, stock watchlist, or notifications
+   - **Deploy to production**: Verify env vars, run migrations, deploy
+   - **Add test framework**: Vitest for unit tests, Playwright for E2E
+   - **New features**: Friends leaderboard tab, stock watchlist, notifications, portfolio reset
+   - **Performance**: Add React Query for client-side caching, optimize image loading
 7. Use `@fixer` for bounded implementation work, `@oracle` for architecture decisions
