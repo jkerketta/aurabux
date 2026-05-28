@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent } from "react";
 import { toast } from "sonner";
@@ -22,7 +22,9 @@ import {
   TrendingUp,
   TrendingDown,
   ArrowLeft,
+  RotateCw,
 } from "lucide-react";
+import { TradeConfirmation } from "@/components/trade/trade-confirmation";
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -44,7 +46,7 @@ interface CandleData {
 }
 
 interface ChartPoint {
-  date: string;
+  timestamp: number;
   price: number;
 }
 
@@ -95,12 +97,43 @@ function formatShares(value: number): string {
   return rounded % 1 === 0 ? rounded.toString() : rounded.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
 }
 
-function formatDate(timestamp: number): string {
-  return new Date(timestamp * 1000).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "2-digit",
-  });
+function getMarketStatus(): { isOpen: boolean; message: string } {
+  const now = new Date();
+  const etString = now.toLocaleString("en-US", { timeZone: "America/New_York" });
+  const etDate = new Date(etString);
+  const day = etDate.getDay(); // 0=Sun, 6=Sat
+  const hours = etDate.getHours();
+  const minutes = etDate.getMinutes();
+  const timeInMinutes = hours * 60 + minutes;
+  const marketOpen = 9 * 60 + 30; // 9:30 AM
+  const marketClose = 16 * 60;    // 4:00 PM
+  const isOpen = day >= 1 && day <= 5 && timeInMinutes >= marketOpen && timeInMinutes < marketClose;
+  return { isOpen, message: isOpen ? "Market Open" : "Market Closed" };
+}
+
+function formatChartDate(timestamp: number, range: TimeRange): string {
+  const d = new Date(timestamp * 1000);
+  switch (range) {
+    case "1D":
+      return d.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    case "1M":
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "2-digit",
+      });
+    case "1Y":
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+      });
+    case "5Y":
+      return d.getFullYear().toString();
+  }
 }
 
 function isQuoteData(v: unknown): v is QuoteData {
@@ -125,6 +158,18 @@ function isCandleData(v: unknown): v is CandleData {
     Array.isArray(o.closes) &&
     typeof o.status === "string"
   );
+}
+
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) return `Updated ${diffSec}s ago`;
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `Updated ${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `Updated ${diffHr}h ago`;
+  return `Updated ${date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`;
 }
 
 // ─── Component ───────────────────────────────────────────────────────
@@ -177,6 +222,55 @@ export function StockDetailClient({
   const [sellLoading, setSellLoading] = useState(false);
   const [sellError, setSellError] = useState<string | null>(null);
 
+  const [confirmationData, setConfirmationData] = useState<{
+    type: "buy" | "sell";
+    symbol: string;
+    shares: number;
+    pricePerShare: number;
+    total: number;
+    remainingBalance?: number;
+    costBasis?: number;
+    gainLoss?: number;
+    gainLossPercent?: number;
+  } | null>(null);
+
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [, setTick] = useState(0);
+
+  // ── Last updated timer ─────────────────────────────────
+
+  useEffect(() => {
+    setLastUpdated(new Date());
+    const interval = setInterval(() => setTick((t) => t + 1), 10_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ── Refresh quote ──────────────────────────────────────
+
+  const handleRefresh = useCallback(async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      const res = await fetch(`/api/stocks/quote?symbol=${encodeURIComponent(symbol)}`);
+      if (!res.ok) {
+        toast.error("Failed to refresh quote");
+        return;
+      }
+      const data = await res.json();
+      if (isQuoteData(data)) {
+        setQuoteData(data);
+        setLastUpdated(new Date());
+      } else {
+        toast.error("Invalid quote data received");
+      }
+    } catch {
+      toast.error("Network error — could not refresh");
+    } finally {
+      setRefreshing(false);
+    }
+  }, [symbol, refreshing]);
+
   // ── Fetch candles on range change ──────────────────────
 
   const fetchCandles = useCallback(
@@ -220,7 +314,7 @@ export function StockDetailClient({
 
   // ── Buy logic ──────────────────────────────────────────
 
-  const handleBuy = useCallback(async () => {
+  const handleBuy = useCallback(() => {
     if (!quoteData || !buyInput) return;
 
     const parsedInput = parseFloat(buyInput);
@@ -246,42 +340,22 @@ export function StockDetailClient({
       return;
     }
 
-    setBuyLoading(true);
     setBuyError(null);
 
-    try {
-      const res = await fetch("/api/stocks/buy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          symbol,
-          shares: Math.round(shares * 100) / 100,
-          pricePerShare: quoteData.currentPrice,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || data.error) {
-        setBuyError(data.error ?? "Purchase failed");
-        return;
-      }
-
-      setBuyInput("");
-      router.refresh();
-      toast.success(
-        `Bought ${data.shares_bought} shares of ${data.symbol}`
-      );
-    } catch {
-      setBuyError("Network error — try again");
-    } finally {
-      setBuyLoading(false);
-    }
-  }, [symbol, quoteData, buyInput, buyMode, availableBalance, router]);
+    const roundedShares = Math.round(shares * 100) / 100;
+    setConfirmationData({
+      type: "buy",
+      symbol,
+      shares: roundedShares,
+      pricePerShare: quoteData.currentPrice,
+      total: totalCost,
+      remainingBalance: availableBalance - totalCost,
+    });
+  }, [symbol, quoteData, buyInput, buyMode, availableBalance]);
 
   // ── Sell logic ─────────────────────────────────────────
 
-  const handleSell = useCallback(async () => {
+  const handleSell = useCallback(() => {
     if (!quoteData || !sellInput || !userHolding) return;
 
     const parsedInput = parseFloat(sellInput);
@@ -306,44 +380,105 @@ export function StockDetailClient({
       return;
     }
 
-    setSellLoading(true);
     setSellError(null);
 
-    try {
-      const res = await fetch("/api/stocks/sell", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          symbol,
-          shares: Math.round(shares * 100) / 100,
-          pricePerShare: quoteData.currentPrice,
-        }),
-      });
+    const roundedShares = Math.round(shares * 100) / 100;
+    const total = roundedShares * quoteData.currentPrice;
+    const costBasis = roundedShares * userHolding.avg_buy_price;
+    const gainLoss = total - costBasis;
+    const gainLossPercent = costBasis > 0 ? (gainLoss / costBasis) * 100 : 0;
 
-      const data = await res.json();
+    setConfirmationData({
+      type: "sell",
+      symbol,
+      shares: roundedShares,
+      pricePerShare: quoteData.currentPrice,
+      total,
+      costBasis,
+      gainLoss,
+      gainLossPercent,
+    });
+  }, [symbol, quoteData, sellInput, sellMode, userHolding]);
 
-      if (!res.ok || data.error) {
-        setSellError(data.error ?? "Sell failed");
-        return;
+  // ── Execute trade ──────────────────────────────────────
+
+  const executeTrade = useCallback(async () => {
+    if (!confirmationData || !quoteData) return;
+
+    if (confirmationData.type === "buy") {
+      setBuyLoading(true);
+      setBuyError(null);
+
+      try {
+        const res = await fetch("/api/stocks/buy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            symbol: confirmationData.symbol,
+            shares: confirmationData.shares,
+            pricePerShare: confirmationData.pricePerShare,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          setBuyError(data.error ?? "Purchase failed");
+          return;
+        }
+
+        setBuyInput("");
+        router.refresh();
+        toast.success(
+          `Bought ${data.shares_bought} shares of ${data.symbol}`
+        );
+      } catch {
+        setBuyError("Network error — try again");
+      } finally {
+        setBuyLoading(false);
+        setConfirmationData(null);
       }
+    } else {
+      setSellLoading(true);
+      setSellError(null);
 
-      setSellInput("");
-      router.refresh();
-      toast.success(
-        `Sold ${data.shares_sold} shares of ${data.symbol}`
-      );
-    } catch {
-      setSellError("Network error — try again");
-    } finally {
-      setSellLoading(false);
+      try {
+        const res = await fetch("/api/stocks/sell", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            symbol: confirmationData.symbol,
+            shares: confirmationData.shares,
+            pricePerShare: confirmationData.pricePerShare,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          setSellError(data.error ?? "Sell failed");
+          return;
+        }
+
+        setSellInput("");
+        router.refresh();
+        toast.success(
+          `Sold ${data.shares_sold} shares of ${data.symbol}`
+        );
+      } catch {
+        setSellError("Network error — try again");
+      } finally {
+        setSellLoading(false);
+        setConfirmationData(null);
+      }
     }
-  }, [symbol, quoteData, sellInput, sellMode, userHolding, router]);
+  }, [confirmationData, quoteData, router]);
 
   // ── Computed ───────────────────────────────────────────
 
   const chartData: ChartPoint[] =
     candleData?.timestamps.map((t, i) => ({
-      date: formatDate(t),
+      timestamp: t,
       price: candleData.closes[i],
     })) ?? [];
 
@@ -363,6 +498,8 @@ export function StockDetailClient({
 
   const isUp = quoteData ? quoteData.change >= 0 : true;
   const chartColor = isUp ? "#00C805" : "#FF4444";
+
+  const marketStatus = getMarketStatus();
 
   const currentPrice = quoteData?.currentPrice ?? 0;
   const computedShares =
@@ -385,11 +522,11 @@ export function StockDetailClient({
   // ── Render ─────────────────────────────────────────────
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-5xl pt-4">
       {/* Back button */}
       <button
         onClick={() => router.back()}
-        className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-black"
+        className="mb-6 flex items-center gap-1.5 text-sm text-[#4B5563] transition-colors hover:text-[#111827]"
       >
         <ArrowLeft className="h-4 w-4" />
         Back
@@ -402,10 +539,10 @@ export function StockDetailClient({
           <div className="mb-6">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight text-black">
+                <h1 className="text-4xl font-bold tracking-tight text-[#111827]">
                   {symbol}
                 </h1>
-                <p className="mt-0.5 text-sm text-muted-foreground">
+                <p className="mt-0.5 text-sm text-[#4B5563]">
                   {companyName}
                 </p>
               </div>
@@ -414,7 +551,7 @@ export function StockDetailClient({
                 <p className="text-sm text-[#FF4444]">{quoteError}</p>
               ) : quoteData ? (
                 <div className="text-right">
-                  <p className="text-3xl font-bold tracking-tight text-black">
+                  <p className="text-3xl font-bold text-[#111827]">
                     ${formatCurrency(quoteData.currentPrice)}
                   </p>
                   <div className="mt-1 flex items-center justify-end gap-1.5">
@@ -438,6 +575,27 @@ export function StockDetailClient({
                       {quoteData.changePercent.toFixed(2)}%)
                     </Badge>
                   </div>
+                  <div className="mt-1 flex items-center justify-end">
+                    <Badge variant="outline" className={cn(
+                      "text-xs",
+                      marketStatus.isOpen ? "border-[#00C805] text-[#00C805]" : "border-[#4B5563] text-[#4B5563]"
+                    )}>
+                      {marketStatus.message}
+                    </Badge>
+                  </div>
+                  {lastUpdated && (
+                    <div className="mt-1 flex items-center justify-end gap-1.5 text-xs text-[#4B5563]">
+                      <span>{formatRelativeTime(lastUpdated)}</span>
+                      <button
+                        onClick={handleRefresh}
+                        disabled={refreshing}
+                        className="rounded p-0.5 transition-colors hover:text-[#111827] disabled:opacity-50"
+                        aria-label="Refresh quote"
+                      >
+                        <RotateCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : null}
             </div>
@@ -458,7 +616,7 @@ export function StockDetailClient({
                       {showBadge && (
                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 mb-1">
                           <div className={cn(
-                            "rounded px-2 py-1 text-xs font-semibold text-black",
+                            "rounded px-2 py-1 text-xs font-semibold text-[#111827]",
                             isReturnPositive ? "bg-[#00C805]" : "bg-[#FF4444]"
                           )}>
                             {pctReturn >= 0 ? "+" : ""}{pctReturn.toFixed(2)}%
@@ -477,8 +635,8 @@ export function StockDetailClient({
                         className={cn(
                           "h-7 px-3 text-xs",
                           isActive
-                            ? "bg-black text-white"
-                            : "border-neutral-200 text-muted-foreground hover:bg-neutral-100"
+                            ? "bg-[#2563EB] text-white"
+                            : "border-[#E5E7EB] text-[#4B5563] hover:bg-[#F9FAFB]"
                         )}
                       >
                         {range}
@@ -492,21 +650,29 @@ export function StockDetailClient({
               <div className="h-64">
                 {candleLoading ? (
                   <div className="flex h-full items-center justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    <Loader2 className="h-5 w-5 animate-spin text-[#4B5563]" />
                   </div>
                 ) : candleError ? (
-                  <div className="flex h-full items-center justify-center text-sm text-[#FF4444]">
-                    {candleError}
+                  <div className="flex h-full flex-col items-center justify-center gap-3">
+                    <p className="text-sm text-[#FF4444]">{candleError}</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchCandles(symbol, chartRange)}
+                      className="h-7 px-3 text-xs border-[#E5E7EB] text-[#4B5563] hover:bg-[#F9FAFB]"
+                    >
+                      Retry
+                    </Button>
                   </div>
                 ) : candleData?.status === "no_data" ? (
-                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  <div className="flex h-full items-center justify-center text-sm text-[#4B5563]">
                     No historical data for this stock
                   </div>
                 ) : chartData.length > 1 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
                       data={chartData}
-                      margin={{ top: 5, right: 5, bottom: 5, left: 5 }}
+                      margin={{ top: 5, right: 5, bottom: 30, left: 5 }}
                     >
                       <defs>
                         <linearGradient
@@ -529,12 +695,13 @@ export function StockDetailClient({
                         </linearGradient>
                       </defs>
                       <XAxis
-                        dataKey="date"
+                        dataKey="timestamp"
                         axisLine={false}
                         tickLine={false}
                         tick={{ fontSize: 11, fill: "#6b6b6b" }}
                         interval="preserveStartEnd"
                         minTickGap={40}
+                        tickFormatter={(ts: number) => formatChartDate(ts, chartRange)}
                       />
                       <YAxis
                         domain={["auto", "auto"]}
@@ -553,6 +720,7 @@ export function StockDetailClient({
                           fontSize: "13px",
                         }}
                         labelStyle={{ fontWeight: 600, color: "#1a1a1a" }}
+                        labelFormatter={(ts: number) => formatChartDate(ts, chartRange)}
                         formatter={(value: number) => [
                           `$${formatCurrency(Number(value))}`,
                           "Price",
@@ -568,7 +736,7 @@ export function StockDetailClient({
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  <div className="flex h-full items-center justify-center text-sm text-[#4B5563]">
                     Failed to load chart data
                   </div>
                 )}
@@ -607,10 +775,10 @@ export function StockDetailClient({
                   },
                 ].map((item) => (
                   <div key={item.label}>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <p className="text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                       {item.label}
                     </p>
-                    <p className="mt-0.5 text-sm font-semibold text-black">
+                    <p className="mt-0.5 text-sm font-semibold text-[#111827]">
                       {quoteError ? "—" : item.value}
                     </p>
                   </div>
@@ -622,25 +790,25 @@ export function StockDetailClient({
           {/* Company Info */}
           <Card className="mt-6">
             <CardContent className="p-6">
-              <h3 className="mb-4 text-base font-semibold text-black">
+              <h3 className="mb-4 text-base font-semibold text-[#111827]">
                 Company Info
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Market Cap</span>
-                  <span className="text-sm font-semibold text-black">
+                  <span className="text-xs text-[#4B5563]">Market Cap</span>
+                  <span className="text-sm font-semibold text-[#111827]">
                     {formatMarketCap(companyInfo?.marketCap ?? null)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Exchange</span>
-                  <span className="text-sm font-semibold text-black">
+                  <span className="text-xs text-[#4B5563]">Exchange</span>
+                  <span className="text-sm font-semibold text-[#111827]">
                     {companyInfo?.exchange ?? "\u2014"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Website</span>
-                  <span className="text-sm font-semibold text-black">
+                  <span className="text-xs text-[#4B5563]">Website</span>
+                  <span className="text-sm font-semibold text-[#111827]">
                     {companyInfo?.weburl ? (
                       <a
                         href={companyInfo.weburl}
@@ -687,8 +855,8 @@ export function StockDetailClient({
                       className={cn(
                         "h-8 px-4 text-xs capitalize",
                         tradeMode === mode
-                          ? "bg-black text-white"
-                          : "border-neutral-200 text-muted-foreground hover:bg-neutral-100",
+                          ? "bg-[#2563EB] text-white"
+                          : "border-[#E5E7EB] text-[#4B5563] hover:bg-[#F9FAFB]",
                         isSellDisabled && "opacity-50 cursor-not-allowed"
                       )}
                     >
@@ -698,7 +866,7 @@ export function StockDetailClient({
                 })}
               </div>
 
-              <h3 className="mb-4 text-base font-semibold text-black">
+              <h3 className="mb-4 text-base font-semibold text-[#111827]">
                 {tradeMode === "buy" ? "Buy" : "Sell"} {symbol}
               </h3>
 
@@ -720,8 +888,8 @@ export function StockDetailClient({
                         className={cn(
                           "h-8 px-4 text-xs capitalize",
                           buyMode === mode
-                            ? "bg-black text-white"
-                            : "border-neutral-200 text-muted-foreground hover:bg-neutral-100"
+                            ? "bg-[#2563EB] text-white"
+                            : "border-[#E5E7EB] text-[#4B5563] hover:bg-[#F9FAFB]"
                         )}
                       >
                         {mode === "shares" ? "Shares" : "ABX Amount"}
@@ -731,23 +899,23 @@ export function StockDetailClient({
 
                   {/* Price display */}
                   {quoteData && (
-                    <p className="mb-1 text-sm text-muted-foreground">
+                    <p className="mb-1 text-sm text-[#4B5563]">
                       Current price:{" "}
-                      <span className="font-semibold text-black">
+                      <span className="font-semibold text-[#111827]">
                         ${formatCurrency(quoteData.currentPrice)}
                       </span>
                     </p>
                   )}
-                  <p className="mb-4 text-xs text-muted-foreground">
+                  <p className="mb-4 text-xs text-[#4B5563]">
                     Available:{" "}
-                    <span className="font-medium text-black">
+                    <span className="font-medium text-[#111827]">
                       {formatCurrency(availableBalance)} ABX
                     </span>
                   </p>
 
                   {/* Input */}
                   <div className="mb-3">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    <label className="mb-1 block text-xs font-medium text-[#4B5563]">
                       {buyMode === "shares"
                         ? "Number of shares"
                         : "ABX to spend"}
@@ -764,25 +932,25 @@ export function StockDetailClient({
                       placeholder={
                         buyMode === "shares" ? "e.g. 10" : "e.g. 500"
                       }
-                      className="h-10"
+                      className="h-10 focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1"
                       disabled={!quoteData}
                     />
                   </div>
 
                   {/* Calculated values */}
                   {buyInput && quoteData && !isNaN(parseFloat(buyInput)) && (
-                    <p className="mb-3 text-xs text-muted-foreground">
+                    <p className="mb-3 text-xs text-[#4B5563]">
                       {buyMode === "shares" ? (
                         <>
                           Total cost:{" "}
-                          <span className="font-medium text-black">
+                          <span className="font-medium text-[#111827]">
                             {formatCurrency(computedCost)} ABX
                           </span>
                         </>
                       ) : (
                         <>
                           You&apos;ll get approx.{" "}
-                          <span className="font-medium text-black">
+                          <span className="font-medium text-[#111827]">
                             {computedShares < 1
                               ? computedShares.toFixed(4)
                               : computedShares.toFixed(2)}{" "}
@@ -797,7 +965,7 @@ export function StockDetailClient({
                   <Button
                     onClick={handleBuy}
                     disabled={!buyInput || buyLoading || !quoteData}
-                    className="h-11 w-full bg-black text-base text-white hover:bg-neutral-800"
+                    className="h-11 w-full bg-[#2563EB] text-base text-white hover:bg-blue-700 disabled:opacity-60"
                   >
                     {buyLoading ? (
                       <>
@@ -836,8 +1004,8 @@ export function StockDetailClient({
                         className={cn(
                           "h-8 px-4 text-xs capitalize",
                           sellMode === mode
-                            ? "bg-black text-white"
-                            : "border-neutral-200 text-muted-foreground hover:bg-neutral-100"
+                            ? "bg-[#2563EB] text-white"
+                            : "border-[#E5E7EB] text-[#4B5563] hover:bg-[#F9FAFB]"
                         )}
                       >
                         {mode === "shares" ? "Shares" : "ABX to receive"}
@@ -847,23 +1015,23 @@ export function StockDetailClient({
 
                   {/* Price display */}
                   {quoteData && (
-                    <p className="mb-1 text-sm text-muted-foreground">
+                    <p className="mb-1 text-sm text-[#4B5563]">
                       Current price:{" "}
-                      <span className="font-semibold text-black">
+                      <span className="font-semibold text-[#111827]">
                         ${formatCurrency(quoteData.currentPrice)}
                       </span>
                     </p>
                   )}
-                  <p className="mb-4 text-xs text-muted-foreground">
+                  <p className="mb-4 text-xs text-[#4B5563]">
                     Available to sell:{" "}
-                    <span className="font-medium text-black">
+                    <span className="font-medium text-[#111827]">
                       {formatShares(userHolding.shares)} share{formatShares(userHolding.shares) !== "1" ? "s" : ""}
                     </span>
                   </p>
 
                   {/* Input */}
                   <div className="mb-3">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    <label className="mb-1 block text-xs font-medium text-[#4B5563]">
                       {sellMode === "shares"
                         ? "Number of shares to sell"
                         : "ABX to receive"}
@@ -883,7 +1051,7 @@ export function StockDetailClient({
                             ? `e.g. ${Math.min(Number(formatShares(userHolding.shares)), 10)}`
                             : "e.g. 500"
                         }
-                        className="h-10 flex-1"
+                        className="h-10 flex-1 focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1"
                         disabled={!quoteData}
                       />
                       {sellMode === "shares" && (
@@ -895,7 +1063,7 @@ export function StockDetailClient({
                             setSellInput(String(userHolding.shares));
                             setSellError(null);
                           }}
-                          className="h-10 shrink-0 border-neutral-200 text-xs text-muted-foreground hover:bg-neutral-100"
+                          className="h-10 shrink-0 border-[#E5E7EB] text-xs text-[#4B5563] hover:bg-[#F9FAFB]"
                           disabled={!quoteData}
                         >
                           Max
@@ -906,18 +1074,18 @@ export function StockDetailClient({
 
                   {/* Calculated values */}
                   {sellInput && quoteData && !isNaN(parseFloat(sellInput)) && (
-                    <p className="mb-3 text-xs text-muted-foreground">
+                    <p className="mb-3 text-xs text-[#4B5563]">
                       {sellMode === "shares" ? (
                         <>
                           You&apos;ll receive approx.{" "}
-                          <span className="font-medium text-black">
+                          <span className="font-medium text-[#111827]">
                             {formatCurrency(computedSellProceeds)} ABX
                           </span>
                         </>
                       ) : (
                         <>
                           You&apos;ll sell approx.{" "}
-                          <span className="font-medium text-black">
+                          <span className="font-medium text-[#111827]">
                             {computedSellShares < 1
                               ? computedSellShares.toFixed(4)
                               : computedSellShares.toFixed(2)}{" "}
@@ -932,7 +1100,7 @@ export function StockDetailClient({
                   <Button
                     onClick={handleSell}
                     disabled={!sellInput || sellLoading || !quoteData}
-                    className="h-11 w-full bg-black text-base text-white hover:bg-neutral-800"
+                    className="h-11 w-full bg-[#2563EB] text-base text-white hover:bg-blue-700 disabled:opacity-60"
                   >
                     {sellLoading ? (
                       <>
@@ -959,31 +1127,31 @@ export function StockDetailClient({
           {userHolding && quoteData && (
             <Card>
               <CardContent className="p-6">
-                <h3 className="mb-4 text-base font-semibold text-black">
+                <h3 className="mb-4 text-base font-semibold text-[#111827]">
                   Your Position
                 </h3>
 
                 <div className="space-y-3">
                   {/* Shares */}
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Shares</span>
-                    <span className="text-sm font-semibold text-black">
+                    <span className="text-xs text-[#4B5563]">Shares</span>
+                    <span className="text-sm font-semibold text-[#111827]">
                       {formatShares(userHolding.shares)} share{formatShares(userHolding.shares) !== "1" ? "s" : ""}
                     </span>
                   </div>
 
                   {/* Avg Buy Price */}
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Avg Buy Price</span>
-                    <span className="text-sm font-semibold text-black">
+                    <span className="text-xs text-[#4B5563]">Avg Buy Price</span>
+                    <span className="text-sm font-semibold text-[#111827]">
                       ${formatCurrency(userHolding.avg_buy_price)}
                     </span>
                   </div>
 
                   {/* Current Value */}
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Current Value</span>
-                    <span className="text-sm font-semibold text-black">
+                    <span className="text-xs text-[#4B5563]">Current Value</span>
+                    <span className="text-sm font-semibold text-[#111827]">
                       ${formatCurrency(quoteData.currentPrice * userHolding.shares)}
                     </span>
                   </div>
@@ -1002,7 +1170,7 @@ export function StockDetailClient({
                     const isTotalPositive = totalReturnDollars >= 0;
                     return (
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">Total Return</span>
+                        <span className="text-xs text-[#4B5563]">Total Return</span>
                         <span
                           className={cn(
                             "text-sm font-semibold",
@@ -1021,7 +1189,7 @@ export function StockDetailClient({
                   {/* Today's Return */}
                   {firstClose !== null && lastClose !== null && (
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">Today&apos;s Return</span>
+                      <span className="text-xs text-[#4B5563]">Today&apos;s Return</span>
                       <span
                         className={cn(
                           "text-sm font-semibold",
@@ -1038,8 +1206,8 @@ export function StockDetailClient({
 
                   {/* % of Portfolio */}
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">% of Portfolio</span>
-                    <span className="text-sm font-semibold text-black">
+                    <span className="text-xs text-[#4B5563]">% of Portfolio</span>
+                    <span className="text-sm font-semibold text-[#111827]">
                       {portfolioTotalValue > 0
                         ? (
                             ((quoteData.currentPrice * userHolding.shares) /
@@ -1055,7 +1223,15 @@ export function StockDetailClient({
             </Card>
           )}
 
-
+          {/* Trade Confirmation Dialog */}
+          {confirmationData && (
+            <TradeConfirmation
+              open={!!confirmationData}
+              onOpenChange={(open) => { if (!open) setConfirmationData(null); }}
+              onConfirm={executeTrade}
+              {...confirmationData}
+            />
+          )}
         </div>
       </div>
     </div>

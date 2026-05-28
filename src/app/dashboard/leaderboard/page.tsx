@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Loader2, Crown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
 
 interface LeaderboardEntry {
   rank: number;
@@ -47,7 +48,7 @@ function RankBadge({ rank }: { rank: number }) {
     );
   }
   return (
-    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-neutral-100 text-sm font-medium text-muted-foreground">
+    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-neutral-100 text-sm font-medium text-[#4B5563]">
       {rank}
     </span>
   );
@@ -59,7 +60,7 @@ function LeaderboardSkeleton() {
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-4 rounded-lg border border-neutral-100 px-4 py-3"
+          className="flex items-center gap-4 rounded-lg border border-[#E5E7EB] px-4 py-3"
         >
           <Skeleton className="h-7 w-7 rounded-full" />
           <div className="flex-1 space-y-1">
@@ -102,11 +103,11 @@ export default function LeaderboardPage() {
   const renderRow = (entry: LeaderboardEntry) => (
     <div
       key={entry.user_id}
-      className={cn(
+        className={cn(
         "flex items-center gap-4 rounded-lg border px-4 py-3 transition-colors",
         entry.is_current_user
-          ? "border-black bg-neutral-50"
-          : "border-neutral-100 hover:bg-neutral-50"
+          ? "border-[#2563EB] bg-blue-50/50"
+          : "border-[#E5E7EB] hover:bg-[#F9FAFB]"
       )}
     >
       {/* Rank */}
@@ -120,7 +121,7 @@ export default function LeaderboardPage() {
 
       {/* Username */}
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-black truncate">
+        <div className="text-sm font-medium text-[#111827] truncate">
           {entry.username}
           {entry.display_number && (
             <span className="ml-1.5 text-xs text-neutral-400">
@@ -137,7 +138,7 @@ export default function LeaderboardPage() {
 
       {/* Value + Return */}
       <div className="text-right flex-shrink-0">
-        <p className="text-sm font-semibold text-black">
+        <p className="text-sm font-semibold text-[#111827]">
           {formatCurrency(entry.total_value)} ABX
         </p>
         <p
@@ -154,8 +155,8 @@ export default function LeaderboardPage() {
   );
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <h1 className="mb-6 text-3xl font-semibold tracking-tight text-black">
+    <div className="mx-auto max-w-3xl pt-4">
+      <h1 className="mb-6 text-4xl font-bold tracking-tight text-[#111827]">
         Leaderboard
       </h1>
 
@@ -163,12 +164,19 @@ export default function LeaderboardPage() {
         <LeaderboardSkeleton />
       ) : data.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center text-sm text-muted-foreground">
+          <CardContent className="py-12 text-center text-sm text-[#4B5563]">
             No players yet. Be the first!
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">{data.map(renderRow)}</div>
+        <motion.div
+          className="space-y-2"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {data.map(renderRow)}
+        </motion.div>
       )}
     </div>
   );

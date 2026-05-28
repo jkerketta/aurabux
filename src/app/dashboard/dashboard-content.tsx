@@ -8,9 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, RotateCw, Zap, Clock } from "lucide-react";
+import { RotateCw, Zap, Clock, CircleHelp } from "lucide-react";
 import { SpinModal } from "@/components/spinner/spin-modal";
+import { SpinInfoModal } from "@/components/spinner/spin-info-modal";
 import { X2ClaimModal } from "@/components/spinner/x2-claim-modal";
+import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
+import { TransactionHistory } from "@/components/transactions/transaction-history";
 
 interface Holding {
   ticker: string;
@@ -21,7 +24,7 @@ interface Holding {
 
 interface Transaction {
   ticker: string;
-  type: "buy" | "sell";
+  type: "buy" | "sell" | "spin";
   shares: number;
   price_per_share: number;
   created_at: string;
@@ -36,6 +39,7 @@ interface DashboardContentProps {
   holdings: Holding[];
   transactions: Transaction[];
   totalInvested: number;
+  hasSeenOnboarding: boolean;
   canSpin: boolean;
   hasActivePowerup: boolean;
   activePowerupExpiresAt: string | null;
@@ -43,28 +47,6 @@ interface DashboardContentProps {
   nextResetAt: string | null;
   freeSpinsRemaining: number;
 }
-
-// Static objects — extracted outside component to avoid recreation on every render
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-    },
-  },
-};
 
 function formatCurrency(value: number) {
   return value.toLocaleString("en-US", {
@@ -78,6 +60,7 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
+    year: "numeric",
   });
 }
 
@@ -95,6 +78,7 @@ export function DashboardContent({
   holdings,
   transactions,
   totalInvested,
+  hasSeenOnboarding,
   canSpin,
   hasActivePowerup,
   activePowerupExpiresAt,
@@ -103,9 +87,10 @@ export function DashboardContent({
   freeSpinsRemaining,
 }: DashboardContentProps) {
   const router = useRouter();
-  const [showValues, setShowValues] = useState(true);
   const [spinModalOpen, setSpinModalOpen] = useState(false);
   const [claimModalOpen, setClaimModalOpen] = useState(hasExpiredPowerup);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [spinInfoOpen, setSpinInfoOpen] = useState(false);
   const [x2Countdown, setX2Countdown] = useState("");
 
   // x2 powerup countdown timer
@@ -132,28 +117,58 @@ export function DashboardContent({
     return () => clearInterval(id);
   }, [activePowerupExpiresAt, router]);
 
-  const displayBalance = showValues ? formatCurrency(initialBalance) : "••••••";
-  const displayTotalValue = showValues ? formatCurrency(initialTotalValue) : "••••••";
-
   // All-time portfolio return: based on total invested, not hardcoded 1000
   const investmentsValue = holdings.reduce((sum, h) => sum + h.shares * h.current_price, 0);
   const allTimeReturn = totalInvested > 0 ? ((investmentsValue - totalInvested) / totalInvested) * 100 : 0;
   const isAllTimePositive = allTimeReturn >= 0;
-  const displayInvestments = showValues ? formatCurrency(investmentsValue) : "••••••";
+  const totalPnl = investmentsValue - totalInvested;
+  const isPnlPositive = totalPnl >= 0;
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="pb-20"
-    >
+    <>
+      {/* Animated gradient blobs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div
+          className="absolute -top-[10%] -left-[10%] w-[80vw] h-[80vw] max-w-[900px] max-h-[900px] rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(6,182,212,0.6) 0%, transparent 65%)",
+            filter: "blur(100px)",
+            animation: "blob1 35s ease-in-out infinite",
+            opacity: 0.7,
+          }}
+        />
+        <div
+          className="absolute top-[20%] -right-[10%] w-[70vw] h-[70vw] max-w-[800px] max-h-[800px] rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(168,85,247,0.6) 0%, transparent 65%)",
+            filter: "blur(100px)",
+            animation: "blob2 40s ease-in-out infinite",
+            opacity: 0.7,
+          }}
+        />
+        <div
+          className="absolute -bottom-[10%] left-[10%] w-[75vw] h-[75vw] max-w-[850px] max-h-[850px] rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(34,197,94,0.6) 0%, transparent 65%)",
+            filter: "blur(100px)",
+            animation: "blob3 38s ease-in-out infinite",
+            opacity: 0.6,
+          }}
+        />
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="pb-20"
+      >
       {/* Greeting Section */}
-      <motion.div variants={itemVariants} className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight text-black">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-8">
+          <h1 className="text-4xl font-bold tracking-tight text-[#111827]">
           {greeting}, {username || "Trader"}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-sm text-[#4B5563]">
           {new Date().toLocaleDateString("en-US", {
             weekday: "long",
             year: "numeric",
@@ -164,58 +179,63 @@ export function DashboardContent({
       </motion.div>
 
       {/* Portfolio Value Section */}
-      <motion.div variants={itemVariants} className="mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardDescription className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-8">
+          <Card className="relative backdrop-blur-xl bg-white/60 border border-white/40 shadow-none">
+            <button
+              onClick={() => setShowHowToPlay(true)}
+              className="absolute top-4 right-4 text-xs text-[#4B5563] hover:text-[#2563EB] transition-colors"
+            >
+              How it works
+            </button>
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 Portfolio Value
               </CardDescription>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowValues(!showValues)}
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              >
-                {showValues ? (
-                  <Eye className="h-4 w-4" />
-                ) : (
-                  <EyeOff className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-5xl font-bold tracking-tight text-black">
-              {displayTotalValue} ABX
-            </p>
-          </CardContent>
-        </Card>
-      </motion.div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-5xl font-bold tracking-tight text-[#111827]">
+                {formatCurrency(initialTotalValue)} ABX
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
 
       {/* Stats Row */}
-      <motion.div variants={itemVariants} className="grid gap-4 sm:grid-cols-2 mb-8">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid gap-4 sm:grid-cols-2 mb-8">
         {/* ABX Balance Card */}
-        <Card className="min-h-[120px]">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              ABX Balance
-            </CardDescription>
+          <Card className="min-h-[120px] backdrop-blur-xl bg-white/60 border border-white/40 shadow-none">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs font-medium uppercase tracking-wider text-[#4B5563]">
+                ABX Balance
+              </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold tracking-tight text-black">
-              {displayBalance} <span className="text-lg font-normal text-muted-foreground">ABX</span>
+            <p className="text-3xl font-bold tracking-tight text-[#111827]">
+              {formatCurrency(initialBalance)} <span className="text-lg font-normal text-[#4B5563]">ABX</span>
             </p>
             <div className="mt-3">
-              <div className="relative inline-flex items-center gap-2 cursor-pointer group" onClick={() => setSpinModalOpen(true)}>
-                <RotateCw className={cn("h-4 w-4 transition-colors", canSpin ? "text-black group-hover:text-neutral-600" : "text-neutral-300")} />
-                <span className={cn("text-xs font-semibold uppercase tracking-wider transition-colors", canSpin ? "text-black group-hover:text-neutral-600" : "text-neutral-300")}>
+              <div
+                className={cn(
+                  "inline-flex items-center gap-2 cursor-pointer transition-colors pl-0",
+                  canSpin ? "text-[#2563EB] hover:text-blue-700" : "text-neutral-300"
+                )}
+                onClick={() => setSpinModalOpen(true)}
+              >
+                <RotateCw className="h-4 w-4" />
+                <span className="text-xs font-semibold uppercase tracking-wider">
                   Daily Spin
                 </span>
                 {(canSpin) && (
                   <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 border border-white" />
                 )}
               </div>
+              <button
+                onClick={() => setSpinInfoOpen(true)}
+                className="inline-flex items-center justify-center h-6 w-6 rounded-full border border-[#E5E7EB] text-[#4B5563] hover:text-[#2563EB] hover:border-[#2563EB] transition-colors"
+                aria-label="Spin info"
+              >
+                <CircleHelp className="h-3.5 w-3.5" />
+              </button>
               {freeSpinsRemaining > 0 && (
                 <p className="mt-1 text-xs text-cyan-600 font-medium">
                   {freeSpinsRemaining} free spin{freeSpinsRemaining !== 1 ? "s" : ""} left
@@ -226,26 +246,22 @@ export function DashboardContent({
         </Card>
 
         {/* Investments Card */}
-        <Card className="min-h-[120px]">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Investments
-            </CardDescription>
+          <Card className="min-h-[120px] backdrop-blur-xl bg-white/60 border border-white/40 shadow-none">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs font-medium uppercase tracking-wider text-[#4B5563]">
+                Investments
+              </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold tracking-tight text-black">
-              {displayInvestments} <span className="text-lg font-normal text-muted-foreground">ABX</span>
+            <p className="text-3xl font-bold tracking-tight text-[#111827]">
+              {formatCurrency(investmentsValue)} <span className="text-lg font-normal text-[#4B5563]">ABX</span>
             </p>
             <div className="mt-2">
               <div className={cn(
                 "inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold",
-                showValues
-                  ? (isAllTimePositive ? "bg-[#00C805]/10 text-[#00A804]" : "bg-[#FF4444]/10 text-[#CC3333]")
-                  : "bg-neutral-100 text-neutral-400"
+                isAllTimePositive ? "bg-[#00C805]/10 text-[#00A804]" : "bg-[#FF4444]/10 text-[#CC3333]"
               )}>
-                {showValues
-                  ? `${isAllTimePositive ? "+" : ""}${allTimeReturn.toFixed(2)}% all time`
-                  : "••••••"}
+                {isAllTimePositive ? "+" : ""}{allTimeReturn.toFixed(2)}% all time
               </div>
             </div>
           </CardContent>
@@ -253,9 +269,20 @@ export function DashboardContent({
       </motion.div>
 
       {/* Holdings Section */}
-      <motion.div variants={itemVariants} className="mb-8">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-8">
         <div className="flex items-center gap-3 mb-4">
-          <h2 className="text-lg font-semibold tracking-tight text-black">Holdings</h2>
+          <h2 className="text-lg font-semibold tracking-tight text-[#111827]">Holdings</h2>
+          {totalInvested > 0 && (
+            <div className={cn(
+              "inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold",
+              isPnlPositive ? "bg-[#00C805]/10 text-[#00A804]" : "bg-[#FF4444]/10 text-[#CC3333]"
+            )}>
+              {isPnlPositive ? "+" : ""}{formatCurrency(totalPnl)}
+            </div>
+          )}
+          <span className="text-xs text-[#4B5563]">
+            ({holdings.length} position{holdings.length !== 1 ? "s" : ""})
+          </span>
           {hasActivePowerup && x2Countdown && (
             <div className="flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 border border-rose-200">
               <Zap className="h-3.5 w-3.5 text-rose-600 fill-rose-600" />
@@ -266,34 +293,34 @@ export function DashboardContent({
           )}
         </div>
         {holdings.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-sm font-medium text-black">No holdings yet</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Start trading to build your portfolio
-              </p>
-            </CardContent>
-          </Card>
+            <Card className="bg-white border-[#E5E7EB] shadow-none">
+              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-sm font-medium text-[#111827]">No holdings yet</p>
+                <p className="mt-1 text-sm text-[#4B5563]">
+                  Start trading to build your portfolio
+                </p>
+              </CardContent>
+            </Card>
         ) : (
-          <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
-            <table className="w-full">
-              <tbody className="divide-y divide-neutral-100">
-                {holdings.map((h) => {
-                  const currentValue = h.shares * h.current_price;
-                  const costBasis = h.shares * h.avg_buy_price;
-                  const pnl = currentValue - costBasis;
-                  const pnlPercent = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
-                  const isPnlPositive = pnl >= 0;
-                  return (
-                    <tr
-                      key={h.ticker}
-                      className="group cursor-pointer hover:bg-neutral-50 transition-colors"
-                      onClick={() => router.push(`/dashboard/stock/${h.ticker}`)}
-                    >
-                      <td className="px-6 py-4">
-                        <p className="text-sm font-semibold text-black">{h.ticker}</p>
-                        <p className="text-xs text-muted-foreground">{formatShares(h.shares)} share{formatShares(h.shares) !== "1" ? "s" : ""}</p>
-                      </td>
+            <div className="overflow-hidden rounded-lg border border-[#E5E7EB] bg-white">
+              <table className="w-full">
+                <tbody className="divide-y divide-[#E5E7EB]">
+                  {holdings.map((h) => {
+                    const currentValue = h.shares * h.current_price;
+                    const costBasis = h.shares * h.avg_buy_price;
+                    const pnl = currentValue - costBasis;
+                    const pnlPercent = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
+                    const isPnlPositive = pnl >= 0;
+                    return (
+                      <tr
+                        key={h.ticker}
+                        className="group cursor-pointer hover:bg-[#F9FAFB]"
+                        onClick={() => router.push(`/dashboard/stock/${h.ticker}`)}
+                      >
+                        <td className="px-6 py-4">
+                          <p className="text-sm font-semibold text-[#111827]">{h.ticker}</p>
+                          <p className="text-xs text-[#4B5563]">{formatShares(h.shares)} share{formatShares(h.shares) !== "1" ? "s" : ""}</p>
+                        </td>
                       <td className="px-6 py-4 text-right">
                         <p
                           className={cn(
@@ -323,92 +350,14 @@ export function DashboardContent({
         )}
       </motion.div>
 
-      {/* Recent Transactions Section */}
-      <motion.div variants={itemVariants}>
-        <h2 className="mb-4 text-lg font-semibold tracking-tight text-black">
-          Recent Transactions
+      {/* Transaction History Section */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+        <h2 className="mb-4 text-lg font-semibold tracking-tight text-[#111827]">
+          Transaction History
         </h2>
-        {transactions.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-sm font-medium text-black">No transactions yet</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Your trade history will appear here
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-neutral-100">
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Ticker
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Shares
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                    Total
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100">
-                {transactions.map((t, i) => {
-                  const total = t.shares * t.price_per_share;
-                  const colorMap: Record<string, string> = {
-                    buy: "bg-[#00C805]/10 text-[#00A804]",
-                    sell: "bg-[#FF4444]/10 text-[#CC3333]",
-                    spin: "bg-[#6366F1]/10 text-[#6366F1]",
-                  };
-                  const labelMap: Record<string, string> = {
-                    buy: "Buy",
-                    sell: "Sell",
-                    spin: "Spin",
-                  };
-                  return (
-                    <tr key={`${t.created_at}-${i}`} className="group">
-                      <td className="px-6 py-4 text-sm text-neutral-600">
-                        {formatDate(t.created_at)}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-black">
-                        {t.ticker}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge
-                          className={cn(
-                            "rounded-full px-3 py-1.5 text-xs font-semibold",
-                            colorMap[t.type] ?? "bg-neutral-100 text-neutral-700"
-                          )}
-                        >
-                          {labelMap[t.type] ?? t.type}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-left text-sm text-neutral-700">
-                        {t.shares}
-                      </td>
-                      <td className="px-6 py-4 text-left text-sm text-neutral-700">
-                        {formatCurrency(t.price_per_share)}
-                      </td>
-                      <td className="px-6 py-4 text-left text-sm font-medium text-black">
-                        {formatCurrency(total)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <div className="rounded-lg border border-[#E5E7EB] bg-white pb-8">
+          <TransactionHistory initialTransactions={transactions} />
+        </div>
       </motion.div>
 
       <SpinModal
@@ -425,6 +374,22 @@ export function DashboardContent({
         onOpenChange={setClaimModalOpen}
         onClaimComplete={() => router.refresh()}
       />
+
+      <OnboardingModal
+        open={!hasSeenOnboarding || showHowToPlay}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowHowToPlay(false);
+            router.refresh();
+          }
+        }}
+      />
+
+      <SpinInfoModal
+        open={spinInfoOpen}
+        onOpenChange={setSpinInfoOpen}
+      />
     </motion.div>
+    </>
   );
 }

@@ -198,7 +198,7 @@ export function SpinModal({ open, onOpenChange, onSpinComplete, canSpin, nextRes
           {isOnCooldown && countdownText && !spinning && !result && (
             <div className="flex flex-col items-center gap-2">
               <Clock className="h-8 w-8 text-muted-foreground" />
-              <p className="text-2xl font-bold tracking-tight text-black">
+              <p className="text-2xl font-bold tracking-tight text-[#111827]">
                 {countdownText}
               </p>
               <p className="text-xs text-muted-foreground">
@@ -220,7 +220,7 @@ export function SpinModal({ open, onOpenChange, onSpinComplete, canSpin, nextRes
               {/* Viewport */}
               <div
                 ref={viewportRef}
-                className="relative h-[104px] overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50"
+                className="relative h-[104px] overflow-hidden rounded-xl border border-[#E5E7EB] bg-[#F9FAFB]"
               >
                 {/* Center highlight */}
                 <div className="absolute left-1/2 top-0 z-0 h-full w-[172px] -translate-x-1/2 border-x-2 border-black/10" />
@@ -258,10 +258,10 @@ export function SpinModal({ open, onOpenChange, onSpinComplete, canSpin, nextRes
               onClick={handleSpin}
               disabled={isOnCooldown}
               className={cn(
-                "h-12 gap-2 px-8 text-base",
+                "h-12 gap-2 px-8 text-base rounded-md",
                 isOnCooldown
-                  ? "bg-neutral-200 text-neutral-500 cursor-not-allowed hover:bg-neutral-200"
-                  : "bg-black text-white hover:bg-neutral-800"
+                  ? "bg-[#E5E7EB] text-[#4B5563] cursor-not-allowed hover:bg-[#E5E7EB]"
+                  : "bg-[#2563EB] text-white hover:bg-blue-700"
               )}
             >
               <RotateCw className="h-5 w-5" />

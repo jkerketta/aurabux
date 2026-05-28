@@ -85,7 +85,7 @@ export function X2ClaimModal({ open, onOpenChange, onClaimComplete }: X2ClaimMod
             <Button
               onClick={handleClaim}
               disabled={claiming}
-              className="h-12 gap-2 px-8 text-base bg-black text-white hover:bg-neutral-800"
+              className="h-12 gap-2 px-8 text-base bg-[#2563EB] text-white hover:bg-blue-700"
             >
               {claiming ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -99,7 +99,7 @@ export function X2ClaimModal({ open, onOpenChange, onClaimComplete }: X2ClaimMod
           /* Post-claim results */
           <div className="flex flex-col gap-5 py-2">
             {/* Summary */}
-            <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+            <div className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-muted-foreground">
                   Investments at activation
@@ -197,7 +197,7 @@ export function X2ClaimModal({ open, onOpenChange, onClaimComplete }: X2ClaimMod
             {/* Close button */}
             <Button
               onClick={handleClose}
-              className="h-12 gap-2 px-8 text-base bg-black text-white hover:bg-neutral-800"
+              className="h-12 gap-2 px-8 text-base bg-[#2563EB] text-white hover:bg-blue-700"
             >
               <Check className="h-4 w-4" />
               Done

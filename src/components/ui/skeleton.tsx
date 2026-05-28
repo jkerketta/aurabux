@@ -12,7 +12,7 @@ export function Skeleton({ className, ...props }: SkeletonProps) {
         background:
           "linear-gradient(90deg, var(--color-skeleton) 25%, var(--color-skeleton-highlight) 50%, var(--color-skeleton) 75%)",
         backgroundSize: "200% 100%",
-        animation: "shimmer 1.5s ease-in-out infinite",
+        animation: "shimmer 2.5s linear infinite",
       }}
       {...props}
     />

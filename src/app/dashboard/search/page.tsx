@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Search, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -102,22 +102,22 @@ function SearchPageInner() {
   }, [searchQuery]);
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <h1 className="mb-6 text-3xl font-semibold tracking-tight text-black">
+    <div className="mx-auto max-w-3xl pt-4">
+      <h1 className="mb-6 text-4xl font-bold tracking-tight text-[#111827]">
         Search Stocks
       </h1>
 
       {/* Search Bar */}
       <div className="relative mb-6">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#4B5563]" />
         <Input
           value={searchQuery}
           onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
           placeholder="Search stocks..."
-          className="h-12 pl-10 text-base"
+          className="h-12 pl-10 text-base focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1"
         />
         {searchLoading && (
-          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[#4B5563]" />
         )}
       </div>
 
@@ -127,50 +127,46 @@ function SearchPageInner() {
       )}
 
       {/* Search Results */}
-      <AnimatePresence mode="popLayout">
-        {searchQuery.trim() && !searchLoading && searchResults.length === 0 && (
-          <motion.p
-            key="no-results"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="py-8 text-center text-sm text-muted-foreground"
-          >
-            No stocks found for &ldquo;{searchQuery}&rdquo;
-          </motion.p>
-        )}
+      {searchQuery.trim() && !searchLoading && searchResults.length === 0 && (
+        <motion.p
+          key="no-results"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="py-8 text-center text-sm text-[#4B5563]"
+        >
+          No stocks found for &ldquo;{searchQuery}&rdquo;
+        </motion.p>
+      )}
 
-        {searchResults.map((result: SearchResult, index: number) => (
-          <motion.div
-            key={`${result.symbol}-${result.displaySymbol}-${index}`}
-            layout
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
+      {searchResults.map((result: SearchResult, index: number) => (
+        <motion.div
+          key={`${result.symbol}-${result.displaySymbol}-${index}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Card
+            className="mb-2 cursor-pointer border-[#E5E7EB] hover:bg-[#F9FAFB]"
+            onClick={() =>
+              router.push(`/dashboard/stock/${result.symbol}`)
+            }
           >
-            <Card
-              className="mb-2 cursor-pointer transition-colors hover:bg-neutral-50"
-              onClick={() =>
-                router.push(`/dashboard/stock/${result.symbol}`)
-              }
-            >
-              <CardContent className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-black">
-                      {result.displaySymbol || result.symbol}
-                    </p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">
-                      {result.description}
-                    </p>
-                  </div>
+            <CardContent className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-[#111827]">
+                    {result.displaySymbol || result.symbol}
+                  </p>
+                  <p className="text-xs text-[#4B5563] line-clamp-1">
+                    {result.description}
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </AnimatePresence>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      ))}
     </div>
   );
 }
@@ -184,7 +180,7 @@ export default function SearchPage() {
         <div className="mx-auto max-w-3xl">
           <Skeleton className="h-9 w-48 mb-6" />
           <div className="relative mb-6">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#4B5563]" />
             <Skeleton className="h-12 w-full" />
           </div>
         </div>

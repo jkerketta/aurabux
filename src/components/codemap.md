@@ -6,9 +6,10 @@ Provides all reusable UI primitives and domain-specific interactive components f
 | Directory | Purpose |
 |---|---|
 | `ui/` | shadcn/ui primitives — unstyled building blocks (button, card, dialog, input, etc.) |
-| `spinner/` | Daily spin game mechanics — slot-machine animation, reward claiming, x2 powerup lifecycle |
+| `spinner/` | Daily spin game mechanics — slot-machine animation, reward claiming, x2 powerup lifecycle, spin info modal |
 | `friends/` | Social features — friend search, request send/accept/decline/cancel, friend list management |
 | `layout/` | Application shell — top navigation bar with user menu and route links |
+| `trade/` | Trade confirmation dialog — buy/sell summary with cost basis and gain/loss display |
 
 ## Design Patterns
 
@@ -99,6 +100,7 @@ Server Component (layout/page)
 |---|---|---|
 | `SpinModal` | Client | Slot-machine animation, 8 reward types (ABX, stock, x2 powerup, free spins), cooldown countdown, x2 accept/reject flow |
 | `X2ClaimModal` | Client | Post-powerup claim flow, snapshot vs. current value comparison, doubled gain/loss display with color-coded results |
+| `SpinInfoModal` | Client | Rewards explainer dialog — lists all 8 reward types with icons and descriptions, triggered by `?` icon on dashboard |
 
 ### `friends/` — Social Features
 
@@ -111,3 +113,9 @@ Server Component (layout/page)
 | Component | Type | Key Features |
 |---|---|---|
 | `Navbar` | Client | Three-section layout (logo left, nav links center, user menu right), dropdown with Friends + Sign Out, hard-redirect logout |
+
+### `trade/` — Trade Confirmation
+
+| Component | Type | Key Features |
+|---|---|---|
+| `TradeConfirmation` | Client | Buy/sell confirmation dialog — shows trade summary, remaining balance (buy), or cost basis + gain/loss (sell), prevents accidental trades |

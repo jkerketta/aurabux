@@ -62,6 +62,7 @@ Copy `.env.local` from `.env.example` and fill in Supabase credentials.
 - `supabase/migrations/001_initial_schema.sql` — `users` + `portfolios` tables with RLS policies.
 - `supabase/migrations/002_holdings_and_transactions.sql` — `holdings` + `transactions` tables.
 - `supabase/migrations/008_daily_spinner.sql` — `daily_spins` + `powerups` tables.
+- `supabase/migrations/016_onboarding_flag.sql` — `has_seen_onboarding` boolean in `users` table.
 - RLS: users can only read/update their own data.
 - `transactions.type` check constraint: `('buy', 'sell', 'spin')`
 
@@ -70,13 +71,15 @@ Copy `.env.local` from `.env.example` and fill in Supabase credentials.
 
 ### UI components
 - shadcn/ui primitives at `@/components/ui/`
-- Layout components (Sidebar, Header) at `@/components/layout/`
+- Layout components (Navbar) at `@/components/layout/`
 - Spinner components at `@/components/spinner/`
-- Skeleton component at `@/components/ui/skeleton.tsx`
+- Onboarding modal at `@/components/onboarding/onboarding-modal.tsx`
+- Transaction history at `@/components/transactions/transaction-history.tsx`
+- Skeleton components at `@/components/ui/skeleton.tsx` and `@/components/skeletons/`
 
 ### Styling
 - Tailwind CSS v4 — uses `@tailwindcss/postcss` plugin (no `tailwind.config.js`).
-- Global styles in `src/app/globals.css` (includes shimmer keyframes).
+- Global styles in `src/app/globals.css` (includes shimmer keyframes — linear timing, 2.5s duration).
 - Dark theme by default.
 
 ## Conventions

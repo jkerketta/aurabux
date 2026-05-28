@@ -60,14 +60,45 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white px-4">
+    <div className="relative flex min-h-screen items-center justify-center px-4 overflow-hidden">
+      {/* Animated gradient blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute -top-[20%] -left-[20%] w-[100vw] h-[100vw] max-w-[1200px] max-h-[1200px] rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(6,182,212,0.6) 0%, transparent 65%)",
+            filter: "blur(100px)",
+            animation: "blob1 20s ease-in-out infinite",
+            opacity: 0.7,
+          }}
+        />
+        <div
+          className="absolute top-[10%] -right-[20%] w-[90vw] h-[90vw] max-w-[1100px] max-h-[1100px] rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(168,85,247,0.6) 0%, transparent 65%)",
+            filter: "blur(100px)",
+            animation: "blob2 25s ease-in-out infinite",
+            opacity: 0.7,
+          }}
+        />
+        <div
+          className="absolute -bottom-[20%] left-[0%] w-[95vw] h-[95vw] max-w-[1150px] max-h-[1150px] rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(34,197,94,0.6) 0%, transparent 65%)",
+            filter: "blur(100px)",
+            animation: "blob3 22s ease-in-out infinite",
+            opacity: 0.6,
+          }}
+        />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="relative z-10 w-full max-w-md"
       >
-        <Card className="border-neutral-200">
+        <Card className="backdrop-blur-xl bg-white/60 border border-white/40 shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-4xl font-bold tracking-tight text-black">ABX</CardTitle>
             <CardDescription className="text-sm text-muted-foreground">
