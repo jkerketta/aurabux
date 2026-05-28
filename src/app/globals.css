@@ -68,19 +68,31 @@ a {
 
 /* Animated gradient blobs for auth pages */
 @keyframes blob1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -50px) scale(1.1); }
-  66% { transform: translate(-20px, 20px) scale(0.9); }
+  0% { transform: translate(0, 0) scale(1); }
+  15% { transform: translate(40px, -60px) scale(1.1); }
+  30% { transform: translate(-20px, -100px) scale(0.95); }
+  50% { transform: translate(-60px, -30px) scale(1.05); }
+  70% { transform: translate(30px, 40px) scale(0.9); }
+  85% { transform: translate(60px, -20px) scale(1.08); }
+  100% { transform: translate(0, 0) scale(1); }
 }
 
 @keyframes blob2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(-30px, 30px) scale(0.9); }
-  66% { transform: translate(20px, -30px) scale(1.1); }
+  0% { transform: translate(0, 0) scale(1); }
+  15% { transform: translate(-50px, 30px) scale(0.9); }
+  30% { transform: translate(-80px, -20px) scale(1.1); }
+  50% { transform: translate(-30px, -60px) scale(0.95); }
+  70% { transform: translate(40px, -40px) scale(1.05); }
+  85% { transform: translate(20px, 50px) scale(0.92); }
+  100% { transform: translate(0, 0) scale(1); }
 }
 
 @keyframes blob3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(50px, 20px) scale(0.95); }
-  66% { transform: translate(-30px, -40px) scale(1.05); }
+  0% { transform: translate(0, 0) scale(1); }
+  15% { transform: translate(60px, 20px) scale(0.95); }
+  30% { transform: translate(30px, -50px) scale(1.08); }
+  50% { transform: translate(-40px, -30px) scale(0.9); }
+  70% { transform: translate(-60px, 40px) scale(1.05); }
+  85% { transform: translate(-20px, 60px) scale(0.92); }
+  100% { transform: translate(0, 0) scale(1); }
 }

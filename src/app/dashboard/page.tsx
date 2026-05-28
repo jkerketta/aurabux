@@ -118,7 +118,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <div className="mx-auto max-w-5xl px-8 py-12">
         <DashboardContent
           user={user}

@@ -128,7 +128,7 @@ export function DashboardContent({
           style={{
             background: "radial-gradient(circle, rgba(6,182,212,0.6) 0%, transparent 65%)",
             filter: "blur(100px)",
-            animation: "blob1 20s ease-in-out infinite",
+            animation: "blob1 35s ease-in-out infinite",
             opacity: 0.7,
           }}
         />
@@ -137,7 +137,7 @@ export function DashboardContent({
           style={{
             background: "radial-gradient(circle, rgba(168,85,247,0.6) 0%, transparent 65%)",
             filter: "blur(100px)",
-            animation: "blob2 25s ease-in-out infinite",
+            animation: "blob2 40s ease-in-out infinite",
             opacity: 0.7,
           }}
         />
@@ -146,7 +146,7 @@ export function DashboardContent({
           style={{
             background: "radial-gradient(circle, rgba(34,197,94,0.6) 0%, transparent 65%)",
             filter: "blur(100px)",
-            animation: "blob3 22s ease-in-out infinite",
+            animation: "blob3 38s ease-in-out infinite",
             opacity: 0.6,
           }}
         />
