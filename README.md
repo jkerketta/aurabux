@@ -1,31 +1,33 @@
-# Aurabux
+# ABX
 
 A fake stock trading game where you pick real stocks, compete with friends, and try to grow your portfolio.
 
 ## About
 
-Aurabux gives every player **10,000 ABX** to start trading real stocks with fake money. Track your portfolio, compete on a live leaderboard, spin daily for rewards, and challenge friends to see who makes the best investments. Built for learning, fun, and friendly rivalry.
+ABX gives every player **10,000 ABX** to start trading real stocks with fake money. Track your portfolio, compete on a live leaderboard, spin daily for rewards, and challenge friends to see who makes the best investments. Built for learning, fun, and friendly rivalry.
 
 ## Features
 
-- **Portfolio Dashboard** — Real-time balance, holdings, and all-time return tracking
-- **Live Stock Data** — Real-time quotes, interactive charts (1D/1M/1Y/5Y), and company info
-- **Buy & Sell** — Trade by shares or ABX amount with instant balance updates
+- **Portfolio Dashboard** — Real-time balance, holdings, total P&L, and all-time return tracking
+- **Live Stock Data** — Real-time quotes, interactive charts (1D/1M/1Y/5Y), market status, and company info
+- **Buy & Sell** — Trade by shares or ABX amount with confirmation dialogs and instant balance updates
 - **Daily Spin** — CSGO-style spinner with 8 rewards: ABX, free stocks, x2 returns, free spins
 - **x2 Powerup** — Snapshot your portfolio, wait 24h, and claim doubled returns
 - **Global Leaderboard** — Live rankings with real-time price calculations
 - **Friends System** — Send requests, accept/decline, and compete with your circle
+- **Onboarding** — Interactive 3-step guide for new users, re-openable anytime
 - **Skeleton Loading** — Shimmer animations on all page transitions
+- **Glassmorphism UI** — Light theme with animated gradient blobs and frosted glass cards
 
 ## Tech Stack
 
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwind-css)](https://tailwindcss.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase)](https://supabase.com/)
-[![Finnhub](https://img.shields.io/badge/Finnhub-Stock%20Data-0052CC?logo=finnhub)](https://finnhub.io/)
-[![Yahoo Finance](https://img.shields.io/badge/Yahoo%20Finance-Chart%20Data-6001D2?logo=yahoo)](https://finance.yahoo.com/)
-[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000?logo=vercel)](https://vercel.com/)
+[![Recharts](https://img.shields.io/badge/Recharts-Charts-FF7300?logo=apacheecharts)](https://recharts.org/)
+[![Framer Motion](https://img.shields.io/badge/Framer_Motion-Animations-0055FF?logo=framer)](https://www.framer.com/motion/)
 
 ## Getting Started
 
@@ -69,9 +71,17 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-side only) |
 | `FINNHUB_API_KEY` | Finnhub API key for stock data (free at [finnhub.io](https://finnhub.io)) |
 
+## Live Demo
+
+[Deploy on Vercel](https://vercel.com/new) — One-click deploy with environment variables.
+
 ## Screenshots
 
-Coming soon.
+| Dashboard | Stock Detail | Daily Spin |
+|-----------|-------------|------------|
+| *Portfolio overview with glassmorphic cards* | *Interactive charts with buy/sell panel* | *CSGO-style spinner with 8 rewards* |
+
+> Add actual screenshots by replacing the placeholder text with `<img>` tags or uploading images to the repo.
 
 ## License
 
