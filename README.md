@@ -76,13 +76,10 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 [Deploy on Vercel](https://vercel.com/new) — One-click deploy with environment variables.
 
 ## Screenshots
+<img width="1060" height="578" alt="image" src="https://github.com/user-attachments/assets/ba9f47c4-049d-4cc8-87bc-1f5a4cddbbaa" />
+<img width="1196" height="1040" alt="image" src="https://github.com/user-attachments/assets/e8675884-4406-4565-aff2-f8d0bb57654d" />
+<img width="920" height="1229" alt="image" src="https://github.com/user-attachments/assets/580623d6-65e7-46ed-bda3-489ea019012b" />
 
-| Dashboard | Stock Detail | Daily Spin |
-|-----------|-------------|------------|
-| *<img width="1060" height="578" alt="image" src="https://github.com/user-attachments/assets/ba9f47c4-049d-4cc8-87bc-1f5a4cddbbaa" />
-* | *Interactive charts with buy/sell panel* | *CSGO-style spinner with 8 rewards* |
-
-> Add actual screenshots by replacing the placeholder text with `<img>` tags or uploading images to the repo.
 
 ## License
 
