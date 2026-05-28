@@ -1,6 +1,6 @@
-# ABX
+# ABX - Aurabux
 
-A fake stock trading game where you pick real stocks, compete with friends, and try to grow your portfolio.
+A stock trading game where you use a fake digital currency called Aurabux (ABX) to pick real stocks, compete with friends, and try to grow your portfolio.
 
 ## About
 
