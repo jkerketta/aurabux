@@ -199,14 +199,14 @@ export function DashboardContent({
               </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold tracking-tight text-[#2563EB]">
+            <p className="text-3xl font-bold tracking-tight text-[#111827]">
               {formatCurrency(initialBalance)} <span className="text-lg font-normal text-[#4B5563]">ABX</span>
             </p>
             <div className="mt-3">
               <div
                 className={cn(
-                  "relative inline-flex items-center gap-2 cursor-pointer rounded-md px-3 py-1.5 transition-colors",
-                  canSpin ? "bg-[#2563EB] text-white hover:bg-blue-700" : "bg-transparent text-neutral-300"
+                  "inline-flex items-center gap-2 cursor-pointer transition-colors pl-0",
+                  canSpin ? "text-[#2563EB] hover:text-blue-700" : "text-neutral-300"
                 )}
                 onClick={() => setSpinModalOpen(true)}
               >
