@@ -965,7 +965,7 @@ export function StockDetailClient({
                   <Button
                     onClick={handleBuy}
                     disabled={!buyInput || buyLoading || !quoteData}
-                    className="h-11 w-full bg-[#2563EB] text-base text-white hover:bg-blue-700"
+                    className="h-11 w-full bg-[#2563EB] text-base text-white hover:bg-blue-700 disabled:opacity-60"
                   >
                     {buyLoading ? (
                       <>
@@ -1100,7 +1100,7 @@ export function StockDetailClient({
                   <Button
                     onClick={handleSell}
                     disabled={!sellInput || sellLoading || !quoteData}
-                    className="h-11 w-full bg-[#2563EB] text-base text-white hover:bg-blue-700"
+                    className="h-11 w-full bg-[#2563EB] text-base text-white hover:bg-blue-700 disabled:opacity-60"
                   >
                     {sellLoading ? (
                       <>
