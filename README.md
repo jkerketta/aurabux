@@ -79,7 +79,8 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 
 | Dashboard | Stock Detail | Daily Spin |
 |-----------|-------------|------------|
-| *Portfolio overview with glassmorphic cards* | *Interactive charts with buy/sell panel* | *CSGO-style spinner with 8 rewards* |
+| *<img width="1060" height="578" alt="image" src="https://github.com/user-attachments/assets/ba9f47c4-049d-4cc8-87bc-1f5a4cddbbaa" />
+* | *Interactive charts with buy/sell panel* | *CSGO-style spinner with 8 rewards* |
 
 > Add actual screenshots by replacing the placeholder text with `<img>` tags or uploading images to the repo.
 
