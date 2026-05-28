@@ -24,6 +24,7 @@ import {
   ArrowLeft,
   RotateCw,
 } from "lucide-react";
+import { TradeConfirmation } from "@/components/trade/trade-confirmation";
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -221,6 +222,18 @@ export function StockDetailClient({
   const [sellLoading, setSellLoading] = useState(false);
   const [sellError, setSellError] = useState<string | null>(null);
 
+  const [confirmationData, setConfirmationData] = useState<{
+    type: "buy" | "sell";
+    symbol: string;
+    shares: number;
+    pricePerShare: number;
+    total: number;
+    remainingBalance?: number;
+    costBasis?: number;
+    gainLoss?: number;
+    gainLossPercent?: number;
+  } | null>(null);
+
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [, setTick] = useState(0);
@@ -301,7 +314,7 @@ export function StockDetailClient({
 
   // ── Buy logic ──────────────────────────────────────────
 
-  const handleBuy = useCallback(async () => {
+  const handleBuy = useCallback(() => {
     if (!quoteData || !buyInput) return;
 
     const parsedInput = parseFloat(buyInput);
@@ -327,42 +340,22 @@ export function StockDetailClient({
       return;
     }
 
-    setBuyLoading(true);
     setBuyError(null);
 
-    try {
-      const res = await fetch("/api/stocks/buy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          symbol,
-          shares: Math.round(shares * 100) / 100,
-          pricePerShare: quoteData.currentPrice,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || data.error) {
-        setBuyError(data.error ?? "Purchase failed");
-        return;
-      }
-
-      setBuyInput("");
-      router.refresh();
-      toast.success(
-        `Bought ${data.shares_bought} shares of ${data.symbol}`
-      );
-    } catch {
-      setBuyError("Network error — try again");
-    } finally {
-      setBuyLoading(false);
-    }
-  }, [symbol, quoteData, buyInput, buyMode, availableBalance, router]);
+    const roundedShares = Math.round(shares * 100) / 100;
+    setConfirmationData({
+      type: "buy",
+      symbol,
+      shares: roundedShares,
+      pricePerShare: quoteData.currentPrice,
+      total: totalCost,
+      remainingBalance: availableBalance - totalCost,
+    });
+  }, [symbol, quoteData, buyInput, buyMode, availableBalance]);
 
   // ── Sell logic ─────────────────────────────────────────
 
-  const handleSell = useCallback(async () => {
+  const handleSell = useCallback(() => {
     if (!quoteData || !sellInput || !userHolding) return;
 
     const parsedInput = parseFloat(sellInput);
@@ -387,38 +380,99 @@ export function StockDetailClient({
       return;
     }
 
-    setSellLoading(true);
     setSellError(null);
 
-    try {
-      const res = await fetch("/api/stocks/sell", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          symbol,
-          shares: Math.round(shares * 100) / 100,
-          pricePerShare: quoteData.currentPrice,
-        }),
-      });
+    const roundedShares = Math.round(shares * 100) / 100;
+    const total = roundedShares * quoteData.currentPrice;
+    const costBasis = roundedShares * userHolding.avg_buy_price;
+    const gainLoss = total - costBasis;
+    const gainLossPercent = costBasis > 0 ? (gainLoss / costBasis) * 100 : 0;
 
-      const data = await res.json();
+    setConfirmationData({
+      type: "sell",
+      symbol,
+      shares: roundedShares,
+      pricePerShare: quoteData.currentPrice,
+      total,
+      costBasis,
+      gainLoss,
+      gainLossPercent,
+    });
+  }, [symbol, quoteData, sellInput, sellMode, userHolding]);
 
-      if (!res.ok || data.error) {
-        setSellError(data.error ?? "Sell failed");
-        return;
+  // ── Execute trade ──────────────────────────────────────
+
+  const executeTrade = useCallback(async () => {
+    if (!confirmationData || !quoteData) return;
+
+    if (confirmationData.type === "buy") {
+      setBuyLoading(true);
+      setBuyError(null);
+
+      try {
+        const res = await fetch("/api/stocks/buy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            symbol: confirmationData.symbol,
+            shares: confirmationData.shares,
+            pricePerShare: confirmationData.pricePerShare,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          setBuyError(data.error ?? "Purchase failed");
+          return;
+        }
+
+        setBuyInput("");
+        router.refresh();
+        toast.success(
+          `Bought ${data.shares_bought} shares of ${data.symbol}`
+        );
+      } catch {
+        setBuyError("Network error — try again");
+      } finally {
+        setBuyLoading(false);
+        setConfirmationData(null);
       }
+    } else {
+      setSellLoading(true);
+      setSellError(null);
 
-      setSellInput("");
-      router.refresh();
-      toast.success(
-        `Sold ${data.shares_sold} shares of ${data.symbol}`
-      );
-    } catch {
-      setSellError("Network error — try again");
-    } finally {
-      setSellLoading(false);
+      try {
+        const res = await fetch("/api/stocks/sell", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            symbol: confirmationData.symbol,
+            shares: confirmationData.shares,
+            pricePerShare: confirmationData.pricePerShare,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          setSellError(data.error ?? "Sell failed");
+          return;
+        }
+
+        setSellInput("");
+        router.refresh();
+        toast.success(
+          `Sold ${data.shares_sold} shares of ${data.symbol}`
+        );
+      } catch {
+        setSellError("Network error — try again");
+      } finally {
+        setSellLoading(false);
+        setConfirmationData(null);
+      }
     }
-  }, [symbol, quoteData, sellInput, sellMode, userHolding, router]);
+  }, [confirmationData, quoteData, router]);
 
   // ── Computed ───────────────────────────────────────────
 
@@ -1169,7 +1223,15 @@ export function StockDetailClient({
             </Card>
           )}
 
-
+          {/* Trade Confirmation Dialog */}
+          {confirmationData && (
+            <TradeConfirmation
+              open={!!confirmationData}
+              onOpenChange={(open) => { if (!open) setConfirmationData(null); }}
+              onConfirm={executeTrade}
+              {...confirmationData}
+            />
+          )}
         </div>
       </div>
     </div>
