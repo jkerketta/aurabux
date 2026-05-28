@@ -96,6 +96,20 @@ function formatShares(value: number): string {
   return rounded % 1 === 0 ? rounded.toString() : rounded.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
 }
 
+function getMarketStatus(): { isOpen: boolean; message: string } {
+  const now = new Date();
+  const etString = now.toLocaleString("en-US", { timeZone: "America/New_York" });
+  const etDate = new Date(etString);
+  const day = etDate.getDay(); // 0=Sun, 6=Sat
+  const hours = etDate.getHours();
+  const minutes = etDate.getMinutes();
+  const timeInMinutes = hours * 60 + minutes;
+  const marketOpen = 9 * 60 + 30; // 9:30 AM
+  const marketClose = 16 * 60;    // 4:00 PM
+  const isOpen = day >= 1 && day <= 5 && timeInMinutes >= marketOpen && timeInMinutes < marketClose;
+  return { isOpen, message: isOpen ? "Market Open" : "Market Closed" };
+}
+
 function formatChartDate(timestamp: number, range: TimeRange): string {
   const d = new Date(timestamp * 1000);
   switch (range) {
@@ -431,6 +445,8 @@ export function StockDetailClient({
   const isUp = quoteData ? quoteData.change >= 0 : true;
   const chartColor = isUp ? "#00C805" : "#FF4444";
 
+  const marketStatus = getMarketStatus();
+
   const currentPrice = quoteData?.currentPrice ?? 0;
   const computedShares =
     buyMode === "abx" && buyInput
@@ -503,6 +519,14 @@ export function StockDetailClient({
                       {formatCurrency(quoteData.change)} (
                       {quoteData.changePercent >= 0 ? "+" : ""}
                       {quoteData.changePercent.toFixed(2)}%)
+                    </Badge>
+                  </div>
+                  <div className="mt-1 flex items-center justify-end">
+                    <Badge variant="outline" className={cn(
+                      "text-xs",
+                      marketStatus.isOpen ? "border-[#00C805] text-[#00C805]" : "border-[#4B5563] text-[#4B5563]"
+                    )}>
+                      {marketStatus.message}
                     </Badge>
                   </div>
                   {lastUpdated && (
