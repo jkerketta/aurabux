@@ -456,7 +456,7 @@ export function StockDetailClient({
       {/* Back button */}
       <button
         onClick={() => router.back()}
-        className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-black"
+        className="mb-6 flex items-center gap-1.5 text-sm text-[#4B5563] transition-colors hover:text-[#111827]"
       >
         <ArrowLeft className="h-4 w-4" />
         Back
@@ -469,10 +469,10 @@ export function StockDetailClient({
           <div className="mb-6">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight text-black">
+                <h1 className="text-4xl font-bold tracking-tight text-[#111827]">
                   {symbol}
                 </h1>
-                <p className="mt-0.5 text-sm text-muted-foreground">
+                <p className="mt-0.5 text-sm text-[#4B5563]">
                   {companyName}
                 </p>
               </div>
@@ -481,7 +481,7 @@ export function StockDetailClient({
                 <p className="text-sm text-[#FF4444]">{quoteError}</p>
               ) : quoteData ? (
                 <div className="text-right">
-                  <p className="text-3xl font-bold tracking-tight text-black">
+                  <p className="text-3xl font-bold text-[#111827]">
                     ${formatCurrency(quoteData.currentPrice)}
                   </p>
                   <div className="mt-1 flex items-center justify-end gap-1.5">
@@ -506,12 +506,12 @@ export function StockDetailClient({
                     </Badge>
                   </div>
                   {lastUpdated && (
-                    <div className="mt-1 flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
+                    <div className="mt-1 flex items-center justify-end gap-1.5 text-xs text-[#4B5563]">
                       <span>{formatRelativeTime(lastUpdated)}</span>
                       <button
                         onClick={handleRefresh}
                         disabled={refreshing}
-                        className="rounded p-0.5 transition-colors hover:text-black disabled:opacity-50"
+                        className="rounded p-0.5 transition-colors hover:text-[#111827] disabled:opacity-50"
                         aria-label="Refresh quote"
                       >
                         <RotateCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
@@ -538,7 +538,7 @@ export function StockDetailClient({
                       {showBadge && (
                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 mb-1">
                           <div className={cn(
-                            "rounded px-2 py-1 text-xs font-semibold text-black",
+                            "rounded px-2 py-1 text-xs font-semibold text-[#111827]",
                             isReturnPositive ? "bg-[#00C805]" : "bg-[#FF4444]"
                           )}>
                             {pctReturn >= 0 ? "+" : ""}{pctReturn.toFixed(2)}%
@@ -557,8 +557,8 @@ export function StockDetailClient({
                         className={cn(
                           "h-7 px-3 text-xs",
                           isActive
-                            ? "bg-black text-white"
-                            : "border-neutral-200 text-muted-foreground hover:bg-neutral-100"
+                            ? "bg-[#2563EB] text-white"
+                            : "border-[#E5E7EB] text-[#4B5563] hover:bg-[#F9FAFB]"
                         )}
                       >
                         {range}
@@ -572,7 +572,7 @@ export function StockDetailClient({
               <div className="h-64">
                 {candleLoading ? (
                   <div className="flex h-full items-center justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    <Loader2 className="h-5 w-5 animate-spin text-[#4B5563]" />
                   </div>
                 ) : candleError ? (
                   <div className="flex h-full flex-col items-center justify-center gap-3">
@@ -581,13 +581,13 @@ export function StockDetailClient({
                       variant="outline"
                       size="sm"
                       onClick={() => fetchCandles(symbol, chartRange)}
-                      className="h-7 px-3 text-xs border-neutral-200 text-muted-foreground hover:bg-neutral-100"
+                      className="h-7 px-3 text-xs border-[#E5E7EB] text-[#4B5563] hover:bg-[#F9FAFB]"
                     >
                       Retry
                     </Button>
                   </div>
                 ) : candleData?.status === "no_data" ? (
-                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  <div className="flex h-full items-center justify-center text-sm text-[#4B5563]">
                     No historical data for this stock
                   </div>
                 ) : chartData.length > 1 ? (
@@ -658,7 +658,7 @@ export function StockDetailClient({
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  <div className="flex h-full items-center justify-center text-sm text-[#4B5563]">
                     Failed to load chart data
                   </div>
                 )}
@@ -697,10 +697,10 @@ export function StockDetailClient({
                   },
                 ].map((item) => (
                   <div key={item.label}>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <p className="text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                       {item.label}
                     </p>
-                    <p className="mt-0.5 text-sm font-semibold text-black">
+                    <p className="mt-0.5 text-sm font-semibold text-[#111827]">
                       {quoteError ? "—" : item.value}
                     </p>
                   </div>
@@ -712,25 +712,25 @@ export function StockDetailClient({
           {/* Company Info */}
           <Card className="mt-6">
             <CardContent className="p-6">
-              <h3 className="mb-4 text-base font-semibold text-black">
+              <h3 className="mb-4 text-base font-semibold text-[#111827]">
                 Company Info
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Market Cap</span>
-                  <span className="text-sm font-semibold text-black">
+                  <span className="text-xs text-[#4B5563]">Market Cap</span>
+                  <span className="text-sm font-semibold text-[#111827]">
                     {formatMarketCap(companyInfo?.marketCap ?? null)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Exchange</span>
-                  <span className="text-sm font-semibold text-black">
+                  <span className="text-xs text-[#4B5563]">Exchange</span>
+                  <span className="text-sm font-semibold text-[#111827]">
                     {companyInfo?.exchange ?? "\u2014"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Website</span>
-                  <span className="text-sm font-semibold text-black">
+                  <span className="text-xs text-[#4B5563]">Website</span>
+                  <span className="text-sm font-semibold text-[#111827]">
                     {companyInfo?.weburl ? (
                       <a
                         href={companyInfo.weburl}
@@ -777,8 +777,8 @@ export function StockDetailClient({
                       className={cn(
                         "h-8 px-4 text-xs capitalize",
                         tradeMode === mode
-                          ? "bg-black text-white"
-                          : "border-neutral-200 text-muted-foreground hover:bg-neutral-100",
+                          ? "bg-[#2563EB] text-white"
+                          : "border-[#E5E7EB] text-[#4B5563] hover:bg-[#F9FAFB]",
                         isSellDisabled && "opacity-50 cursor-not-allowed"
                       )}
                     >
@@ -788,7 +788,7 @@ export function StockDetailClient({
                 })}
               </div>
 
-              <h3 className="mb-4 text-base font-semibold text-black">
+              <h3 className="mb-4 text-base font-semibold text-[#111827]">
                 {tradeMode === "buy" ? "Buy" : "Sell"} {symbol}
               </h3>
 
@@ -810,8 +810,8 @@ export function StockDetailClient({
                         className={cn(
                           "h-8 px-4 text-xs capitalize",
                           buyMode === mode
-                            ? "bg-black text-white"
-                            : "border-neutral-200 text-muted-foreground hover:bg-neutral-100"
+                            ? "bg-[#2563EB] text-white"
+                            : "border-[#E5E7EB] text-[#4B5563] hover:bg-[#F9FAFB]"
                         )}
                       >
                         {mode === "shares" ? "Shares" : "ABX Amount"}
@@ -821,23 +821,23 @@ export function StockDetailClient({
 
                   {/* Price display */}
                   {quoteData && (
-                    <p className="mb-1 text-sm text-muted-foreground">
+                    <p className="mb-1 text-sm text-[#4B5563]">
                       Current price:{" "}
-                      <span className="font-semibold text-black">
+                      <span className="font-semibold text-[#111827]">
                         ${formatCurrency(quoteData.currentPrice)}
                       </span>
                     </p>
                   )}
-                  <p className="mb-4 text-xs text-muted-foreground">
+                  <p className="mb-4 text-xs text-[#4B5563]">
                     Available:{" "}
-                    <span className="font-medium text-black">
+                    <span className="font-medium text-[#111827]">
                       {formatCurrency(availableBalance)} ABX
                     </span>
                   </p>
 
                   {/* Input */}
                   <div className="mb-3">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    <label className="mb-1 block text-xs font-medium text-[#4B5563]">
                       {buyMode === "shares"
                         ? "Number of shares"
                         : "ABX to spend"}
@@ -854,25 +854,25 @@ export function StockDetailClient({
                       placeholder={
                         buyMode === "shares" ? "e.g. 10" : "e.g. 500"
                       }
-                      className="h-10 focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-1"
+                      className="h-10 focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1"
                       disabled={!quoteData}
                     />
                   </div>
 
                   {/* Calculated values */}
                   {buyInput && quoteData && !isNaN(parseFloat(buyInput)) && (
-                    <p className="mb-3 text-xs text-muted-foreground">
+                    <p className="mb-3 text-xs text-[#4B5563]">
                       {buyMode === "shares" ? (
                         <>
                           Total cost:{" "}
-                          <span className="font-medium text-black">
+                          <span className="font-medium text-[#111827]">
                             {formatCurrency(computedCost)} ABX
                           </span>
                         </>
                       ) : (
                         <>
                           You&apos;ll get approx.{" "}
-                          <span className="font-medium text-black">
+                          <span className="font-medium text-[#111827]">
                             {computedShares < 1
                               ? computedShares.toFixed(4)
                               : computedShares.toFixed(2)}{" "}
@@ -887,7 +887,7 @@ export function StockDetailClient({
                   <Button
                     onClick={handleBuy}
                     disabled={!buyInput || buyLoading || !quoteData}
-                    className="h-11 w-full bg-black text-base text-white hover:bg-neutral-800"
+                    className="h-11 w-full bg-[#2563EB] text-base text-white hover:bg-blue-700"
                   >
                     {buyLoading ? (
                       <>
@@ -926,8 +926,8 @@ export function StockDetailClient({
                         className={cn(
                           "h-8 px-4 text-xs capitalize",
                           sellMode === mode
-                            ? "bg-black text-white"
-                            : "border-neutral-200 text-muted-foreground hover:bg-neutral-100"
+                            ? "bg-[#2563EB] text-white"
+                            : "border-[#E5E7EB] text-[#4B5563] hover:bg-[#F9FAFB]"
                         )}
                       >
                         {mode === "shares" ? "Shares" : "ABX to receive"}
@@ -937,23 +937,23 @@ export function StockDetailClient({
 
                   {/* Price display */}
                   {quoteData && (
-                    <p className="mb-1 text-sm text-muted-foreground">
+                    <p className="mb-1 text-sm text-[#4B5563]">
                       Current price:{" "}
-                      <span className="font-semibold text-black">
+                      <span className="font-semibold text-[#111827]">
                         ${formatCurrency(quoteData.currentPrice)}
                       </span>
                     </p>
                   )}
-                  <p className="mb-4 text-xs text-muted-foreground">
+                  <p className="mb-4 text-xs text-[#4B5563]">
                     Available to sell:{" "}
-                    <span className="font-medium text-black">
+                    <span className="font-medium text-[#111827]">
                       {formatShares(userHolding.shares)} share{formatShares(userHolding.shares) !== "1" ? "s" : ""}
                     </span>
                   </p>
 
                   {/* Input */}
                   <div className="mb-3">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    <label className="mb-1 block text-xs font-medium text-[#4B5563]">
                       {sellMode === "shares"
                         ? "Number of shares to sell"
                         : "ABX to receive"}
@@ -973,7 +973,7 @@ export function StockDetailClient({
                             ? `e.g. ${Math.min(Number(formatShares(userHolding.shares)), 10)}`
                             : "e.g. 500"
                         }
-                        className="h-10 flex-1 focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-1"
+                        className="h-10 flex-1 focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1"
                         disabled={!quoteData}
                       />
                       {sellMode === "shares" && (
@@ -985,7 +985,7 @@ export function StockDetailClient({
                             setSellInput(String(userHolding.shares));
                             setSellError(null);
                           }}
-                          className="h-10 shrink-0 border-neutral-200 text-xs text-muted-foreground hover:bg-neutral-100"
+                          className="h-10 shrink-0 border-[#E5E7EB] text-xs text-[#4B5563] hover:bg-[#F9FAFB]"
                           disabled={!quoteData}
                         >
                           Max
@@ -996,18 +996,18 @@ export function StockDetailClient({
 
                   {/* Calculated values */}
                   {sellInput && quoteData && !isNaN(parseFloat(sellInput)) && (
-                    <p className="mb-3 text-xs text-muted-foreground">
+                    <p className="mb-3 text-xs text-[#4B5563]">
                       {sellMode === "shares" ? (
                         <>
                           You&apos;ll receive approx.{" "}
-                          <span className="font-medium text-black">
+                          <span className="font-medium text-[#111827]">
                             {formatCurrency(computedSellProceeds)} ABX
                           </span>
                         </>
                       ) : (
                         <>
                           You&apos;ll sell approx.{" "}
-                          <span className="font-medium text-black">
+                          <span className="font-medium text-[#111827]">
                             {computedSellShares < 1
                               ? computedSellShares.toFixed(4)
                               : computedSellShares.toFixed(2)}{" "}
@@ -1022,7 +1022,7 @@ export function StockDetailClient({
                   <Button
                     onClick={handleSell}
                     disabled={!sellInput || sellLoading || !quoteData}
-                    className="h-11 w-full bg-black text-base text-white hover:bg-neutral-800"
+                    className="h-11 w-full bg-[#2563EB] text-base text-white hover:bg-blue-700"
                   >
                     {sellLoading ? (
                       <>
@@ -1049,31 +1049,31 @@ export function StockDetailClient({
           {userHolding && quoteData && (
             <Card>
               <CardContent className="p-6">
-                <h3 className="mb-4 text-base font-semibold text-black">
+                <h3 className="mb-4 text-base font-semibold text-[#111827]">
                   Your Position
                 </h3>
 
                 <div className="space-y-3">
                   {/* Shares */}
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Shares</span>
-                    <span className="text-sm font-semibold text-black">
+                    <span className="text-xs text-[#4B5563]">Shares</span>
+                    <span className="text-sm font-semibold text-[#111827]">
                       {formatShares(userHolding.shares)} share{formatShares(userHolding.shares) !== "1" ? "s" : ""}
                     </span>
                   </div>
 
                   {/* Avg Buy Price */}
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Avg Buy Price</span>
-                    <span className="text-sm font-semibold text-black">
+                    <span className="text-xs text-[#4B5563]">Avg Buy Price</span>
+                    <span className="text-sm font-semibold text-[#111827]">
                       ${formatCurrency(userHolding.avg_buy_price)}
                     </span>
                   </div>
 
                   {/* Current Value */}
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Current Value</span>
-                    <span className="text-sm font-semibold text-black">
+                    <span className="text-xs text-[#4B5563]">Current Value</span>
+                    <span className="text-sm font-semibold text-[#111827]">
                       ${formatCurrency(quoteData.currentPrice * userHolding.shares)}
                     </span>
                   </div>
@@ -1092,7 +1092,7 @@ export function StockDetailClient({
                     const isTotalPositive = totalReturnDollars >= 0;
                     return (
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">Total Return</span>
+                        <span className="text-xs text-[#4B5563]">Total Return</span>
                         <span
                           className={cn(
                             "text-sm font-semibold",
@@ -1111,7 +1111,7 @@ export function StockDetailClient({
                   {/* Today's Return */}
                   {firstClose !== null && lastClose !== null && (
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">Today&apos;s Return</span>
+                      <span className="text-xs text-[#4B5563]">Today&apos;s Return</span>
                       <span
                         className={cn(
                           "text-sm font-semibold",
@@ -1128,8 +1128,8 @@ export function StockDetailClient({
 
                   {/* % of Portfolio */}
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">% of Portfolio</span>
-                    <span className="text-sm font-semibold text-black">
+                    <span className="text-xs text-[#4B5563]">% of Portfolio</span>
+                    <span className="text-sm font-semibold text-[#111827]">
                       {portfolioTotalValue > 0
                         ? (
                             ((quoteData.currentPrice * userHolding.shares) /
