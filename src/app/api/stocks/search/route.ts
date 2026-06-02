@@ -52,7 +52,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(responseData);
   } catch (error) {
-    console.error("Stock search error:", error);
     return NextResponse.json(
       { error: "Failed to search stocks" },
       { status: 500 }

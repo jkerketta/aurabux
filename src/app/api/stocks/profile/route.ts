@@ -77,7 +77,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Stock profile error:", error);
     return NextResponse.json(
       { error: "Failed to fetch company profile" },
       { status: 500 },

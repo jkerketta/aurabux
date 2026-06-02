@@ -22,7 +22,6 @@ export async function PATCH() {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Onboarding update error:", error);
     return NextResponse.json(
       { error: "Failed to update" },
       { status: 500 }

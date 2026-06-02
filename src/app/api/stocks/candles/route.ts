@@ -85,13 +85,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(result);
     }
 
-    // Log request details and response status in dev mode
-    if (process.env.NODE_ENV === "development") {
-      console.log(
-        `Yahoo Finance candles request for ${symbol}: status=${response.status}, url=${response.url}`,
-      );
-    }
-
     if (!response.ok) {
       const result = {
         timestamps: [],
@@ -103,13 +96,6 @@ export async function GET(request: NextRequest) {
     }
 
     const json = await response.json();
-
-    if (process.env.NODE_ENV === "development") {
-      console.log(
-        "Yahoo Finance candles response:",
-        JSON.stringify(json, null, 2),
-      );
-    }
 
     const result = json?.chart?.result?.[0];
     const error = json?.chart?.error;
@@ -157,7 +143,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(resultData);
   } catch (error) {
-    console.error("Stock candles error:", error);
     const message =
       error instanceof Error ? error.message : "Failed to fetch price history";
     return NextResponse.json({ error: message }, { status: 500 });

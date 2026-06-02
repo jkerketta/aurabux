@@ -64,7 +64,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Cancel friend request error:", error);
     return NextResponse.json(
       { error: "Failed to cancel friend request" },
       { status: 500 }

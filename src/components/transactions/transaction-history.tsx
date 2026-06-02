@@ -161,7 +161,27 @@ export function TransactionHistory({ initialTransactions }: TransactionHistoryPr
   if (loading && transactions.length === 0) {
     return (
       <div className="overflow-hidden rounded-lg border border-[#E5E7EB] bg-white">
-        <table className="w-full">
+        {/* Mobile skeleton */}
+        <div className="sm:hidden space-y-3 p-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-3"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-5 w-12 rounded-full" />
+              </div>
+              <Skeleton className="h-3 w-24 mb-2" />
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Desktop skeleton table */}
+        <table className="hidden sm:table w-full">
           <thead>
             <tr className="border-b border-[#E5E7EB]">
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#4B5563]">
@@ -203,7 +223,63 @@ export function TransactionHistory({ initialTransactions }: TransactionHistoryPr
 
   return (
     <div>
-      <div className="overflow-hidden rounded-lg border border-[#E5E7EB] bg-white">
+      {/* Mobile card view */}
+      <div className="sm:hidden space-y-3">
+        {loading
+          ? Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={`skeleton-mobile-${i}`}
+                className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-3"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <Skeleton className="h-4 w-12" />
+                  <Skeleton className="h-5 w-12 rounded-full" />
+                </div>
+                <Skeleton className="h-3 w-24 mb-2" />
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </div>
+            ))
+          : transactions.map((t, i) => {
+              const total = t.shares * t.price_per_share;
+              return (
+                <div
+                  key={`mobile-${t.created_at}-${i}`}
+                  className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-[#111827]">
+                      {t.ticker}
+                    </span>
+                    <Badge
+                      className={cn(
+                        "rounded-full px-3 py-1.5 text-xs font-semibold",
+                        colorMap[t.type] ?? "bg-neutral-100 text-neutral-700"
+                      )}
+                    >
+                      {labelMap[t.type] ?? t.type}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 text-xs text-[#4B5563]">
+                    {t.shares} shares × ${formatCurrency(t.price_per_share)}
+                  </p>
+                  <div className="mt-1 flex items-center justify-between">
+                    <span className="text-sm font-medium text-[#111827]">
+                      ${formatCurrency(total)}
+                    </span>
+                    <span className="text-xs text-[#4B5563]">
+                      {formatDate(t.created_at)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+      </div>
+
+      {/* Desktop table view */}
+      <div className="hidden sm:block overflow-hidden rounded-lg border border-[#E5E7EB] bg-white">
         <table className="w-full">
           <thead>
             <tr className="border-b border-[#E5E7EB]">

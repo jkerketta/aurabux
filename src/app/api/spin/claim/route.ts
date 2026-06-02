@@ -117,7 +117,6 @@ export async function POST() {
       newBalance,
     });
   } catch (error) {
-    console.error("Spin claim error:", error);
     return NextResponse.json(
       { error: "Failed to claim powerup" },
       { status: 500 }

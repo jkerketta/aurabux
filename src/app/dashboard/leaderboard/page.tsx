@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Loader2, Crown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 interface LeaderboardEntry {
   rank: number;
@@ -104,7 +105,7 @@ export default function LeaderboardPage() {
     <div
       key={entry.user_id}
         className={cn(
-        "flex items-center gap-4 rounded-lg border px-4 py-3 transition-colors",
+        "flex items-center gap-3 rounded-lg border px-3 sm:px-4 py-2.5 sm:py-3 transition-colors",
         entry.is_current_user
           ? "border-[#2563EB] bg-blue-50/50"
           : "border-[#E5E7EB] hover:bg-[#F9FAFB]"
@@ -124,7 +125,7 @@ export default function LeaderboardPage() {
         <div className="text-sm font-medium text-[#111827] truncate">
           {entry.username}
           {entry.display_number && (
-            <span className="ml-1.5 text-xs text-neutral-400">
+            <span className="hidden sm:inline ml-1.5 text-xs text-neutral-400">
               ({entry.display_number})
             </span>
           )}
@@ -138,12 +139,12 @@ export default function LeaderboardPage() {
 
       {/* Value + Return */}
       <div className="text-right flex-shrink-0">
-        <p className="text-sm font-semibold text-[#111827]">
+        <p className="text-xs sm:text-sm font-semibold text-[#111827]">
           {formatCurrency(entry.total_value)} ABX
         </p>
         <p
           className={cn(
-            "text-xs font-medium",
+            "text-[10px] sm:text-xs font-medium",
             entry.gain_loss_pct >= 0 ? "text-[#00C805]" : "text-[#FF4444]"
           )}
         >
@@ -156,28 +157,30 @@ export default function LeaderboardPage() {
 
   return (
     <div className="mx-auto max-w-3xl pt-4">
-      <h1 className="mb-6 text-4xl font-bold tracking-tight text-[#111827]">
+      <h1 className="mb-6 text-2xl sm:text-4xl font-bold tracking-tight text-[#111827]">
         Leaderboard
       </h1>
 
-      {loading ? (
-        <LeaderboardSkeleton />
-      ) : data.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-sm text-[#4B5563]">
-            No players yet. Be the first!
-          </CardContent>
-        </Card>
-      ) : (
-        <motion.div
-          className="space-y-2"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {data.map(renderRow)}
-        </motion.div>
-      )}
+      <ErrorBoundary fallbackTitle="Leaderboard failed to load">
+        {loading ? (
+          <LeaderboardSkeleton />
+        ) : data.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center text-sm text-[#4B5563]">
+              No players yet. Be the first!
+            </CardContent>
+          </Card>
+        ) : (
+          <motion.div
+            className="space-y-2"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {data.map(renderRow)}
+          </motion.div>
+        )}
+      </ErrorBoundary>
     </div>
   );
 }

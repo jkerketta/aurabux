@@ -67,7 +67,6 @@ export async function POST(request: NextRequest) {
 
     if (portfolioError || !portfolio) {
       // Auto-heal: create portfolio if missing
-      console.log("Portfolio not found for user, creating one...");
       const { data: newPortfolio, error: insertError } = await adminClient
         .from("portfolios")
         .insert({
@@ -80,7 +79,6 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (insertError) {
-        console.error("Failed to create portfolio:", insertError);
         // If insert failed due to unique constraint, portfolio exists — try reading again
         if (insertError.code === "23505") {
           const { data: retryPortfolio } = await adminClient
@@ -204,7 +202,6 @@ export async function POST(request: NextRequest) {
       total_cost: totalCost,
     });
   } catch (error) {
-    console.error("Stock buy error:", error);
     return NextResponse.json(
       { error: "Failed to execute purchase" },
       { status: 500 }
