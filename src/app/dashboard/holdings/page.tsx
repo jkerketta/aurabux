@@ -77,11 +77,6 @@ export default async function HoldingsPage() {
     }));
   }
 
-  const totalInvested = enrichedHoldings.reduce((sum, h) => sum + h.shares * h.avg_buy_price, 0);
-  const investmentsValue = enrichedHoldings.reduce((sum, h) => sum + h.shares * h.current_price, 0);
-  const totalPnl = investmentsValue - totalInvested;
-  const isPnlPositive = totalPnl >= 0;
-
   return (
     <div className="mx-auto max-w-5xl pt-4">
       {/* Back button + Title */}
@@ -97,30 +92,6 @@ export default async function HoldingsPage() {
           Holdings
         </h1>
       </div>
-
-      {/* Summary Card */}
-      {enrichedHoldings.length > 0 && (
-        <Card className="mb-6 backdrop-blur-xl bg-white/60 border border-white/40 shadow-none">
-          <CardContent className="py-4 px-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-[#4B5563]">
-                  Total Value
-                </p>
-                <p className="text-2xl sm:text-3xl font-bold tracking-tight text-[#111827]">
-                  {formatCurrency(investmentsValue)} <span className="text-lg font-normal text-[#4B5563]">ABX</span>
-                </p>
-              </div>
-              <div className={cn(
-                "inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold",
-                isPnlPositive ? "bg-[#00C805]/10 text-[#00A804]" : "bg-[#FF4444]/10 text-[#CC3333]"
-              )}>
-                {isPnlPositive ? "+" : ""}{formatCurrency(totalPnl)} ({isPnlPositive ? "+" : ""}{totalInvested > 0 ? ((totalPnl / totalInvested) * 100).toFixed(2) : "0.00"}%)
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Holdings List */}
       {enrichedHoldings.length === 0 ? (
