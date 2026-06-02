@@ -4,163 +4,24 @@
 Fake stock trading game. Users get **10000 ABX** starting balance, pick real stocks, compete with friends.
 **Tech Stack**: Next.js 15 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Supabase
 **UI**: shadcn/ui (new-york style, zinc base, lucide icons), light theme with blue primary (`#2563EB`), glassmorphism accents, animated gradient blobs
-**Branch**: `feat/ui-polish` (ready for merge to `main`)
+**Branch**: `main` (MVP complete, public repo)
 
 ---
 
 ## Next Goals (Priority Order)
 
-### 1. ~~Sell Feature~~ ✅ DONE
-- **API Route**: `src/app/api/stocks/sell/route.ts`
-  - Validates user owns the stock and has enough shares
-  - Deducts shares from `holdings` table (deletes row if shares = 0)
-  - Adds ABX back to `portfolios.abx_balance`
-  - Records transaction in `transactions` table with `type: "sell"`
-  - Compensation pattern: reverts balance if holdings/txn fails
-  - Blocks `.TO` Canadian stocks
-- **UI**: Buy/Sell toggle in trading panel (`stock-detail-client.tsx`)
-  - Sell button disabled/grayed out when user has no position
-  - Mode toggle: "Shares to sell" or "ABX to receive"
-  - Shows available shares to sell
-  - Toast notification on success (top-center, 3s, white box, black text)
-  - `router.refresh()` after buy/sell to refetch server data
+### 1. ~~MVP Feature Complete~~ ✅ DONE
+- All core features implemented: trading, spinner, friends, leaderboard, onboarding, light theme.
+- Repo is public and ready for deployment.
 
-### 2. ~~Portfolio Total Value with Live Prices~~ ✅ DONE
-- Dashboard and stock detail page both fetch live prices for all holdings
-- `total_value = abx_balance + Σ(shares × current_price)`
-- Investments card now shows current value (not cost basis)
-
-### 3. ~~Social & Competition Phase~~ ✅ DONE
-- **Database**: `supabase/migrations/006_social.sql`
-  - `friendships` table with requester/addressee/status
-  - `users.display_number` column (#000, #001, etc.)
-  - Auto-assign via trigger, backfill existing users
-  - RLS policies for friendships CRUD
-- **Friends System**:
-  - API routes: `/api/friends` (list, request), `/api/friends/accept`, `/api/friends/decline`, `/api/friends/remove`, `/api/friends/cancel`, `/api/friends/search`
-  - Friends modal via navbar dropdown (2 tabs: Friends, Requests)
-  - Requests tab: search bar with format validation (`displayname#002`), send button, incoming/outgoing sections
-  - 50 friend max, exact match search, friendship status indicators
-- **Leaderboard**:
-  - API: `/api/leaderboard?type=global` with live price calculation
-  - Page: `/dashboard/leaderboard` (Global only, no Friends tab)
-  - Crown icon for rank 1, gold/silver/bronze badges for 2/3
-  - Current user highlight, gain/loss %
-
-### 4. ~~Daily Spinner Feature~~ ✅ DONE
-- **Database**: `supabase/migrations/008_daily_spinner.sql` (daily_spins, powerups tables)
-  - `supabase/migrations/009_grant_spinner_permissions.sql` (service_role grants)
-  - `supabase/migrations/010_free_spins.sql` (free_spins column in portfolios)
-  - `supabase/migrations/011_powerup_snapshot.sql` (snapshot_value column)
-  - `supabase/migrations/012_fix_spinner_constraint.sql` (free_spins in check constraint)
-  - `supabase/migrations/015_add_spin_transactions.sql` (spin type in transactions)
-- **Rewards** (equal probability, 8 types): 500/1000/2500/5000/10000 ABX, 3 Free MAG 7 Shares, x2 Returns, 2 Free Spins
-- **API Routes**:
-  - `GET /api/spin` — spin status (cooldown, free spins, powerup state)
-  - `POST /api/spin` — execute spin, apply reward
-  - `POST /api/spin/activate` — activate x2 powerup (snapshots investments value)
-  - `POST /api/spin/claim` — claim expired x2 powerup (doubles returns)
-- **UI**: `src/components/spinner/spin-modal.tsx` (CSGO-style horizontal spinner), `src/components/spinner/x2-claim-modal.tsx`
-- **x2 Powerup**: Manual activation, 24h countdown badge next to Holdings, claim modal on expiry, excluded from reward pool if active
-- **Free Spins**: "2 Free Spins" reward grants 2 extra spins, excluded from pool until daily reset
-- **Free Stock**: 3 shares of random MAG 7 stock (AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA), avg_buy_price set to current price
-- **Spin Transactions**: Type "spin" appears in recent transactions with current price and total
-
-### 5. ~~Skeleton Loading States~~ ✅ DONE
-- `src/components/ui/skeleton.tsx` — reusable Skeleton component with shimmer animation
-- `src/app/globals.css` — shimmer keyframes + skeleton colors
-- `src/app/dashboard/loading.tsx` — dashboard skeleton
-- `src/app/dashboard/leaderboard/loading.tsx` — leaderboard skeleton
-- `src/app/dashboard/stock/[symbol]/loading.tsx` — stock detail skeleton
-- `src/app/dashboard/search/page.tsx` — Suspense fallback with skeleton
-- `src/app/dashboard/leaderboard/page.tsx` — inline skeleton replaced with component
-
-### 6. ~~total_invested Tracking for Accurate ROI~~ ✅ DONE
-- **Database**: `supabase/migrations/013_total_invested.sql` (total_invested column in portfolios)
-- **Buy Route**: Increments total_invested by totalCost on purchase
-- **Sell Route**: Decrements total_invested by costBasis (shares × avg_buy_price) on sale
-- **All-Time Return**: `(investmentsValue - totalInvested) / totalInvested × 100`
-- **Leaderboard**: Uses total_invested for gain/loss % instead of hardcoded 1000
-- **Buy Hardening**: Floating-point comparison fixed (rounded to 2 decimals before balance check)
-
-### 7. ~~Starting Balance 10000~~ ✅ DONE
-- **Database**: `supabase/migrations/014_starting_balance_10000.sql` (updates handle_new_user trigger + column defaults)
-- **Migration 001**: Updated in-place (abx_balance default 10000, total_invested column)
-- **All fallbacks**: Updated across all routes (1000 → 10000)
-
-### 8. ~~UI Polish & Onboarding~~ ✅ DONE
-- **Database**: `supabase/migrations/016_onboarding_flag.sql` (adds `has_seen_onboarding` boolean to `users` table)
-- **Onboarding Modal**: `src/components/onboarding/onboarding-modal.tsx`
-  - 3-step modal with framer-motion slide transitions
-  - Dot indicators, left/right arrow navigation
-  - "Got it" button on final step calls `PATCH /api/onboarding`
-  - Non-dismissible by clicking outside or pressing Escape
-  - Only shown to new users (`has_seen_onboarding = false`)
-- **API Routes**:
-  - `PATCH /api/onboarding` — marks `users.has_seen_onboarding = true`
-  - `GET /api/transactions?page=N` — paginated transactions (10/page, ordered by created_at DESC)
-- **Transaction History**: `src/components/transactions/transaction-history.tsx`
-  - Paginated table with prev/next buttons and page indicator
-  - Date format includes year ("Jan 15, 2025")
-  - SSR page 1, client-side pagination for subsequent pages
-  - Loading, empty, and error states with retry button
-- **Skeleton Improvements**:
-  - `src/components/skeletons/dashboard-skeleton.tsx` — per-section skeleton with staggered delays
-  - `src/app/dashboard/stock/[symbol]/loading.tsx` — stock detail route skeleton
-  - Fixed shimmer animation: `linear` timing (was `ease-in-out`), `2.5s` duration (was `1.5s`), percentage-based keyframes (removed `calc` offset for consistent speed)
-- **Stock Detail Enhancements**:
-  - "Last updated" timestamp with relative time ("Updated 12s ago")
-  - Refresh button next to timestamp (re-fetches quote)
-  - Chart retry button on error state
-  - Input focus rings on buy/sell inputs
-- **Micro-UI Polish**:
-  - Navbar active page highlighting via `usePathname()`
-  - Card hover shadows on holdings rows, stats cards, search results
-  - Input focus rings on search and buy/sell inputs
-
-### 9. ~~Chart Formatting~~ ✅ DONE
-- **Range-aware x-axis labels** on stock detail chart:
-  - `1D`: Time only (e.g., "9:30 AM", "2:00 PM")
-  - `1M`: Month + day + year (e.g., "May 27, 25")
-  - `1Y`: Month + year (e.g., "Jan 2025")
-  - `5Y`: Year only (e.g., "2024", "2025")
-- **Increased bottom margin** on AreaChart from 5px → 30px for label spacing
-- **Tooltip labelFormatter** also adapts per range
-
-### 10. ~~UI Redesign (Light Theme + Glassmorphism)~~ ✅ DONE
-- **Color Palette**: White base (`#FFFFFF`), blue primary (`#2563EB`), charcoal headings (`#111827`), grey body text (`#4B5563`), borders (`#E5E7EB`)
-- **Background**: Removed topography SVG pattern. Clean white background.
-- **Animated Blobs**: 3 large gradient blobs (cyan/purple/green) on dashboard and auth pages. Slow random drift animation (35-40s cycles). Visible through glassmorphic cards.
-- **Floating Navbar Capsule** (`src/components/layout/navbar.tsx`):
-  - Fixed position, centered, `max-w-5xl` width
-  - `backdrop-blur-xl bg-white/70 border-white/30 rounded-full shadow-lg`
-  - Framer Motion entrance animation (`y: -80` → `0`)
-  - Active link has animated underline via `layoutId` (blue)
-  - Taller capsule: `py-3.5`
-- **Login/Signup Pages** (`src/app/login/page.tsx`, `src/app/signup/page.tsx`):
-  - 3 animated gradient blobs (cyan, purple, green) via CSS keyframes
-  - Blobs are `90-100vw` size, `blur(100px)`, opacity 0.6-0.7
-  - Glass card: `backdrop-blur-xl bg-white/60 border-white/40 shadow-xl`
-  - Removed `bg-white` from root div so blobs show through
-- **Dashboard Glassmorphism**: Stats cards (Portfolio Value, ABX Balance, Investments) use `backdrop-blur-xl bg-white/60 border-white/40` so blobs animate behind them. Holdings table and transaction history remain solid white for readability.
-- **Consistent Page Spacing**:
-  - Dashboard layout: `pt-32` (128px) for fixed navbar
-  - All sub-pages (search, leaderboard, stock detail): added `pt-4` for uniform title positioning
-- **Removed Features**:
-  - Eye icon hide-values feature completely removed from dashboard
-
-### 11. ~~MVP Final Touches~~ ✅ DONE
-- **Buy/Sell Confirmation Dialog**: New `TradeConfirmation` component. Shows trade summary, remaining balance (buy), or cost basis + gain/loss (sell) before execution. Prevents accidental trades.
-- **Market Status Badge**: "Market Open" (green) / "Market Closed" (grey) badge on stock detail page. Based on NYSE hours (Mon-Fri, 9:30 AM - 4:00 PM ET).
-- **Total P&L Badge**: Capsule badge next to "Holdings" heading showing unrealized gain/loss. Green/red based on performance. Only shows when `totalInvested > 0`.
-- **Holdings Count**: Position count displayed next to P&L badge (e.g., "3 positions").
-- **Daily Spin Info Modal**: New `SpinInfoModal` component triggered by `?` icon. Lists all 8 rewards with descriptions (ABX amounts, MAG 7 shares, x2 powerup, free spins).
-- **"How it Works" Button**: Text link on Portfolio Value card that re-opens onboarding modal for existing users.
-- **Loading State Polish**: Buy/Sell buttons show `opacity-60` during API calls for clearer visual feedback.
-
-### 12. End-of-Day Portfolio Recalculation (DEFERRED)
-- Not implemented. Would require Supabase Edge Function + cron
-- For now, total value is calculated on each page load
+### 2. Debugging & Stability (Current Focus)
+- **Race Conditions**: Check for double-submissions in buy/sell/spin flows.
+- **API Fallbacks**: Verify Yahoo Finance fallback works when Finnhub rate limits or fails.
+- **RLS Edge Cases**: Test behavior when users try to access other users' data directly.
+- **Error Boundaries**: Add React error boundaries to prevent full app crashes on component failures.
+- **Loading States**: Ensure all async operations have proper loading/skeleton states.
+- **Console Cleanup**: Remove any remaining `console.log` statements used for debugging.
+- **Type Safety**: Fix any `any` types or missing type definitions in API responses.
 
 ---
 
@@ -341,13 +202,16 @@ Required env vars (see `.env.example`):
 ## Session Resume Instructions
 When starting a new session:
 1. Read this `handoff.md` file
-2. Check current branch: `git branch` (should be `main` after merge, or `feat/ui-polish` if not merged)
+2. Check current branch: `git branch` (should be `main`)
 3. Check recent commits: `git log --oneline -10`
 4. Check git status: `git status` (should be clean)
-5. Pull latest: `git pull origin <branch>`
-6. Next tasks (pick one):
-   - **Deploy to production**: Verify env vars, run migrations, deploy
-   - **Add test framework**: Vitest for unit tests, Playwright for E2E
-   - **New features**: Friends leaderboard tab, stock watchlist, notifications, portfolio reset
-   - **Performance**: Add React Query for client-side caching, optimize image loading
-7. Use `@fixer` for bounded implementation work, `@oracle` for architecture decisions
+5. Pull latest: `git pull origin main`
+6. **Debugging Focus** (pick one):
+   - **Race Conditions**: Audit buy/sell/spin flows for double-submission risks.
+   - **API Fallbacks**: Test Yahoo Finance fallback when Finnhub fails/rate limits.
+   - **RLS Edge Cases**: Verify users cannot access/modify other users' data.
+   - **Error Boundaries**: Add React error boundaries to prevent full app crashes.
+   - **Loading States**: Ensure all async operations have proper loading/skeleton states.
+   - **Console Cleanup**: Remove any remaining `console.log` statements.
+   - **Type Safety**: Fix `any` types or missing definitions in API responses.
+7. Use `@fixer` for bounded bug fixes, `@oracle` for complex debugging/architecture decisions.
