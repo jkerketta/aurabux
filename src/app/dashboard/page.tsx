@@ -39,7 +39,7 @@ export default async function DashboardPage() {
     .select("ticker, type, shares, price_per_share, created_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
-    .limit(10);
+    .limit(5);
 
   const balance = Number(portfolio?.abx_balance ?? 10000);
   const totalInvested = Number(portfolio?.total_invested ?? 0);
