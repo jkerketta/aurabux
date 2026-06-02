@@ -102,8 +102,8 @@ function SearchPageInner() {
   }, [searchQuery]);
 
   return (
-    <div className="mx-auto max-w-3xl pt-4">
-      <h1 className="mb-6 text-4xl font-bold tracking-tight text-[#111827]">
+    <div className="mx-auto max-w-3xl px-4 sm:px-0 pt-4">
+      <h1 className="mb-6 text-2xl sm:text-4xl font-bold tracking-tight text-[#111827]">
         Search Stocks
       </h1>
 
@@ -114,7 +114,7 @@ function SearchPageInner() {
           value={searchQuery}
           onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
           placeholder="Search stocks..."
-          className="h-12 pl-10 text-base focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1"
+          className="h-11 sm:h-12 pl-10 text-base focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1"
         />
         {searchLoading && (
           <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[#4B5563]" />

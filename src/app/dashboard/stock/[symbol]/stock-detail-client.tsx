@@ -514,7 +514,7 @@ export function StockDetailClient({
   // ── Render ─────────────────────────────────────────────
 
   return (
-    <div className="mx-auto max-w-5xl pt-4">
+    <div className="mx-auto max-w-5xl px-4 sm:px-0 pt-4">
       {/* Back button */}
       <button
         onClick={() => router.back()}
@@ -531,7 +531,7 @@ export function StockDetailClient({
           <div className="mb-6">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-4xl font-bold tracking-tight text-[#111827]">
+                <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-[#111827]">
                   {symbol}
                 </h1>
                 <p className="mt-0.5 text-sm text-[#4B5563]">
@@ -543,7 +543,7 @@ export function StockDetailClient({
                 <p className="text-sm text-[#FF4444]">{quoteError}</p>
               ) : quoteData ? (
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-[#111827]">
+                  <p className="text-xl sm:text-3xl font-bold text-[#111827]">
                     ${formatCurrency(quoteData.currentPrice)}
                   </p>
                   <div className="mt-1 flex items-center justify-end gap-1.5">
@@ -597,7 +597,7 @@ export function StockDetailClient({
           <Card className="mb-6">
             <CardContent className="p-6">
               {/* Time range buttons */}
-              <div className="mb-4 flex items-center gap-2">
+              <div className="mb-4 flex items-center gap-2 flex-wrap">
                 {(["1D", "1M", "1Y", "5Y"] as const).map((range) => {
                   const isActive = chartRange === range;
                   const showBadge = isActive && range !== "1D" && chartData.length >= 2;
@@ -639,7 +639,7 @@ export function StockDetailClient({
               </div>
 
               {/* Chart area */}
-              <div className="h-64">
+              <div className="h-48 sm:h-64">
                 {candleLoading ? (
                   <div className="flex h-full items-center justify-center">
                     <Loader2 className="h-5 w-5 animate-spin text-[#4B5563]" />
@@ -739,7 +739,7 @@ export function StockDetailClient({
           {/* Stock Info Grid */}
           <Card>
             <CardContent className="p-6">
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-4">
                 {[
                   {
                     label: "Open",
