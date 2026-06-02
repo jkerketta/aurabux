@@ -29,6 +29,7 @@ export default function SignupPage() {
       password,
       options: {
         data: { username },
+        emailRedirectTo: `${location.origin}/auth/confirm`,
       },
     });
 
