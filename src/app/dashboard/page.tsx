@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { DashboardContent } from "./dashboard-content";
 import { getSpinStatus } from "@/lib/spin";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -120,23 +121,25 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen">
       <div className="mx-auto max-w-5xl px-8 py-12">
-        <DashboardContent
-          user={user}
-          initialBalance={balance}
-          initialTotalValue={totalValue}
-          username={username}
-          greeting={greeting}
-          holdings={enrichedHoldings}
-          transactions={transactions ?? []}
-          totalInvested={totalInvested}
-          hasSeenOnboarding={profile?.has_seen_onboarding ?? true}
-          canSpin={spinStatus.canSpin}
-          hasActivePowerup={spinStatus.hasActivePowerup}
-          activePowerupExpiresAt={spinStatus.activePowerupExpiresAt}
-          hasExpiredPowerup={spinStatus.hasExpiredPowerup}
-          nextResetAt={spinStatus.nextResetAt}
-          freeSpinsRemaining={spinStatus.freeSpinsRemaining}
-        />
+        <ErrorBoundary fallbackTitle="Dashboard failed to load">
+          <DashboardContent
+            user={user}
+            initialBalance={balance}
+            initialTotalValue={totalValue}
+            username={username}
+            greeting={greeting}
+            holdings={enrichedHoldings}
+            transactions={transactions ?? []}
+            totalInvested={totalInvested}
+            hasSeenOnboarding={profile?.has_seen_onboarding ?? true}
+            canSpin={spinStatus.canSpin}
+            hasActivePowerup={spinStatus.hasActivePowerup}
+            activePowerupExpiresAt={spinStatus.activePowerupExpiresAt}
+            hasExpiredPowerup={spinStatus.hasExpiredPowerup}
+            nextResetAt={spinStatus.nextResetAt}
+            freeSpinsRemaining={spinStatus.freeSpinsRemaining}
+          />
+        </ErrorBoundary>
       </div>
     </div>
   );

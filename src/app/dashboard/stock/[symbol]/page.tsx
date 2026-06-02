@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { StockDetailClient } from "./stock-detail-client";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 interface Props {
   params: Promise<{ symbol: string }>;
@@ -185,16 +186,18 @@ export default async function StockDetailPage({ params }: Props) {
   }
 
   return (
-    <StockDetailClient
-      symbol={symbolUpper}
-      companyName={companyName}
-      initialQuote={quote}
-      initialCandles={candles}
-      quoteError={quoteError}
-      availableBalance={availableBalance}
-      userHolding={userHolding}
-      portfolioTotalValue={portfolioTotalValue}
-      companyInfo={companyInfo}
-    />
+    <ErrorBoundary fallbackTitle="Failed to load stock details">
+      <StockDetailClient
+        symbol={symbolUpper}
+        companyName={companyName}
+        initialQuote={quote}
+        initialCandles={candles}
+        quoteError={quoteError}
+        availableBalance={availableBalance}
+        userHolding={userHolding}
+        portfolioTotalValue={portfolioTotalValue}
+        companyInfo={companyInfo}
+      />
+    </ErrorBoundary>
   );
 }

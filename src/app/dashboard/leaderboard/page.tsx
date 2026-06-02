@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Loader2, Crown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 interface LeaderboardEntry {
   rank: number;
@@ -160,24 +161,26 @@ export default function LeaderboardPage() {
         Leaderboard
       </h1>
 
-      {loading ? (
-        <LeaderboardSkeleton />
-      ) : data.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-sm text-[#4B5563]">
-            No players yet. Be the first!
-          </CardContent>
-        </Card>
-      ) : (
-        <motion.div
-          className="space-y-2"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {data.map(renderRow)}
-        </motion.div>
-      )}
+      <ErrorBoundary fallbackTitle="Leaderboard failed to load">
+        {loading ? (
+          <LeaderboardSkeleton />
+        ) : data.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center text-sm text-[#4B5563]">
+              No players yet. Be the first!
+            </CardContent>
+          </Card>
+        ) : (
+          <motion.div
+            className="space-y-2"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {data.map(renderRow)}
+          </motion.div>
+        )}
+      </ErrorBoundary>
     </div>
   );
 }
