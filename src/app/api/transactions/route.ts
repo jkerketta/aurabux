@@ -52,7 +52,6 @@ export async function GET(request: NextRequest) {
       totalPages,
     });
   } catch (error) {
-    console.error("Transactions fetch error:", error);
     return NextResponse.json(
       { error: "Failed to fetch transactions" },
       { status: 500 }

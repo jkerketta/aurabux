@@ -57,7 +57,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Remove friend error:", error);
     return NextResponse.json(
       { error: "Failed to remove friend" },
       { status: 500 }

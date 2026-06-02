@@ -115,7 +115,6 @@ export async function POST() {
 
     return NextResponse.json({ success: true, snapshotValue });
   } catch (error) {
-    console.error("Spin activate error:", error);
     return NextResponse.json(
       { error: "Failed to activate powerup" },
       { status: 500 }

@@ -57,7 +57,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Decline friend error:", error);
     return NextResponse.json(
       { error: "Failed to decline friend request" },
       { status: 500 }

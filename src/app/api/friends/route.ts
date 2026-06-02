@@ -82,7 +82,6 @@ export async function GET() {
 
     return NextResponse.json({ friends, incoming, outgoing });
   } catch (error) {
-    console.error("Friends list error:", error);
     return NextResponse.json(
       { error: "Failed to fetch friends" },
       { status: 500 }
@@ -211,7 +210,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, status: "pending" });
   } catch (error) {
-    console.error("Friend request error:", error);
     return NextResponse.json(
       { error: "Failed to send friend request" },
       { status: 500 }

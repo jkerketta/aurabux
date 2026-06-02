@@ -34,7 +34,6 @@ export async function GET() {
     const status = await getSpinStatus(user.id);
     return NextResponse.json(status);
   } catch (error) {
-    console.error("Spin status error:", error);
     return NextResponse.json(
       { error: "Failed to fetch spin status" },
       { status: 500 }
@@ -264,7 +263,6 @@ export async function POST() {
       freeSpinsRemaining: updatedPortfolio?.free_spins ?? 0,
     });
   } catch (error) {
-    console.error("Spin error:", error);
     return NextResponse.json(
       { error: "Failed to process spin" },
       { status: 500 }

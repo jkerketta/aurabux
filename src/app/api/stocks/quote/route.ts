@@ -159,7 +159,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(quote);
   } catch (error) {
-    console.error("Stock quote error:", error);
     const message =
       error instanceof Error ? error.message : "Failed to fetch stock quote";
     return NextResponse.json({ error: message }, { status: 500 });
