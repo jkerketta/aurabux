@@ -120,7 +120,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-5xl px-8 py-12">
+      <div className="mx-auto max-w-5xl px-4 sm:px-8 py-12">
         <ErrorBoundary fallbackTitle="Dashboard failed to load">
           <DashboardContent
             user={user}

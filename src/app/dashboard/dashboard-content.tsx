@@ -165,7 +165,7 @@ export function DashboardContent({
       >
       {/* Greeting Section */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-8">
-          <h1 className="text-4xl font-bold tracking-tight text-[#111827]">
+          <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-[#111827]">
           {greeting}, {username || "Trader"}
         </h1>
         <p className="mt-1 text-sm text-[#4B5563]">
@@ -193,7 +193,7 @@ export function DashboardContent({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-5xl font-bold tracking-tight text-[#111827]">
+              <p className="text-3xl sm:text-5xl font-bold tracking-tight text-[#111827]">
                 {formatCurrency(initialTotalValue)} ABX
               </p>
             </CardContent>
@@ -302,26 +302,26 @@ export function DashboardContent({
               </CardContent>
             </Card>
         ) : (
-            <div className="overflow-hidden rounded-lg border border-[#E5E7EB] bg-white">
-              <table className="w-full">
-                <tbody className="divide-y divide-[#E5E7EB]">
-                  {holdings.map((h) => {
-                    const currentValue = h.shares * h.current_price;
-                    const costBasis = h.shares * h.avg_buy_price;
-                    const pnl = currentValue - costBasis;
-                    const pnlPercent = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
-                    const isPnlPositive = pnl >= 0;
-                    return (
-                      <tr
-                        key={h.ticker}
-                        className="group cursor-pointer hover:bg-[#F9FAFB]"
-                        onClick={() => router.push(`/dashboard/stock/${h.ticker}`)}
-                      >
-                        <td className="px-6 py-4">
-                          <p className="text-sm font-semibold text-[#111827]">{h.ticker}</p>
-                          <p className="text-xs text-[#4B5563]">{formatShares(h.shares)} share{formatShares(h.shares) !== "1" ? "s" : ""}</p>
-                        </td>
-                      <td className="px-6 py-4 text-right">
+            <>
+              {/* Mobile: Card layout */}
+              <div className="md:hidden space-y-2">
+                {holdings.map((h) => {
+                  const currentValue = h.shares * h.current_price;
+                  const costBasis = h.shares * h.avg_buy_price;
+                  const pnl = currentValue - costBasis;
+                  const pnlPercent = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
+                  const isPnlPositive = pnl >= 0;
+                  return (
+                    <div
+                      key={h.ticker}
+                      className="flex items-center justify-between rounded-lg border border-[#E5E7EB] bg-white px-4 py-3 cursor-pointer hover:bg-[#F9FAFB] transition-colors"
+                      onClick={() => router.push(`/dashboard/stock/${h.ticker}`)}
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-[#111827]">{h.ticker}</p>
+                        <p className="text-xs text-[#4B5563]">{formatShares(h.shares)} share{formatShares(h.shares) !== "1" ? "s" : ""}</p>
+                      </div>
+                      <div className="text-right">
                         <p
                           className={cn(
                             "text-sm font-medium",
@@ -340,13 +340,59 @@ export function DashboardContent({
                           ({isPnlPositive ? "+" : ""}
                           {pnlPercent.toFixed(2)}%)
                         </p>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+              </div>
+
+              {/* Desktop: Table layout */}
+              <div className="hidden md:block overflow-hidden rounded-lg border border-[#E5E7EB] bg-white">
+                <table className="w-full">
+                  <tbody className="divide-y divide-[#E5E7EB]">
+                    {holdings.map((h) => {
+                      const currentValue = h.shares * h.current_price;
+                      const costBasis = h.shares * h.avg_buy_price;
+                      const pnl = currentValue - costBasis;
+                      const pnlPercent = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
+                      const isPnlPositive = pnl >= 0;
+                      return (
+                        <tr
+                          key={h.ticker}
+                          className="group cursor-pointer hover:bg-[#F9FAFB]"
+                          onClick={() => router.push(`/dashboard/stock/${h.ticker}`)}
+                        >
+                          <td className="px-6 py-4">
+                            <p className="text-sm font-semibold text-[#111827]">{h.ticker}</p>
+                            <p className="text-xs text-[#4B5563]">{formatShares(h.shares)} share{formatShares(h.shares) !== "1" ? "s" : ""}</p>
+                          </td>
+                        <td className="px-6 py-4 text-right">
+                          <p
+                            className={cn(
+                              "text-sm font-medium",
+                              isPnlPositive ? "text-[#00C805]" : "text-[#FF4444]"
+                            )}
+                          >
+                            {isPnlPositive ? "+" : ""}
+                            {formatCurrency(pnl)}
+                          </p>
+                          <p
+                            className={cn(
+                              "text-xs",
+                              isPnlPositive ? "text-[#00C805]" : "text-[#FF4444]"
+                            )}
+                          >
+                            ({isPnlPositive ? "+" : ""}
+                            {pnlPercent.toFixed(2)}%)
+                          </p>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            </>
         )}
       </motion.div>
 
