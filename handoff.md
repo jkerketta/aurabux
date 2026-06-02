@@ -57,7 +57,7 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 - ✅ Daily Spinner: CSGO-style horizontal animation, 8 rewards, x2 powerup, free spins, info modal
 - ✅ Skeleton Loading: Shimmer animation on all page transitions (linear timing, 2.5s duration)
 - ✅ Onboarding: Multi-step modal for new users (3 steps, DB-persisted dismissal), re-openable via "How it works"
-- ✅ Transaction History: Paginated table (10/page, year in dates, prev/next navigation)
+- ✅ Transaction History: Paginated table (5/page, year in dates, prev/next navigation)
 - ✅ Stock Detail: Last updated timestamp, refresh button, chart retry, input focus rings, market status badge
 - ✅ Chart Formatting: Range-aware x-axis labels (time for 1D, month+year for 1Y/5Y)
 - ✅ Micro-UI: Navbar active state, card hover shadows, input focus rings, loading opacity
@@ -69,6 +69,12 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 - ✅ Error Boundaries: Reusable `ErrorBoundary` component wrapping major pages
 - ✅ Mobile Responsive: Hamburger navbar, card-based holdings/transactions, responsive stock detail, leaderboard, search
 - ✅ Email Confirmation: `/auth/confirm` route handles Supabase email verification links correctly
+- ✅ Background: Slight off-white `#f8f9fa` (was `#ffffff`) — makes white cards pop
+- ✅ Mobile Blobs: 3 extra centrally-positioned gradient blobs visible on narrow screens
+- ✅ Mobile Stats Cards: ABX balance & investments side-by-side with compact text on mobile
+- ✅ Mobile Padding: Reduced from `px-8` (32px) to `px-4` (16px) on screens `<640px`
+- ✅ Holdings Preview: Dashboard shows first 3 ticker avatars + count with `→` arrow, links to full page
+- ✅ Holdings Page: Dedicated `/dashboard/holdings` with back arrow, mobile card + desktop table layouts
 
 ### Key Files
 | File | Purpose |
@@ -88,7 +94,7 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 | `src/components/ui/error-boundary.tsx` | Reusable React error boundary with fallback UI + retry |
 | `src/app/auth/confirm/route.ts` | Email confirmation handler — verifies Supabase OTP token and redirects |
 | `src/app/api/onboarding/route.ts` | PATCH endpoint to mark onboarding as seen |
-| `src/app/api/transactions/route.ts` | GET endpoint with paginated transactions (10/page) |
+| `src/app/api/transactions/route.ts` | GET endpoint with paginated transactions (5/page) |
 | `src/app/api/stocks/buy/route.ts` | Buy logic with balance hardening, total_invested tracking |
 | `src/app/api/stocks/sell/route.ts` | Sell logic: validate shares, update holdings, record transaction, compensation |
 | `src/app/api/spin/route.ts` | Spin status (GET) and execution (POST) |
@@ -98,6 +104,8 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 | `src/components/spinner/x2-claim-modal.tsx` | Claim results modal (original vs doubled returns) |
 | `src/components/ui/skeleton.tsx` | Reusable skeleton component with shimmer |
 | `src/lib/spin.ts` | Shared getSpinStatus function (avoids auth cookie issues) |
+| `src/app/dashboard/holdings/page.tsx` | Dedicated holdings page with back button, mobile/desktop layouts |
+| `src/app/dashboard/holdings/loading.tsx` | Skeleton loader for holdings page |
 | `src/lib/cache.ts` | In-memory cache with TTL for API responses |
 | `src/app/api/friends/route.ts` | Friends list + send request API (with username parsing fix) |
 | `src/app/api/friends/search/route.ts` | Search users by exact `displayname#002` format |
