@@ -113,14 +113,36 @@ export default async function StockDetailPage({ params }: Props) {
   ]);
 
   // ── Quote ──────────────────────────────────────────────
-  let quote: Record<string, unknown> | null = null;
+  let quote: {
+    symbol: string;
+    currentPrice: number;
+    change: number;
+    changePercent: number;
+    high: number;
+    low: number;
+    open: number;
+    previousClose: number;
+  } | null = null;
   let quoteError: string | null = null;
 
   if (quoteRes.ok) {
-    quote = await quoteRes.json();
-    if (quote && "error" in quote) {
-      quoteError = quote.error as string;
-      quote = null;
+    const rawQuote: Record<string, unknown> = await quoteRes.json();
+    if (rawQuote && "error" in rawQuote) {
+      quoteError = rawQuote.error as string;
+    } else if (
+      typeof rawQuote.currentPrice === "number" &&
+      typeof rawQuote.change === "number"
+    ) {
+      quote = {
+        symbol: String(rawQuote.symbol ?? symbolUpper),
+        currentPrice: rawQuote.currentPrice as number,
+        change: rawQuote.change as number,
+        changePercent: rawQuote.changePercent as number,
+        high: rawQuote.high as number,
+        low: rawQuote.low as number,
+        open: rawQuote.open as number,
+        previousClose: rawQuote.previousClose as number,
+      };
     }
   } else {
     try {
@@ -132,9 +154,24 @@ export default async function StockDetailPage({ params }: Props) {
   }
 
   // ── Candles ────────────────────────────────────────────
-  let candles: Record<string, unknown> | null = null;
+  let candles: {
+    timestamps: number[];
+    closes: number[];
+    status: string;
+  } | null = null;
   if (candleRes.ok) {
-    candles = await candleRes.json();
+    const rawCandles: Record<string, unknown> = await candleRes.json();
+    if (
+      Array.isArray(rawCandles.timestamps) &&
+      Array.isArray(rawCandles.closes) &&
+      typeof rawCandles.status === "string"
+    ) {
+      candles = {
+        timestamps: rawCandles.timestamps as number[],
+        closes: rawCandles.closes as number[],
+        status: rawCandles.status as string,
+      };
+    }
   }
 
   // ── Price fallback from candles ────────────────────────
@@ -144,11 +181,9 @@ export default async function StockDetailPage({ params }: Props) {
     !quote &&
     candles &&
     candles.status !== "no_data" &&
-    Array.isArray(candles.closes) &&
-    (candles.closes as number[]).length > 0
+    candles.closes.length > 0
   ) {
-    const closes = candles.closes as number[];
-    const lastClose = closes[closes.length - 1];
+    const lastClose = candles.closes[candles.closes.length - 1];
     quote = {
       symbol: symbolUpper,
       currentPrice: lastClose,

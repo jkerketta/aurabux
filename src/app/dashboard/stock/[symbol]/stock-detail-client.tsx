@@ -55,8 +55,8 @@ type TimeRange = "1D" | "1M" | "1Y" | "5Y";
 interface StockDetailClientProps {
   symbol: string;
   companyName: string;
-  initialQuote: Record<string, unknown> | null;
-  initialCandles: Record<string, unknown> | null;
+  initialQuote: QuoteData | null;
+  initialCandles: CandleData | null;
   quoteError: string | null;
   availableBalance: number;
   userHolding: { shares: number; avg_buy_price: number } | null;
@@ -177,8 +177,8 @@ function formatRelativeTime(date: Date): string {
 export function StockDetailClient({
   symbol,
   companyName,
-  initialQuote: rawInitialQuote,
-  initialCandles: rawInitialCandles,
+  initialQuote,
+  initialCandles,
   quoteError: initialQuoteError,
   availableBalance,
   userHolding,
@@ -187,25 +187,17 @@ export function StockDetailClient({
 }: StockDetailClientProps) {
   const router = useRouter();
 
-  // Coerce initial data to typed form
-  const typedInitialQuote = isQuoteData(rawInitialQuote)
-    ? rawInitialQuote
-    : null;
-  const typedInitialCandles = isCandleData(rawInitialCandles)
-    ? rawInitialCandles
-    : null;
-
   // ── State ──────────────────────────────────────────────
 
   const [quoteData, setQuoteData] = useState<QuoteData | null>(
-    typedInitialQuote
+    initialQuote
   );
   const [quoteError] = useState<string | null>(
-    typedInitialQuote ? null : initialQuoteError
+    initialQuote ? null : initialQuoteError
   );
 
   const [candleData, setCandleData] = useState<CandleData | null>(
-    typedInitialCandles
+    initialCandles
   );
   const [candleError, setCandleError] = useState<string | null>(null);
   const [chartRange, setChartRange] = useState<TimeRange>("1D");
