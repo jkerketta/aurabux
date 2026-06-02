@@ -4,7 +4,7 @@
 Fake stock trading game. Users get **10000 ABX** starting balance, pick real stocks, compete with friends.
 **Tech Stack**: Next.js 15 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Supabase
 **UI**: shadcn/ui (new-york style, zinc base, lucide icons), light theme with blue primary (`#2563EB`), glassmorphism accents, animated gradient blobs
-**Branch**: `main` (MVP complete, public repo)
+**Branch**: `fix/mobile-and-bugs` (off `main`)
 
 ---
 
@@ -14,14 +14,25 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 - All core features implemented: trading, spinner, friends, leaderboard, onboarding, light theme.
 - Repo is public and ready for deployment.
 
-### 2. Debugging & Stability (Current Focus)
-- **Race Conditions**: Check for double-submissions in buy/sell/spin flows.
-- **API Fallbacks**: Verify Yahoo Finance fallback works when Finnhub rate limits or fails.
-- **RLS Edge Cases**: Test behavior when users try to access other users' data directly.
-- **Error Boundaries**: Add React error boundaries to prevent full app crashes on component failures.
-- **Loading States**: Ensure all async operations have proper loading/skeleton states.
-- **Console Cleanup**: Remove any remaining `console.log` statements used for debugging.
-- **Type Safety**: Fix any `any` types or missing type definitions in API responses.
+### 2. ~~Debugging & Stability~~ ✅ DONE (fix/mobile-and-bugs)
+- **Error Boundaries**: ✅ Added `ErrorBoundary` component wrapping dashboard, stock detail, leaderboard.
+- **Console Cleanup**: ✅ Removed all `console.log`/`console.error` from API routes (18 files).
+- **Type Safety**: ✅ Replaced `Record<string, unknown>` with proper types in stock detail page/client.
+- **Email Confirmation**: ✅ Added `/auth/confirm` route + `emailRedirectTo` in signup to fix localhost redirect.
+
+### 3. Mobile Responsiveness ✅ DONE (fix/mobile-and-bugs)
+- **Navbar**: Hamburger menu for mobile with animated slide-down panel.
+- **Dashboard**: Responsive headings, card-based holdings on mobile, responsive page padding.
+- **Transaction History**: Card-based layout on mobile (< sm), table on desktop.
+- **Stock Detail**: Responsive headings, chart height, button wrapping, container padding.
+- **Leaderboard**: Compact rows on mobile, hidden display numbers, smaller text.
+- **Search**: Responsive heading, input height, container padding.
+
+### 4. Remaining (Future)
+- **Race Conditions**: Add double-submit protection to buy/sell/spin flows.
+- **API Fallbacks**: Test Yahoo Finance fallback when Finnhub rate limits.
+- **RLS Edge Cases**: Verify users cannot access other users' data directly.
+- **Loading States**: Audit all async operations for missing loading states.
 
 ---
 
@@ -55,6 +66,9 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 - ✅ Login/Signup: Animated gradient blobs (cyan/purple/green) + glass cards
 - ✅ Consistent Page Spacing: All dashboard pages have uniform top padding
 - ✅ Light Theme: White base, blue primary (`#2563EB`), glassmorphic stats cards, animated blobs
+- ✅ Error Boundaries: Reusable `ErrorBoundary` component wrapping major pages
+- ✅ Mobile Responsive: Hamburger navbar, card-based holdings/transactions, responsive stock detail, leaderboard, search
+- ✅ Email Confirmation: `/auth/confirm` route handles Supabase email verification links correctly
 
 ### Key Files
 | File | Purpose |
@@ -71,6 +85,8 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 | `src/components/transactions/transaction-history.tsx` | Paginated transaction history component |
 | `src/components/trade/trade-confirmation.tsx` | Buy/sell confirmation dialog with cost basis and gain/loss |
 | `src/components/spinner/spin-info-modal.tsx` | Daily spin rewards explainer modal |
+| `src/components/ui/error-boundary.tsx` | Reusable React error boundary with fallback UI + retry |
+| `src/app/auth/confirm/route.ts` | Email confirmation handler — verifies Supabase OTP token and redirects |
 | `src/app/api/onboarding/route.ts` | PATCH endpoint to mark onboarding as seen |
 | `src/app/api/transactions/route.ts` | GET endpoint with paginated transactions (10/page) |
 | `src/app/api/stocks/buy/route.ts` | Buy logic with balance hardening, total_invested tracking |
@@ -133,6 +149,7 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 | x2 powerup double-activation | Missing `.eq("claimed", false)` check | Added claimed check to activation route |
 | Cooldown timer stuck | useState/useEffect timing bug | Moved to computed value from nextResetAt with 1s tick re-render |
 | Blobs not visibly moving | Translation distances too small relative to blob size + blur | Increased keyframe translations from 40-100px to 150-450px |
+| Email confirmation links lead to localhost | No `emailRedirectTo` in signUp + no `/auth/confirm` route handler | Added `/auth/confirm` route that verifies OTP token + `emailRedirectTo: ${origin}/auth/confirm` in signup |
 
 ---
 
@@ -202,16 +219,13 @@ Required env vars (see `.env.example`):
 ## Session Resume Instructions
 When starting a new session:
 1. Read this `handoff.md` file
-2. Check current branch: `git branch` (should be `main`)
-3. Check recent commits: `git log --oneline -10`
+2. Check current branch: `git branch` (should be `fix/mobile-and-bugs` or `main` after merge)
+3. Check recent commits: `git log --oneline -15`
 4. Check git status: `git status` (should be clean)
 5. Pull latest: `git pull origin main`
-6. **Debugging Focus** (pick one):
-   - **Race Conditions**: Audit buy/sell/spin flows for double-submission risks.
+6. **Remaining Work** (pick one):
+   - **Race Conditions**: Add debounce/ref double-submit protection to buy/sell/spin buttons.
    - **API Fallbacks**: Test Yahoo Finance fallback when Finnhub fails/rate limits.
    - **RLS Edge Cases**: Verify users cannot access/modify other users' data.
-   - **Error Boundaries**: Add React error boundaries to prevent full app crashes.
-   - **Loading States**: Ensure all async operations have proper loading/skeleton states.
-   - **Console Cleanup**: Remove any remaining `console.log` statements.
-   - **Type Safety**: Fix `any` types or missing definitions in API responses.
+   - **Loading States**: Audit all async operations for missing loading states.
 7. Use `@fixer` for bounded bug fixes, `@oracle` for complex debugging/architecture decisions.
