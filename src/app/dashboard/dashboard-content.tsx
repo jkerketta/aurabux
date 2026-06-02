@@ -330,97 +330,27 @@ export function DashboardContent({
               </CardContent>
             </Card>
         ) : (
-            <>
-              {/* Mobile: Card layout */}
-              <div className="md:hidden space-y-2">
-                {holdings.map((h) => {
-                  const currentValue = h.shares * h.current_price;
-                  const costBasis = h.shares * h.avg_buy_price;
-                  const pnl = currentValue - costBasis;
-                  const pnlPercent = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
-                  const isPnlPositive = pnl >= 0;
-                  return (
-                    <div
-                      key={h.ticker}
-                      className="flex items-center justify-between rounded-lg border border-[#E5E7EB] bg-white px-4 py-3 cursor-pointer hover:bg-[#F9FAFB] transition-colors"
-                      onClick={() => router.push(`/dashboard/stock/${h.ticker}`)}
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-[#111827]">{h.ticker}</p>
-                        <p className="text-xs text-[#4B5563]">{formatShares(h.shares)} share{formatShares(h.shares) !== "1" ? "s" : ""}</p>
-                      </div>
-                      <div className="text-right">
-                        <p
-                          className={cn(
-                            "text-sm font-medium",
-                            isPnlPositive ? "text-[#00C805]" : "text-[#FF4444]"
-                          )}
-                        >
-                          {isPnlPositive ? "+" : ""}
-                          {formatCurrency(pnl)}
-                        </p>
-                        <p
-                          className={cn(
-                            "text-xs",
-                            isPnlPositive ? "text-[#00C805]" : "text-[#FF4444]"
-                          )}
-                        >
-                          ({isPnlPositive ? "+" : ""}
-                          {pnlPercent.toFixed(2)}%)
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+          <div
+            className="flex items-center justify-between rounded-lg border border-[#E5E7EB] bg-white px-4 py-3 cursor-pointer hover:bg-[#F9FAFB] transition-colors"
+            onClick={() => router.push("/dashboard/holdings")}
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex -space-x-2">
+                {holdings.slice(0, 3).map((h) => (
+                  <div
+                    key={h.ticker}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#F3F4F6] border-2 border-white text-xs font-semibold text-[#111827]"
+                  >
+                    {h.ticker.slice(0, 2)}
+                  </div>
+                ))}
               </div>
-
-              {/* Desktop: Table layout */}
-              <div className="hidden md:block overflow-hidden rounded-lg border border-[#E5E7EB] bg-white">
-                <table className="w-full">
-                  <tbody className="divide-y divide-[#E5E7EB]">
-                    {holdings.map((h) => {
-                      const currentValue = h.shares * h.current_price;
-                      const costBasis = h.shares * h.avg_buy_price;
-                      const pnl = currentValue - costBasis;
-                      const pnlPercent = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
-                      const isPnlPositive = pnl >= 0;
-                      return (
-                        <tr
-                          key={h.ticker}
-                          className="group cursor-pointer hover:bg-[#F9FAFB]"
-                          onClick={() => router.push(`/dashboard/stock/${h.ticker}`)}
-                        >
-                          <td className="px-6 py-4">
-                            <p className="text-sm font-semibold text-[#111827]">{h.ticker}</p>
-                            <p className="text-xs text-[#4B5563]">{formatShares(h.shares)} share{formatShares(h.shares) !== "1" ? "s" : ""}</p>
-                          </td>
-                        <td className="px-6 py-4 text-right">
-                          <p
-                            className={cn(
-                              "text-sm font-medium",
-                              isPnlPositive ? "text-[#00C805]" : "text-[#FF4444]"
-                            )}
-                          >
-                            {isPnlPositive ? "+" : ""}
-                            {formatCurrency(pnl)}
-                          </p>
-                          <p
-                            className={cn(
-                              "text-xs",
-                              isPnlPositive ? "text-[#00C805]" : "text-[#FF4444]"
-                            )}
-                          >
-                            ({isPnlPositive ? "+" : ""}
-                            {pnlPercent.toFixed(2)}%)
-                          </p>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <span className="text-sm font-medium text-[#111827]">
+                {holdings.length} position{holdings.length !== 1 ? "s" : ""}
+              </span>
             </div>
-            </>
+            <ChevronRight className="h-5 w-5 text-[#9CA3AF]" />
+          </div>
         )}
       </motion.div>
 
