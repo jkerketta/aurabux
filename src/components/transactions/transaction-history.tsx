@@ -56,7 +56,7 @@ const labelMap: Record<string, string> = {
 function SkeletonRows() {
   return (
     <tbody className="divide-y divide-neutral-100">
-      {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 5 }).map((_, i) => (
         <tr key={i}>
           <td className="px-6 py-4">
             <Skeleton className="h-4 w-24" />
@@ -163,7 +163,7 @@ export function TransactionHistory({ initialTransactions }: TransactionHistoryPr
       <div className="overflow-hidden rounded-lg border border-[#E5E7EB] bg-white">
         {/* Mobile skeleton */}
         <div className="sm:hidden space-y-3 p-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+      {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
               className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-3"
@@ -305,7 +305,7 @@ export function TransactionHistory({ initialTransactions }: TransactionHistoryPr
           </thead>
           <tbody className="divide-y divide-neutral-100">
             {loading
-              ? Array.from({ length: 3 }).map((_, i) => (
+              ? Array.from({ length: 5 }).map((_, i) => (
                   <tr key={`skeleton-${i}`}>
                     <td className="px-6 py-4">
                       <Skeleton className="h-4 w-24" />
