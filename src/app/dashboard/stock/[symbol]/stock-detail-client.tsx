@@ -226,6 +226,8 @@ export function StockDetailClient({
     gainLossPercent?: number;
   } | null>(null);
 
+  const [confirming, setConfirming] = useState(false);
+
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [, setTick] = useState(0);
@@ -397,6 +399,8 @@ export function StockDetailClient({
   const executeTrade = useCallback(async () => {
     if (!confirmationData || !quoteData) return;
 
+    setConfirming(true);
+
     if (confirmationData.type === "buy") {
       setBuyLoading(true);
       setBuyError(null);
@@ -428,6 +432,7 @@ export function StockDetailClient({
         setBuyError("Network error — try again");
       } finally {
         setBuyLoading(false);
+        setConfirming(false);
         setConfirmationData(null);
       }
     } else {
@@ -461,10 +466,11 @@ export function StockDetailClient({
         setSellError("Network error — try again");
       } finally {
         setSellLoading(false);
+        setConfirming(false);
         setConfirmationData(null);
       }
     }
-  }, [confirmationData, quoteData, router]);
+  }, [confirmationData, quoteData, router, confirming]);
 
   // ── Computed ───────────────────────────────────────────
 
@@ -1221,6 +1227,7 @@ export function StockDetailClient({
               open={!!confirmationData}
               onOpenChange={(open) => { if (!open) setConfirmationData(null); }}
               onConfirm={executeTrade}
+              confirming={confirming}
               {...confirmationData}
             />
           )}
