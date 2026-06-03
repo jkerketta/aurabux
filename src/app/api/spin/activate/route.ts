@@ -71,24 +71,6 @@ export async function POST() {
       );
     }
 
-    // Check not already activated in current cycle (only unclaimed blocks)
-    const { data: existing } = await supabase
-      .from("powerups")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("type", "x2_returns")
-      .eq("claimed", false)
-      .gte("activated_at", lastReset.toISOString())
-      .limit(1)
-      .maybeSingle();
-
-    if (existing) {
-      return NextResponse.json(
-        { error: "x2 Returns already activated today" },
-        { status: 400 }
-      );
-    }
-
     // Snapshot current investments value
     const headersList = await import("next/headers");
     const host = (await headersList.headers()).get("host") ?? "localhost:3000";
@@ -111,7 +93,15 @@ export async function POST() {
       snapshot_value: snapshotValue,
     });
 
-    if (insertError) throw insertError;
+    if (insertError) {
+      if (insertError.code === "23505") {
+        return NextResponse.json(
+          { error: "x2 Returns already activated today" },
+          { status: 409 }
+        );
+      }
+      throw insertError;
+    }
 
     return NextResponse.json({ success: true, snapshotValue });
   } catch (error) {

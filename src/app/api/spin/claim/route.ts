@@ -85,7 +85,7 @@ export async function POST() {
       .maybeSingle();
 
     const currentBalance = Number(currentPortfolio?.abx_balance ?? 10000);
-    const newBalance = currentBalance + extraAmount;
+    const newBalance = Math.max(0, currentBalance + extraAmount);
 
     const { error: updateError } = await adminSupabase
       .from("portfolios")
