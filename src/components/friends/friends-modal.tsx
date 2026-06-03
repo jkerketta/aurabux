@@ -52,17 +52,21 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [sendingRequest, setSendingRequest] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchFriends = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/friends");
       if (res.ok) {
         const data = await res.json();
         setFriendsData(data);
+      } else {
+        setError("Failed to load friends");
       }
     } catch {
-      // silent fail
+      setError("Failed to load friends");
     } finally {
       setLoading(false);
     }
@@ -73,6 +77,7 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
       fetchFriends();
       setSearchQuery("");
       setSearchError(null);
+      setError(null);
     }
   }, [open, fetchFriends]);
 
@@ -232,6 +237,18 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-5 w-5 animate-spin text-[#4B5563]" />
+              </div>
+            ) : error ? (
+              <div className="py-8 text-center">
+                <p className="text-sm text-[#FF4444] mb-3">{error}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchFriends}
+                  className="border-[#E5E7EB] text-[#4B5563] hover:bg-[#F9FAFB]"
+                >
+                  Retry
+                </Button>
               </div>
             ) : friendsData.friends.length === 0 ? (
               <div className="py-8 text-center text-sm text-[#4B5563]">
