@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { Loader2, Crown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
@@ -81,17 +82,21 @@ function LeaderboardSkeleton() {
 export default function LeaderboardPage() {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchLeaderboard = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/leaderboard?type=global");
       if (res.ok) {
         const result = await res.json();
         setData(result.leaderboard ?? []);
+      } else {
+        setError("Failed to load leaderboard");
       }
     } catch {
-      // silent fail
+      setError("Failed to load leaderboard");
     } finally {
       setLoading(false);
     }
@@ -164,6 +169,20 @@ export default function LeaderboardPage() {
       <ErrorBoundary fallbackTitle="Leaderboard failed to load">
         {loading ? (
           <LeaderboardSkeleton />
+        ) : error ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-sm text-[#FF4444] mb-3">{error}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchLeaderboard}
+                className="border-[#E5E7EB] text-[#4B5563] hover:bg-[#F9FAFB]"
+              >
+                Retry
+              </Button>
+            </CardContent>
+          </Card>
         ) : data.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-sm text-[#4B5563]">
