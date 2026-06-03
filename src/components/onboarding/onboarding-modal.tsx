@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,7 @@ import {
   Trophy,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 
 interface OnboardingStep {
@@ -53,13 +55,19 @@ interface OnboardingModalProps {
 
 export function OnboardingModal({ open, onOpenChange }: OnboardingModalProps) {
   const [currentStep, setCurrentStep] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   const handleDismiss = useCallback(async () => {
+    setLoading(true);
     try {
-      await fetch("/api/onboarding", { method: "PATCH" });
+      const res = await fetch("/api/onboarding", { method: "PATCH" });
+      if (!res.ok) {
+        toast.error("Failed to save progress");
+      }
     } catch {
-      // Silently fail — modal still closes
+      toast.error("Failed to save progress");
     }
+    setLoading(false);
     onOpenChange(false);
   }, [onOpenChange]);
 
@@ -162,8 +170,10 @@ export function OnboardingModal({ open, onOpenChange }: OnboardingModalProps) {
             {isLastStep ? (
               <Button
                 onClick={handleDismiss}
+                disabled={loading}
                 className="h-10 px-8 bg-[#2563EB] text-white hover:bg-blue-700"
               >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Got it
               </Button>
             ) : (
