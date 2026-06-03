@@ -28,7 +28,7 @@ const STEPS: OnboardingStep[] = [
     icon: BarChart3,
     title: "Welcome to ABX",
     description:
-      "You've been given 10,000 ABX to invest in real stocks. No real money — just real competition.",
+      "You've been given 10,000 ABX to invest in real stocks. No real money - just real competition.",
   },
   {
     icon: Zap,
@@ -40,7 +40,7 @@ const STEPS: OnboardingStep[] = [
     icon: Trophy,
     title: "Climb the Leaderboard",
     description:
-      "Your return % is measured on how well you pick stocks — not luck. Compete with friends and climb the ranks.",
+      "Your return % is measured on how well you pick stocks - not luck. Compete with friends and climb the ranks.",
   },
 ];
 
