@@ -53,6 +53,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Canadian stocks (.TO) are not supported" }, { status: 400 });
     }
 
+    // Server-side price verification: fetch live quote and compare
+    try {
+      const quoteUrl = new URL("/api/stocks/quote", request.url);
+      quoteUrl.searchParams.set("symbol", normalizedSymbol);
+      // Use internal fetch via NextRequest to call our own quote API
+      const quoteRes = await fetch(quoteUrl.toString(), {
+        headers: { cookie: request.headers.get("cookie") ?? "" },
+      });
+      if (quoteRes.ok) {
+        const quoteData = await quoteRes.json();
+        if (quoteData && typeof quoteData.currentPrice === "number" && quoteData.currentPrice > 0) {
+          const livePrice = quoteData.currentPrice;
+          const tolerance = 0.05; // 5% tolerance
+          if (Math.abs(pricePerShare - livePrice) / livePrice > tolerance) {
+            return NextResponse.json(
+              { error: "Price has changed significantly. Please refresh and try again." },
+              { status: 400 }
+            );
+          }
+        }
+      }
+    } catch {
+      // If quote fetch fails, proceed with client price (graceful degradation)
+    }
+
     const totalCost = shares * pricePerShare;
 
     // Fetch user's portfolio (use admin client to bypass RLS for reliable read)
