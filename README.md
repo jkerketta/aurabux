@@ -15,9 +15,7 @@ ABX gives every player **10,000 ABX** to start trading real stocks with fake mon
 - **x2 Powerup** — Snapshot your portfolio, wait 24h, and claim doubled returns
 - **Global Leaderboard** — Live rankings with real-time price calculations
 - **Friends System** — Send requests, accept/decline, and compete with your circle
-- **Onboarding** — Interactive 3-step guide for new users, re-openable anytime
-- **Skeleton Loading** — Shimmer animations on all page transitions
-- **Glassmorphism UI** — Light theme with animated gradient blobs and frosted glass cards
+
 
 ## Tech Stack
 
