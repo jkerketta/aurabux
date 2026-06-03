@@ -1,7 +1,10 @@
 # ABX - Aurabux
+
+```
 ──────────────────────────────────────
  ₍₍⚞(˶^ ᗜ ^˶)⚟⁾⁾  Aurabux ver. 1.0
 ──────────────────────────────────────
+```
 
 <img width="1060" height="578" alt="image" src="https://github.com/user-attachments/assets/ba9f47c4-049d-4cc8-87bc-1f5a4cddbbaa" />
 
