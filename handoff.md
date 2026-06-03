@@ -28,9 +28,18 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 - **Leaderboard**: Compact rows on mobile, hidden display numbers, smaller text.
 - **Search**: Responsive heading, input height, container padding.
 
-### 4. Remaining (Future)
-- **RLS Edge Cases**: Verify users cannot access/modify other users' data beyond friendships.
-- **Spin Double-Submit**: Add debounce to daily spin button.
+### 4. ~~Security Hardening~~ ✅ DONE (fix/mobile-and-bugs)
+- **RLS Hardening**: ✅ Removed client-side INSERT/UPDATE/DELETE on `holdings` and `transactions`. All writes via service_role only.
+- **CHECK Constraints**: ✅ Added `>= 0` constraints on `abx_balance`, `total_value`, `total_invested`, `free_spins`, `shares`, `avg_buy_price`.
+- **Race Conditions**: ✅ Optimistic locking on buy/sell/spin balance updates. UNIQUE constraints on `daily_spins` and `powerups` prevent double-spin/double-activate.
+- **Price Verification**: ✅ Cache-based server-side verification replaces fragile HTTP self-fetch. Rejects if no cache or >5% drift.
+- **Double-Submit Protection**: ✅ Confirm button disables + spinner during trade execution. Google auth buttons disable during redirect.
+- **Error Handling**: ✅ Leaderboard, friends modal, and onboarding all show error UI with retry.
+- **Input Validation**: ✅ Open redirect blocked in email confirmation. URL crash guarded in stock detail. Friend decline checks `status=pending`.
+
+### 5. Remaining (Future)
+- **Rate Limiting**: Add rate limiting to API routes (Fin quota is natural limit, but prevents abuse).
+- **API Auth**: Consider adding auth to `/api/stocks/*` routes if needed.
 
 ---
 
@@ -82,6 +91,16 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 - ✅ Leaderboard Error UI: Error message + retry button on API failure
 - ✅ Friends Modal Error UI: Error message + retry button on fetch failure
 - ✅ Onboarding Error Toast: Toast notification on PATCH failure
+- ✅ RLS Hardening: Client-side writes removed from holdings/transactions (service_role only)
+- ✅ CHECK Constraints: Database-level guards against negative balance/shares
+- ✅ Optimistic Locking: Balance + holdings updates use `.eq("current_value")` pattern
+- ✅ Double-Spin Prevention: UNIQUE index on `(user_id, day)` in daily_spins
+- ✅ Double-Activate Prevention: UNIQUE index on `(user_id, type, day)` in powerups
+- ✅ Cache-Based Price Verification: Rejects trades if no cached quote or >5% drift
+- ✅ Negative Balance Guard: `Math.max(0, ...)` on spin claim, CHECK constraint on portfolio
+- ✅ Open Redirect Blocked: Email confirmation validates `next` parameter
+- ✅ URL Crash Guard: `new URL()` wrapped in try/catch for malformed company URLs
+- ✅ Friend Decline Validation: Checks `status=pending` before declining
 
 ### Key Files
 | File | Purpose |
@@ -142,6 +161,10 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 | `supabase/migrations/015_add_spin_transactions.sql` | spin type in transactions check constraint |
 | `supabase/migrations/016_onboarding_flag.sql` | has_seen_onboarding boolean in users table |
 | `supabase/migrations/017_restrict_friendship_update.sql` | Friendship UPDATE restricted to status column only |
+| `supabase/migrations/018_remove_client_writes.sql` | Drops client-side INSERT/UPDATE/DELETE on holdings + transactions |
+| `supabase/migrations/019_add_check_constraints.sql` | CHECK constraints preventing negative balance/shares |
+| `supabase/migrations/020_prevent_double_spin.sql` | UNIQUE index preventing double-spin per day |
+| `supabase/migrations/021_powerup_unique_per_day.sql` | UNIQUE index preventing duplicate powerup activation per day |
 | `src/app/loading.tsx` | Root loading spinner for auth redirect |
 
 ---
@@ -167,6 +190,15 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 | Cooldown timer stuck | useState/useEffect timing bug | Moved to computed value from nextResetAt with 1s tick re-render |
 | Blobs not visibly moving | Translation distances too small relative to blob size + blur | Increased keyframe translations from 40-100px to 150-450px |
 | Email confirmation links lead to localhost | No `emailRedirectTo` in signUp + no `/auth/confirm` route handler | Added `/auth/confirm` route that verifies OTP token + `emailRedirectTo: ${origin}/auth/confirm` in signup |
+| Client can write holdings/transactions directly | RLS policies allowed INSERT/UPDATE/DELETE for authenticated role | Dropped write policies (migration 018), all writes via service_role |
+| No protection against negative balance/shares | Missing CHECK constraints on numeric columns | Added CHECK `>= 0` constraints (migration 019) |
+| TOCTOU race on buy/sell/spin | Non-atomic read-then-write on balance and holdings | Optimistic locking: `.eq("abx_balance", currentBalance)` + `.select()`, returns 409 on conflict |
+| Double-spin possible | No DB-level constraint on daily spins | UNIQUE index on `(user_id, date_trunc('day', created_at))` (migration 020) |
+| Double-activate powerup possible | No DB-level constraint on powerups | UNIQUE index on `(user_id, type, date_trunc('day', activated_at))` (migration 021) |
+| Fragile HTTP self-fetch for price verification | Internal fetch to `/api/stocks/quote` fails in serverless | Replaced with direct in-memory cache lookup |
+| Open redirect via email confirmation | `next` parameter user-controlled, `?next=@evil.com` exploit | Validate `next` starts with `/`, rejects `//`, `@`, `:` |
+| `new URL()` crash on malformed weburl | Finnhub returns non-URL strings for some companies | Wrapped in try/catch, falls back to raw string |
+| Can decline already-accepted friendships | `/api/friends/decline` had no status check | Added `.eq("status", "pending")` to query |
 
 ---
 
@@ -174,9 +206,12 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 
 ### Architecture
 - **Server components by default** — fetch Supabase data + call internal APIs in parallel
-- **Service role client** — only for admin operations (portfolio auto-create), never exposed to browser
-- **User-scoped client** — for all user data operations (holdings, transactions, balance updates)
+- **Service role client** — used for ALL data writes (holdings, transactions, portfolios, spins). Bypasses RLS. Never exposed to browser.
+- **User-scoped client** — only used for `auth.getUser()` in API routes
 - **Internal API routes** — server components call `/api/stocks/*` via `fetch()` with `baseUrl`
+- **Optimistic locking** — balance/holdings updates use `.eq("current_value")` to detect concurrent modifications
+- **CHECK constraints** — database-level guards against negative balance/shares
+- **UNIQUE indexes** — prevent double-spin and double-activate at DB level
 
 ### Data Sources
 - **Finnhub** — Search (`/search`), Quote (`/quote`), Profile (`/stock/profile2`). Free tier: US stocks only.
@@ -226,10 +261,11 @@ Required env vars (see `.env.example`):
 - `FINNHUB_API_KEY`
 
 ## Database
-- Run migrations in Supabase SQL Editor in order: `001` → `002` → `004` → `005` → `006` → `007` → `008` → `009` → `010` → `011` → `012` → `013` → `014` → `015` → `016`
+- Run migrations in Supabase SQL Editor in order: `001` → `002` → `004` → `005` → `006` → `007` → `008` → `009` → `010` → `011` → `012` → `013` → `014` → `015` → `016` → `017` → `018` → `019` → `020` → `021`
 - `003` was deleted (no longer needed after service role fix)
 - **Migration 014** needs to be run manually from Supabase SQL editor (updates handle_new_user trigger to 10000 starting balance)
 - **Migration 016** needs to be run manually from Supabase SQL editor (adds has_seen_onboarding to users table)
+- **Migrations 018-021** should be run AFTER code deploys to Vercel (018 drops RLS policies that old code depends on)
 
 ---
 
@@ -240,8 +276,9 @@ When starting a new session:
 3. Check recent commits: `git log --oneline -15`
 4. Check git status: `git status` (should be clean)
 5. Pull latest: `git pull origin main`
-6. **Remaining Work** (pick one):
-   - **RLS Edge Cases**: Verify users cannot access/modify other users' data beyond friendships.
-   - **Spin Double-Submit**: Add debounce to daily spin button.
-   - **Loading States**: Audit remaining async operations.
-7. Use `@fixer` for bounded bug fixes, `@oracle` for complex debugging/architecture decisions.
+6. **After merge to main**: Run migrations 018-21 in Supabase SQL Editor (order matters — 018 drops RLS policies)
+7. **Remaining Work** (pick one):
+   - **Rate Limiting**: Add rate limiting to API routes if abuse is detected.
+   - **API Auth**: Consider adding auth to `/api/stocks/*` routes.
+   - **Performance**: Monitor for slow queries, add indexes if needed.
+8. Use `@fixer` for bounded bug fixes, `@oracle` for complex debugging/architecture decisions.
