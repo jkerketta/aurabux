@@ -814,7 +814,10 @@ export function StockDetailClient({
                         rel="noopener noreferrer"
                         className="text-blue-600 underline underline-offset-2 hover:text-blue-800"
                       >
-                        {new URL(companyInfo.weburl).hostname}
+                        {(() => {
+                      try { return new URL(companyInfo.weburl).hostname; }
+                      catch { return companyInfo.weburl; }
+                    })()}
                       </a>
                     ) : (
                       "\u2014"

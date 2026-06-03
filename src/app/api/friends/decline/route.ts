@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
     const { data: friendship } = await supabase
       .from("friendships")
-      .select("id, addressee_id")
+      .select("id, addressee_id, status")
       .eq("id", body.friendship_id)
       .single();
 
@@ -36,6 +36,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Friendship not found" },
         { status: 404 }
+      );
+    }
+
+    if (friendship.status !== "pending") {
+      return NextResponse.json(
+        { error: "Can only decline pending friend requests" },
+        { status: 400 }
       );
     }
 
