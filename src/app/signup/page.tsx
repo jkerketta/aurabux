@@ -17,6 +17,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +47,7 @@ export default function SignupPage() {
 
   const handleGoogleSignup = async () => {
     setError(null);
+    setGoogleLoading(true);
 
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
@@ -57,6 +59,7 @@ export default function SignupPage() {
 
     if (error) {
       setError(error.message);
+      setGoogleLoading(false);
     }
   };
 
@@ -161,6 +164,8 @@ export default function SignupPage() {
             <Button
               onClick={handleGoogleSignup}
               variant="outline"
+              disabled={googleLoading || loading}
+              aria-busy={googleLoading}
               className="w-full h-11 border-neutral-200 hover:bg-neutral-50"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">
