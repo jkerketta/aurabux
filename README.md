@@ -16,13 +16,13 @@ ABX gives every player **10,000 ABX** to start trading real stocks with fake mon
 
 ## Features
 
-- **Portfolio Dashboard** — Real-time balance, holdings, total P&L, and all-time return tracking
-- **Live Stock Data** — Real-time quotes, interactive charts (1D/1M/1Y/5Y), market status, and company info
-- **Buy & Sell** — Trade by shares or ABX amount with confirmation dialogs and instant balance updates
-- **Daily Spin** — CSGO-style spinner with 8 rewards: ABX, free stocks, x2 returns, free spins
-- **x2 Powerup** — Snapshot your portfolio, wait 24h, and claim doubled returns
-- **Global Leaderboard** — Live rankings with real-time price calculations
-- **Friends System** — Send requests, accept/decline, and compete with your circle
+- **Portfolio Dashboard** -- Real-time balance, holdings, total P&L, and all-time return tracking
+- **Live Stock Data** -- Real-time quotes, interactive charts (1D/1M/1Y/5Y), market status, and company info
+- **Buy & Sell** -- Trade by shares or ABX amount with confirmation dialogs and instant balance updates
+- **Daily Spin** -- CSGO-style spinner with 8 rewards: ABX, free stocks, x2 returns, free spins
+- **x2 Powerup** -- Snapshot your portfolio, wait 24h, and claim doubled returns
+- **Global Leaderboard** -- Live rankings with real-time price calculations
+- **Friends System** -- Send requests, accept/decline, and compete with your circle
 
 
 ## Tech Stack
