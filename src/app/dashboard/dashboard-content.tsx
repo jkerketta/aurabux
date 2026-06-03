@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { RotateCw, Zap, Clock, CircleHelp, ChevronRight } from "lucide-react";
@@ -129,7 +127,7 @@ export function DashboardContent({
       {/* Animated gradient blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
         <div
-          className="absolute -top-[10%] -left-[10%] w-[80vw] h-[80vw] max-w-[900px] max-h-[900px] rounded-full"
+          className="absolute -top-[10%] -left-[10%] w-[80vw] h-[80vw] max-w-[2200px] max-h-[2200px] rounded-full"
           style={{
             background: "radial-gradient(circle, rgba(6,182,212,0.6) 0%, transparent 65%)",
             filter: "blur(100px)",
@@ -138,7 +136,7 @@ export function DashboardContent({
           }}
         />
         <div
-          className="absolute top-[20%] -right-[10%] w-[70vw] h-[70vw] max-w-[800px] max-h-[800px] rounded-full"
+          className="absolute top-[20%] -right-[10%] w-[70vw] h-[70vw] max-w-[2000px] max-h-[2000px] rounded-full"
           style={{
             background: "radial-gradient(circle, rgba(168,85,247,0.6) 0%, transparent 65%)",
             filter: "blur(100px)",
@@ -147,7 +145,7 @@ export function DashboardContent({
           }}
         />
         <div
-          className="absolute -bottom-[10%] left-[10%] w-[75vw] h-[75vw] max-w-[850px] max-h-[850px] rounded-full"
+          className="absolute -bottom-[10%] left-[10%] w-[75vw] h-[75vw] max-w-[2100px] max-h-[2100px] rounded-full"
           style={{
             background: "radial-gradient(circle, rgba(34,197,94,0.6) 0%, transparent 65%)",
             filter: "blur(100px)",
@@ -157,7 +155,7 @@ export function DashboardContent({
         />
         {/* Mobile-only blobs — positioned centrally for narrow screens */}
         <div
-          className="absolute top-[40%] left-[20%] w-[60vw] h-[60vw] max-w-[500px] max-h-[500px] rounded-full md:hidden"
+          className="absolute top-[40%] left-[20%] w-[60vw] h-[60vw] max-w-[1200px] max-h-[1200px] rounded-full md:hidden"
           style={{
             background: "radial-gradient(circle, rgba(6,182,212,0.5) 0%, transparent 65%)",
             filter: "blur(80px)",
@@ -166,7 +164,7 @@ export function DashboardContent({
           }}
         />
         <div
-          className="absolute top-[50%] right-[15%] w-[55vw] h-[55vw] max-w-[450px] max-h-[450px] rounded-full md:hidden"
+          className="absolute top-[50%] right-[15%] w-[55vw] h-[55vw] max-w-[1100px] max-h-[1100px] rounded-full md:hidden"
           style={{
             background: "radial-gradient(circle, rgba(168,85,247,0.5) 0%, transparent 65%)",
             filter: "blur(80px)",
@@ -175,7 +173,7 @@ export function DashboardContent({
           }}
         />
         <div
-          className="absolute bottom-[20%] left-[30%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full md:hidden"
+          className="absolute bottom-[20%] left-[30%] w-[50vw] h-[50vw] max-w-[1000px] max-h-[1000px] rounded-full md:hidden"
           style={{
             background: "radial-gradient(circle, rgba(34,197,94,0.5) 0%, transparent 65%)",
             filter: "blur(80px)",
@@ -208,12 +206,12 @@ export function DashboardContent({
 
       {/* Portfolio Value Section */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-8">
-          <Card className="relative backdrop-blur-xl bg-white/60 border border-white/40 shadow-none">
+          <Card className="relative backdrop-blur-2xl bg-white/60 border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.06)]">
             <button
               onClick={() => setShowHowToPlay(true)}
               className="absolute top-4 right-4 text-xs text-[#4B5563] hover:text-[#2563EB] transition-colors"
             >
-              How it works
+              <span className="underline underline-offset-2">How to play</span>
             </button>
             <CardHeader className="pb-2">
               <CardDescription className="text-xs font-medium uppercase tracking-wider text-[#4B5563]">
@@ -231,7 +229,7 @@ export function DashboardContent({
       {/* Stats Row */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-2 gap-2 sm:gap-4 mb-8">
         {/* ABX Balance Card */}
-          <Card className="min-h-[100px] sm:min-h-[120px] backdrop-blur-xl bg-white/60 border border-white/40 shadow-none">
+          <Card className="min-h-[100px] sm:min-h-[120px] backdrop-blur-2xl bg-white/60 border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.06)]">
             <CardHeader className="pb-1 sm:pb-2 px-3 sm:px-6">
               <CardDescription className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 ABX Balance
@@ -259,7 +257,7 @@ export function DashboardContent({
               </div>
               <button
                 onClick={() => setSpinInfoOpen(true)}
-                className="inline-flex items-center justify-center h-5 w-5 sm:h-6 sm:w-6 rounded-full border border-[#E5E7EB] text-[#4B5563] hover:text-[#2563EB] hover:border-[#2563EB] transition-colors"
+                className="ml-2 inline-flex items-center justify-center h-5 w-5 sm:h-6 sm:w-6 rounded-full border border-[#E5E7EB] text-[#4B5563] hover:text-[#2563EB] hover:border-[#2563EB] transition-colors"
                 aria-label="Spin info"
               >
                 <CircleHelp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
@@ -274,7 +272,7 @@ export function DashboardContent({
         </Card>
 
         {/* Investments Card */}
-          <Card className="min-h-[100px] sm:min-h-[120px] backdrop-blur-xl bg-white/60 border border-white/40 shadow-none">
+          <Card className="min-h-[100px] sm:min-h-[120px] backdrop-blur-2xl bg-white/60 border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.06)]">
             <CardHeader className="pb-1 sm:pb-2 px-3 sm:px-6">
               <CardDescription className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 Investments
@@ -308,9 +306,6 @@ export function DashboardContent({
               {isPnlPositive ? "+" : ""}{formatCurrency(totalPnl)}
             </div>
           )}
-          <span className="text-xs text-[#4B5563]">
-            ({holdings.length} position{holdings.length !== 1 ? "s" : ""})
-          </span>
           {hasActivePowerup && x2Countdown && (
             <div className="flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 border border-rose-200">
               <Zap className="h-3.5 w-3.5 text-rose-600 fill-rose-600" />

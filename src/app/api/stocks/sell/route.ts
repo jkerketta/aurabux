@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { cache } from "@/lib/cache";
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,10 +54,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Canadian stocks (.TO) are not supported" }, { status: 400 });
     }
 
+    // Server-side price verification: check cached live price
+    const cached = cache.get<{ currentPrice: number }>(`quote:${normalizedSymbol}`);
+
+    if (!cached) {
+      return NextResponse.json(
+        { error: "Could not verify current price. Please refresh and try again." },
+        { status: 400 }
+      );
+    }
+
+    const livePrice = cached.currentPrice;
+    const tolerance = 0.05; // 5% tolerance
+    if (Math.abs(pricePerShare - livePrice) / livePrice > tolerance) {
+      return NextResponse.json(
+        { error: "Price has changed significantly. Please refresh and try again." },
+        { status: 400 }
+      );
+    }
+
     const proceeds = shares * pricePerShare;
 
+    const adminClient = createAdminClient();
+
     // Fetch user's holding for this symbol
-    const { data: holding, error: holdingError } = await supabase
+    const { data: holding, error: holdingError } = await adminClient
       .from("holdings")
       .select("shares, avg_buy_price")
       .eq("user_id", user.id)
@@ -89,7 +111,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch portfolio (use admin client to bypass RLS for reliable read)
-    const adminClient = createAdminClient();
     const { data: portfolio, error: portfolioError } = await adminClient
       .from("portfolios")
       .select("abx_balance, total_invested")
@@ -144,13 +165,20 @@ export async function POST(request: NextRequest) {
     const newBalance = currentBalance + proceeds;
 
     // Step 1: Add proceeds to balance and decrement total_invested
-    const { error: creditError } = await supabase
+    const { data: balanceUpdated, error: creditError } = await adminClient
       .from("portfolios")
       .update({ abx_balance: newBalance, total_invested: newTotalInvested })
-      .eq("user_id", user.id);
+      .eq("user_id", user.id)
+      .eq("abx_balance", currentBalance)
+      .select("abx_balance");
 
-    if (creditError) {
-      throw creditError;
+    if (creditError) throw creditError;
+
+    if (!balanceUpdated || balanceUpdated.length === 0) {
+      return NextResponse.json(
+        { error: "Balance changed during transaction. Please refresh and try again." },
+        { status: 409 }
+      );
     }
 
     // Track original balance for potential compensation
@@ -162,26 +190,52 @@ export async function POST(request: NextRequest) {
 
       if (remainingShares <= 0) {
         // Delete the holding row entirely
-        const { error: deleteError } = await supabase
+        const { data: deleteUpdated, error: deleteError } = await adminClient
           .from("holdings")
           .delete()
           .eq("user_id", user.id)
-          .eq("ticker", normalizedSymbol);
+          .eq("ticker", normalizedSymbol)
+          .eq("shares", ownedShares)
+          .select();
 
         if (deleteError) throw deleteError;
+
+        if (!deleteUpdated || deleteUpdated.length === 0) {
+          await adminClient
+            .from("portfolios")
+            .update({ abx_balance: currentBalance, total_invested: currentTotalInvested })
+            .eq("user_id", user.id);
+          return NextResponse.json(
+            { error: "Holding changed during transaction. Please refresh and try again." },
+            { status: 409 }
+          );
+        }
       } else {
         // Update shares count
-        const { error: updateError } = await supabase
+        const { data: holdingUpdated, error: updateError } = await adminClient
           .from("holdings")
           .update({ shares: remainingShares })
           .eq("user_id", user.id)
-          .eq("ticker", normalizedSymbol);
+          .eq("ticker", normalizedSymbol)
+          .eq("shares", ownedShares)
+          .select();
 
         if (updateError) throw updateError;
+
+        if (!holdingUpdated || holdingUpdated.length === 0) {
+          await adminClient
+            .from("portfolios")
+            .update({ abx_balance: currentBalance, total_invested: currentTotalInvested })
+            .eq("user_id", user.id);
+          return NextResponse.json(
+            { error: "Holding changed during transaction. Please refresh and try again." },
+            { status: 409 }
+          );
+        }
       }
 
       // Step 3: Record transaction
-      const { error: txnError } = await supabase.from("transactions").insert({
+      const { error: txnError } = await adminClient.from("transactions").insert({
         user_id: user.id,
         ticker: normalizedSymbol,
         type: "sell",
@@ -192,7 +246,7 @@ export async function POST(request: NextRequest) {
       if (txnError) throw txnError;
     } catch (error) {
       // Compensate: revert the balance credit and total_invested
-      await supabase
+      await adminClient
         .from("portfolios")
         .update({ abx_balance: originalBalance, total_invested: currentTotalInvested })
         .eq("user_id", user.id);

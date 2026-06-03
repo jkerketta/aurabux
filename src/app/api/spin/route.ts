@@ -133,12 +133,21 @@ export async function POST() {
       const currentBalance = Number(currentPortfolio?.abx_balance ?? 10000);
       const newBalance = currentBalance + Number(reward.value);
 
-      const { error: updateError } = await adminSupabase
+      const { data: balanceUpdated, error: updateError } = await adminSupabase
         .from("portfolios")
         .update({ abx_balance: newBalance })
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .eq("abx_balance", currentBalance)
+        .select("abx_balance");
 
       if (updateError) throw updateError;
+
+      if (!balanceUpdated || balanceUpdated.length === 0) {
+        return NextResponse.json(
+          { error: "Balance changed during transaction. Please try again." },
+          { status: 409 }
+        );
+      }
     } else if (reward.type === "stock") {
       const ticker = STOCK_TICKERS[Math.floor(Math.random() * STOCK_TICKERS.length)];
 
@@ -221,12 +230,21 @@ export async function POST() {
       reward.label = `3 Shares ${ticker}`;
     } else if (reward.type === "free_spins") {
       // Grant 2 free spins
-      const { error: updateError } = await adminSupabase
+      const { data: spinsUpdated, error: updateError } = await adminSupabase
         .from("portfolios")
         .update({ free_spins: freeSpins + 2 })
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .eq("free_spins", freeSpins)
+        .select("free_spins");
 
       if (updateError) throw updateError;
+
+      if (!spinsUpdated || spinsUpdated.length === 0) {
+        return NextResponse.json(
+          { error: "Free spins changed during transaction. Please try again." },
+          { status: 409 }
+        );
+      }
     }
     // powerup_x2: do NOT auto-insert. User must activate via /api/spin/activate.
 
@@ -237,14 +255,23 @@ export async function POST() {
       reward_value: reward.value,
     });
 
-    if (spinError) throw spinError;
+    if (spinError) {
+      if (spinError.code === "23505") {
+        return NextResponse.json(
+          { error: "Already spun today" },
+          { status: 409 }
+        );
+      }
+      throw spinError;
+    }
 
     // Decrement free spins if used
     if (hasFreeSpins) {
       const { error: updateError } = await adminSupabase
         .from("portfolios")
         .update({ free_spins: freeSpins - 1 })
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .eq("free_spins", freeSpins);
 
       if (updateError) throw updateError;
     }

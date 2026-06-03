@@ -5,7 +5,11 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") ?? "signup";
-  const next = searchParams.get("next") ?? "/dashboard";
+  const rawNext = searchParams.get("next") ?? "/dashboard";
+  // Prevent open redirect: only allow relative paths starting with /
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") && !rawNext.includes("@") && !rawNext.includes(":")
+    ? rawNext
+    : "/dashboard";
 
   if (token_hash) {
     const supabase = await createClient();

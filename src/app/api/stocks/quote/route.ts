@@ -87,6 +87,7 @@ async function fetchQuote(symbol: string) {
 
     // 403 = free tier limitation for non-US stocks → fallback to Yahoo
     if (response.status === 403) {
+      console.log(`[quote] Finnhub 403 for ${symbol}, falling back to Yahoo`);
       return fetchYahooQuote(symbol);
     }
 
@@ -116,10 +117,12 @@ async function fetchQuote(symbol: string) {
     }
 
     // c === 0 means no data on Finnhub → try Yahoo fallback
+    console.log(`[quote] Finnhub returned c=0 for ${symbol}, falling back to Yahoo`);
     return fetchYahooQuote(symbol);
   }
 
   // No API key → try Yahoo directly
+  console.log(`[quote] No FINNHUB_API_KEY, using Yahoo for ${symbol}`);
   return fetchYahooQuote(symbol);
 }
 

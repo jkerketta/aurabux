@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { cache } from "@/lib/cache";
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,6 +52,25 @@ export async function POST(request: NextRequest) {
 
     if (normalizedSymbol.endsWith(".TO")) {
       return NextResponse.json({ error: "Canadian stocks (.TO) are not supported" }, { status: 400 });
+    }
+
+    // Server-side price verification: check cached live price
+    const cached = cache.get<{ currentPrice: number }>(`quote:${normalizedSymbol}`);
+
+    if (!cached) {
+      return NextResponse.json(
+        { error: "Could not verify current price. Please refresh and try again." },
+        { status: 400 }
+      );
+    }
+
+    const livePrice = cached.currentPrice;
+    const tolerance = 0.05; // 5% tolerance
+    if (Math.abs(pricePerShare - livePrice) / livePrice > tolerance) {
+      return NextResponse.json(
+        { error: "Price has changed significantly. Please refresh and try again." },
+        { status: 400 }
+      );
     }
 
     const totalCost = shares * pricePerShare;
@@ -124,23 +144,30 @@ export async function POST(request: NextRequest) {
 
     const newBalance = currentBalance - totalCost;
 
-    // Step 1: Deduct balance and increment total_invested
+    // Step 1: Deduct balance and increment total_invested (optimistic locking)
     const currentTotalInvested = Number(portfolio?.total_invested ?? 0);
-    const { error: deductError } = await supabase
+    const { data: balanceUpdated, error: deductError } = await adminClient
       .from("portfolios")
       .update({ abx_balance: newBalance, total_invested: currentTotalInvested + totalCost })
-      .eq("user_id", user.id);
+      .eq("user_id", user.id)
+      .eq("abx_balance", currentBalance)
+      .select("abx_balance");
 
-    if (deductError) {
-      throw deductError;
+    if (deductError) throw deductError;
+
+    if (!balanceUpdated || balanceUpdated.length === 0) {
+      return NextResponse.json(
+        { error: "Balance changed during transaction. Please refresh and try again." },
+        { status: 409 }
+      );
     }
 
-    // Track original balance for potential compensation
+    // Track original values for potential compensation
     const originalBalance = currentBalance;
 
     try {
       // Step 2: Upsert holding
-      const { data: existingHolding } = await supabase
+      const { data: existingHolding } = await adminClient
         .from("holdings")
         .select("shares, avg_buy_price")
         .eq("user_id", user.id)
@@ -154,15 +181,29 @@ export async function POST(request: NextRequest) {
         const newAvg =
           (oldShares * oldAvg + shares * pricePerShare) / totalShares;
 
-        const { error: updateError } = await supabase
+        const { data: holdingUpdated, error: updateError } = await adminClient
           .from("holdings")
           .update({ shares: totalShares, avg_buy_price: Math.round(newAvg * 100) / 100 })
           .eq("user_id", user.id)
-          .eq("ticker", normalizedSymbol);
+          .eq("ticker", normalizedSymbol)
+          .eq("shares", oldShares)
+          .select();
 
         if (updateError) throw updateError;
+
+        if (!holdingUpdated || holdingUpdated.length === 0) {
+          // Compensation: revert balance
+          await adminClient
+            .from("portfolios")
+            .update({ abx_balance: currentBalance, total_invested: currentTotalInvested })
+            .eq("user_id", user.id);
+          return NextResponse.json(
+            { error: "Holding changed during transaction. Please refresh and try again." },
+            { status: 409 }
+          );
+        }
       } else {
-        const { error: insertError } = await supabase
+        const { error: insertError } = await adminClient
           .from("holdings")
           .insert({
             user_id: user.id,
@@ -175,7 +216,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Step 3: Record transaction
-      const { error: txnError } = await supabase.from("transactions").insert({
+      const { error: txnError } = await adminClient.from("transactions").insert({
         user_id: user.id,
         ticker: normalizedSymbol,
         type: "buy",
@@ -186,7 +227,7 @@ export async function POST(request: NextRequest) {
       if (txnError) throw txnError;
     } catch (error) {
       // Compensate: revert the balance deduction and total_invested
-      await supabase
+      await adminClient
         .from("portfolios")
         .update({ abx_balance: originalBalance, total_invested: currentTotalInvested })
         .eq("user_id", user.id);
