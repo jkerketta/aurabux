@@ -8,9 +8,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 interface TradeConfirmationProps {
   open: boolean;
+  confirming?: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   type: "buy" | "sell";
@@ -33,6 +35,7 @@ function formatCurrency(value: number): string {
 
 export function TradeConfirmation({
   open,
+  confirming = false,
   onOpenChange,
   onConfirm,
   type,
@@ -48,7 +51,7 @@ export function TradeConfirmation({
   const isGain = gainLoss !== undefined && gainLoss >= 0;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(open) => { if (!open && confirming) return; onOpenChange(open); }}>
       <DialogContent className="max-w-sm bg-white">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold text-[#111827]">
@@ -114,6 +117,7 @@ export function TradeConfirmation({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
+            disabled={confirming}
             className="flex-1 border-[#E5E7EB] text-[#111827] hover:bg-[#F9FAFB]"
           >
             Cancel
@@ -123,8 +127,10 @@ export function TradeConfirmation({
               onConfirm();
               onOpenChange(false);
             }}
+            disabled={confirming}
             className="flex-1 bg-[#2563EB] text-white hover:bg-blue-700"
           >
+            {confirming && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Confirm {type === "buy" ? "Buy" : "Sell"}
           </Button>
         </div>
