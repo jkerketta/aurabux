@@ -29,10 +29,8 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 - **Search**: Responsive heading, input height, container padding.
 
 ### 4. Remaining (Future)
-- **Race Conditions**: Add double-submit protection to buy/sell/spin flows.
-- **API Fallbacks**: Test Yahoo Finance fallback when Finnhub rate limits.
-- **RLS Edge Cases**: Verify users cannot access other users' data directly.
-- **Loading States**: Audit all async operations for missing loading states.
+- **RLS Edge Cases**: Verify users cannot access/modify other users' data beyond friendships.
+- **Spin Double-Submit**: Add debounce to daily spin button.
 
 ---
 
@@ -75,6 +73,15 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 - ✅ Mobile Padding: Reduced from `px-8` (32px) to `px-4` (16px) on screens `<640px`
 - ✅ Holdings Preview: Dashboard shows first 3 ticker avatars + count with `→` arrow, links to full page
 - ✅ Holdings Page: Dedicated `/dashboard/holdings` with back arrow, mobile card + desktop table layouts
+- ✅ Double-Submit Protection: Confirm button disables + shows spinner during trade execution
+- ✅ Auth Loading States: Google sign-in/sign-up buttons disable during OAuth redirect
+- ✅ Cross-Button Disable: Email login/signup disables all buttons during submission
+- ✅ Root Loading State: Spinner on `/` route during auth check
+- ✅ Server-Side Price Verification: Buy/sell API rejects orders with >5% price drift
+- ✅ Friendship RLS Hardening: UPDATE restricted to status column only (accepted/declined)
+- ✅ Leaderboard Error UI: Error message + retry button on API failure
+- ✅ Friends Modal Error UI: Error message + retry button on fetch failure
+- ✅ Onboarding Error Toast: Toast notification on PATCH failure
 
 ### Key Files
 | File | Purpose |
@@ -134,6 +141,8 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 | `supabase/migrations/014_starting_balance_10000.sql` | Updated handle_new_user trigger + defaults |
 | `supabase/migrations/015_add_spin_transactions.sql` | spin type in transactions check constraint |
 | `supabase/migrations/016_onboarding_flag.sql` | has_seen_onboarding boolean in users table |
+| `supabase/migrations/017_restrict_friendship_update.sql` | Friendship UPDATE restricted to status column only |
+| `src/app/loading.tsx` | Root loading spinner for auth redirect |
 
 ---
 
@@ -232,8 +241,7 @@ When starting a new session:
 4. Check git status: `git status` (should be clean)
 5. Pull latest: `git pull origin main`
 6. **Remaining Work** (pick one):
-   - **Race Conditions**: Add debounce/ref double-submit protection to buy/sell/spin buttons.
-   - **API Fallbacks**: Test Yahoo Finance fallback when Finnhub fails/rate limits.
-   - **RLS Edge Cases**: Verify users cannot access/modify other users' data.
-   - **Loading States**: Audit all async operations for missing loading states.
+   - **RLS Edge Cases**: Verify users cannot access/modify other users' data beyond friendships.
+   - **Spin Double-Submit**: Add debounce to daily spin button.
+   - **Loading States**: Audit remaining async operations.
 7. Use `@fixer` for bounded bug fixes, `@oracle` for complex debugging/architecture decisions.
