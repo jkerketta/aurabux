@@ -1,13 +1,14 @@
 -- Prevent duplicate powerup activation: one activation per user per type per day
 -- Uses a plain date column + unique index + trigger (avoids IMMUTABLE function issues with timestamptz)
 
--- 1. Clean up any partially-created failing indexes and old triggers/functions
+-- 1. Clean up everything from previous attempts
 DROP INDEX IF EXISTS idx_powerups_one_per_day_per_type;
 DROP TRIGGER IF EXISTS trg_set_activation_date ON public.powerups;
 DROP FUNCTION IF EXISTS public.set_activation_date();
+ALTER TABLE public.powerups DROP COLUMN IF EXISTS activation_date CASCADE;
 
--- 2. Add activation_date column
-ALTER TABLE public.powerups ADD COLUMN IF NOT EXISTS activation_date date;
+-- 2. Add activation_date column (fresh, plain date)
+ALTER TABLE public.powerups ADD COLUMN activation_date date;
 
 -- 3. Backfill existing rows (use UTC to be consistent)
 UPDATE public.powerups SET activation_date = DATE(activated_at AT TIME ZONE 'UTC') WHERE activation_date IS NULL;
