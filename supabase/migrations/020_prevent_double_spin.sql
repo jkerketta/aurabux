@@ -1,5 +1,4 @@
 -- Prevent double-spin: one spin per user per day
--- Uses a plain date column + unique index + trigger (avoids IMMUTABLE function issues with timestamptz)
 
 -- 1. Clean up any partially-created failing indexes
 DROP INDEX IF EXISTS idx_daily_spins_one_per_day;
@@ -7,7 +6,7 @@ DROP INDEX IF EXISTS idx_daily_spins_one_per_day;
 -- 2. Add spin_date column
 ALTER TABLE public.daily_spins ADD COLUMN IF NOT EXISTS spin_date date;
 
--- 3. Backfill existing rows (use UTC to be consistent)
+-- 3. Backfill existing rows
 UPDATE public.daily_spins SET spin_date = DATE(created_at AT TIME ZONE 'UTC') WHERE spin_date IS NULL;
 
 -- 4. Deduplicate: keep only the earliest spin per user per day

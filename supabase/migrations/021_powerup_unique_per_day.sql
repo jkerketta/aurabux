@@ -1,5 +1,4 @@
 -- Prevent duplicate powerup activation: one activation per user per type per day
--- Uses a plain date column + unique index + trigger (avoids IMMUTABLE function issues with timestamptz)
 
 -- 1. Clean up everything from previous attempts
 DROP INDEX IF EXISTS idx_powerups_one_per_day_per_type;
@@ -10,7 +9,7 @@ ALTER TABLE public.powerups DROP COLUMN IF EXISTS activation_date CASCADE;
 -- 2. Add activation_date column (fresh, plain date)
 ALTER TABLE public.powerups ADD COLUMN activation_date date;
 
--- 3. Backfill existing rows (use UTC to be consistent)
+-- 3. Backfill existing rows
 UPDATE public.powerups SET activation_date = DATE(activated_at AT TIME ZONE 'UTC') WHERE activation_date IS NULL;
 
 -- 4. Deduplicate: keep only the earliest activation per user per type per day
@@ -27,10 +26,10 @@ WHERE id IN (SELECT id FROM ranked WHERE rn > 1);
 -- 5. Make NOT NULL
 ALTER TABLE public.powerups ALTER COLUMN activation_date SET NOT NULL;
 
--- 6. Create unique index on the plain date column
+-- 6. Create unique index
 CREATE UNIQUE INDEX idx_powerups_one_per_day_per_type ON public.powerups (user_id, type, activation_date);
 
--- 7. Create trigger function to auto-populate activation_date from activated_at
+-- 7. Trigger function
 CREATE OR REPLACE FUNCTION public.set_activation_date()
 RETURNS TRIGGER AS $$
 BEGIN
