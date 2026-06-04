@@ -6,7 +6,7 @@
 ──────────────────────────────────────
 ```
 
-<img width="1060" height="578" alt="image" src="https://github.com/user-attachments/assets/ba9f47c4-049d-4cc8-87bc-1f5a4cddbbaa" />
+<img width="1043" height="595" alt="image" src="https://github.com/user-attachments/assets/66980d54-fc92-4946-92d4-8e4a53ce764d" />
 
 A stock trading game where you use a fake digital currency called Aurabux (ABX) to pick real stocks, compete with friends, and try to grow your portfolio.
 
