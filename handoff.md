@@ -41,6 +41,11 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 - **Rate Limiting**: Add rate limiting to API routes (Fin quota is natural limit, but prevents abuse).
 - **API Auth**: Consider adding auth to `/api/stocks/*` routes if needed.
 
+### 6. Database Cleanup ✅ DONE
+- **User Data Reset**: Cleared all other users via Dashboard → Authentication → Users (cascade deletes all related data).
+- **Display Number Sequence**: Reset `user_display_number_seq` to 1 — next signup gets #001.
+- **README Rewrite**: Odysseus-style format with features, architecture, quick start, security sections.
+
 ---
 
 ## Current State
@@ -166,6 +171,7 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 | `supabase/migrations/020_prevent_double_spin.sql` | UNIQUE index preventing double-spin per day |
 | `supabase/migrations/021_powerup_unique_per_day.sql` | UNIQUE index preventing duplicate powerup activation per day |
 | `src/app/loading.tsx` | Root loading spinner for auth redirect |
+| `README.md` | Odysseus-style README with features, architecture, security |
 
 ---
 
@@ -199,6 +205,7 @@ Fake stock trading game. Users get **10000 ABX** starting balance, pick real sto
 | Open redirect via email confirmation | `next` parameter user-controlled, `?next=@evil.com` exploit | Validate `next` starts with `/`, rejects `//`, `@`, `:` |
 | `new URL()` crash on malformed weburl | Finnhub returns non-URL strings for some companies | Wrapped in try/catch, falls back to raw string |
 | Can decline already-accepted friendships | `/api/friends/decline` had no status check | Added `.eq("status", "pending")` to query |
+| `date_trunc`/`date()` not IMMUTABLE for unique indexes | `timestamptz` functions are STABLE (timezone-dependent) | Added plain `date` columns + `BEFORE INSERT` triggers + dedup CTEs |
 
 ---
 
