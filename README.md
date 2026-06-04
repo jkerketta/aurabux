@@ -11,23 +11,12 @@
 
 ## Features
 
-- **Auth** — sign up with email/password or Google OAuth, one-click sign-in.
-  　Supabase Auth · JWT · middleware-protected routes
-
-- **Portfolio** — start with 10,000 ABX, buy and sell real stocks with live prices.
-  　Real-time quotes · position tracking · daily return % · total invested
-
-- **Daily Spinner** — spin once a day for ABX bonuses, free stocks, or x2 return powerups.
-  　Cooldown tracking · random rewards · powerup activation + claim flow
-
-- **Leaderboard** — global ranking by portfolio value, sorted by return %.
-  　Live prices · all-time performance · compare with other players
-
-- **Social** — add friends, view their portfolios, compete head-to-head.
-  　Friend requests · accept/decline · view holdings
-
-- **Onboarding** — guided walkthrough for first-time users.
-  　Modal slides · dismiss per session · tracks `has_seen_onboarding`
+- **Auth** — sign up with email/password or Google OAuth, one-click sign-in. `Supabase Auth` · `JWT` · `middleware-protected routes`
+- **Portfolio** — start with 10,000 ABX, buy and sell real stocks with live prices. `Real-time quotes` · `position tracking` · `daily return %` · `total invested`
+- **Daily Spinner** — spin once a day for ABX bonuses, free stocks, or x2 return powerups. `Cooldown tracking` · `random rewards` · `powerup activation + claim flow`
+- **Leaderboard** — global ranking by portfolio value, sorted by return %. `Live prices` · `all-time performance` · `compare with other players`
+- **Social** — add friends, view their portfolios, compete head-to-head. `Friend requests` · `accept/decline` · `view holdings`
+- **Onboarding** — guided walkthrough for first-time users. `Modal slides` · `dismiss per session` · `tracks has_seen_onboarding`
 
 ## Tech Stack
 
