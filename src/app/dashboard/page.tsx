@@ -65,12 +65,13 @@ export default async function DashboardPage() {
   const protocol = host.includes("localhost") ? "http" : "https";
   const baseUrl = `${protocol}://${host}`;
 
-  // Fetch current prices for each holding and calculate total value
+  // Fetch current prices and logos for each holding
   let enrichedHoldings: Array<{
     ticker: string;
     shares: number;
     avg_buy_price: number;
     current_price: number;
+    logo: string | null;
   }> = [];
   let totalValue = balance;
 
@@ -91,7 +92,24 @@ export default async function DashboardPage() {
       return Number(h.avg_buy_price);
     });
 
-    const prices = await Promise.all(pricePromises);
+    const logoPromises = holdings.map(async (h: { ticker: string }) => {
+      try {
+        const res = await fetch(
+          `${baseUrl}/api/stocks/profile?symbol=${encodeURIComponent(h.ticker)}`,
+          { cache: "no-store" }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          return data.logo ?? null;
+        }
+      } catch {
+        // network error, fall through
+      }
+      return null;
+    });
+
+    const [prices, logos] = await Promise.all([Promise.all(pricePromises), Promise.all(logoPromises)]);
+
     const holdingsValue = holdings.reduce(
       (sum: number, h: { ticker: string; shares: number; avg_buy_price: number }, i: number) => sum + Number(h.shares) * prices[i],
       0
@@ -102,6 +120,7 @@ export default async function DashboardPage() {
       shares: Number(h.shares),
       avg_buy_price: Number(h.avg_buy_price),
       current_price: prices[i],
+      logo: logos[i],
     }));
 
     totalValue = balance + holdingsValue;

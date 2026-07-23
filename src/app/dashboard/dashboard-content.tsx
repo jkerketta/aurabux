@@ -18,6 +18,7 @@ interface Holding {
   shares: number;
   avg_buy_price: number;
   current_price: number;
+  logo: string | null;
 }
 
 interface Transaction {
@@ -332,11 +333,25 @@ export function DashboardContent({
             <div className="flex items-center gap-3">
               <div className="flex -space-x-2">
                 {holdings.slice(0, 3).map((h) => (
-                  <div
-                    key={h.ticker}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#F3F4F6] border-2 border-white text-xs font-semibold text-[#111827]"
-                  >
-                    {h.ticker.slice(0, 2)}
+                  <div key={h.ticker} className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#F3F4F6] border-2 border-white text-xs font-semibold text-[#111827] overflow-hidden">
+                    {h.logo ? (
+                      <img
+                        src={h.logo}
+                        alt={h.ticker}
+                        className="h-full w-full object-contain"
+                        onError={(e) => {
+                          const img = e.currentTarget;
+                          img.style.display = "none";
+                          const fallback = img.nextElementSibling;
+                          if (fallback) (fallback as HTMLElement).style.display = "flex";
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className={`${h.logo ? "hidden" : "flex"} h-full w-full items-center justify-center bg-[#F3F4F6] text-xs font-semibold text-[#111827]`}
+                    >
+                      {h.ticker.slice(0, 2)}
+                    </div>
                   </div>
                 ))}
               </div>
