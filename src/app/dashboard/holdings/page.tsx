@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import { HoldingsDonut } from "@/components/holdings/holdings-donut";
 import { HoldingsTable } from "@/components/holdings/holdings-table";
+import { StockLogo } from "@/components/holdings/stock-logo";
 
 interface Holding {
   ticker: string;
@@ -163,24 +164,7 @@ export default async function HoldingsPage() {
                   className="flex items-center justify-between rounded-lg border border-[#E5E7EB] bg-white px-4 py-3 hover:bg-[#F9FAFB] transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    {h.logo ? (
-                      <img
-                        src={h.logo}
-                        alt={h.ticker}
-                        className="h-7 w-7 rounded-full object-contain"
-                        onError={(e) => {
-                          const img = e.currentTarget;
-                          img.style.display = "none";
-                          const fallback = img.nextElementSibling;
-                          if (fallback) (fallback as HTMLElement).style.display = "flex";
-                        }}
-                      />
-                    ) : null}
-                    <div
-                      className={`${h.logo ? "hidden" : "flex"} h-7 w-7 items-center justify-center rounded-full bg-[#F3F4F6] text-xs font-semibold text-[#111827]`}
-                    >
-                      {h.ticker.slice(0, 2)}
-                    </div>
+                    <StockLogo logo={h.logo} ticker={h.ticker} size="sm" />
                     <div>
                       <p className="text-sm font-semibold text-[#111827]">{h.ticker}</p>
                       <p className="text-xs text-[#4B5563]">{formatShares(h.shares)} share{formatShares(h.shares) !== "1" ? "s" : ""}</p>
