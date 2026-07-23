@@ -65,7 +65,7 @@ interface PieChartInnerProps {
   geometryScrubbing: boolean;
 }
 
-function generatePieArcPath(
+export function generatePieArcPath(
   innerRadius: number, outerRadius: number, startAngle: number,
   endAngle: number, cornerRadius: number, padAngle: number
 ): string {

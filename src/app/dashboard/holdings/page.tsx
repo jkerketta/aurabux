@@ -70,7 +70,7 @@ export default async function HoldingsPage() {
         );
         if (res.ok) {
           const data = await res.json();
-          return Number(data.currentPrice) ?? Number(h.avg_buy_price);
+          return data.currentPrice != null && !isNaN(Number(data.currentPrice)) ? Number(data.currentPrice) : Number(h.avg_buy_price);
         }
       } catch {
         // network error, fall through

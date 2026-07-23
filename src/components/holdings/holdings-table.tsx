@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { StockLogo } from "@/components/holdings/stock-logo";
 
 interface Holding {
   ticker: string;
@@ -58,24 +59,7 @@ export function HoldingsTable({ holdings }: HoldingsTableProps) {
               >
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    {h.logo ? (
-                      <img
-                        src={h.logo}
-                        alt={h.ticker}
-                        className="h-7 w-7 rounded-full object-contain"
-                        onError={(e) => {
-                          const img = e.currentTarget;
-                          img.style.display = "none";
-                          const fallback = img.nextElementSibling;
-                          if (fallback) (fallback as HTMLElement).style.display = "flex";
-                        }}
-                      />
-                    ) : null}
-                    <div
-                      className={`${h.logo ? "hidden" : "flex"} h-7 w-7 items-center justify-center rounded-full bg-[#F3F4F6] text-xs font-semibold text-[#111827]`}
-                    >
-                      {h.ticker.slice(0, 2)}
-                    </div>
+                    <StockLogo logo={h.logo} ticker={h.ticker} size="sm" />
                     <span className="text-sm font-semibold text-[#111827]">{h.ticker}</span>
                   </div>
                 </td>

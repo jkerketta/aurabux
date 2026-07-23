@@ -3,26 +3,10 @@
 import { arc as arcGenerator } from "@visx/shape";
 import { motion, useSpring, useTransform } from "motion/react";
 import { memo, useEffect } from "react";
+import { generatePieArcPath } from "./pie-chart";
 import { usePieHover, usePieStable } from "./pie-context";
 import { useEnterComplete } from "./use-enter-complete";
 import { useMountProgress } from "./use-mount-progress";
-
-function generateArcPath(
-  innerRadius: number,
-  outerRadius: number,
-  startAngle: number,
-  endAngle: number,
-  cornerRadius: number,
-  padAngle: number
-): string {
-  const generator = arcGenerator<unknown>({
-    innerRadius,
-    outerRadius,
-    cornerRadius,
-    padAngle,
-  });
-  return generator({ startAngle, endAngle } as unknown as null) || "";
-}
 
 function getSliceOffset(
   startAngle: number,
@@ -94,12 +78,12 @@ function AnimatedSliceTranslate({
   const animatedPath = useTransform(mountProgress, (mount) => {
     const currentEndAngle = startAngle + (endAngle - startAngle) * mount;
     if (currentEndAngle <= startAngle + 0.01) return "";
-    return generateArcPath(innerRadius, outerRadius, startAngle, currentEndAngle, cornerRadius, padAngle);
+    return generatePieArcPath(innerRadius, outerRadius, startAngle, currentEndAngle, cornerRadius, padAngle);
   });
 
   const offset = getSliceOffset(startAngle, endAngle, hoverOffset);
   const glowColor = color;
-  const hitboxPath = generateArcPath(innerRadius, outerRadius, startAngle, endAngle, cornerRadius, padAngle);
+  const hitboxPath = generatePieArcPath(innerRadius, outerRadius, startAngle, endAngle, cornerRadius, padAngle);
 
   if (enterComplete) {
     const shouldTranslate = isHovered;
@@ -201,13 +185,13 @@ function AnimatedSliceGrow({
     ([mount, currentOuterRadius]) => {
       const currentEndAngle = startAngle + (endAngle - startAngle) * (mount as number);
       if (currentEndAngle <= startAngle + 0.01) return "";
-      return generateArcPath(innerRadius, currentOuterRadius as number, startAngle, currentEndAngle, cornerRadius, padAngle);
+      return generatePieArcPath(innerRadius, currentOuterRadius as number, startAngle, currentEndAngle, cornerRadius, padAngle);
     }
   );
 
   const glowColor = color;
   const grownOuterRadius = isHovered ? outerRadius + hoverOffset : outerRadius;
-  const grownPath = generateArcPath(innerRadius, grownOuterRadius, startAngle, endAngle, cornerRadius, padAngle);
+  const grownPath = generatePieArcPath(innerRadius, grownOuterRadius, startAngle, endAngle, cornerRadius, padAngle);
 
   if (enterComplete) {
     return (
@@ -284,12 +268,12 @@ export const PieSlice = memo(function PieSlice({
 
   const offset = getSliceOffset(arcData.startAngle, arcData.endAngle, hoverOffset);
 
-  const hitboxPath = generateArcPath(
+  const hitboxPath = generatePieArcPath(
     innerRadius, outerRadius, arcData.startAngle, arcData.endAngle, cornerRadius, arcData.padAngle
   );
 
   const grownOuterRadius = isHovered ? outerRadius + hoverOffset : outerRadius;
-  const grownPath = generateArcPath(
+  const grownPath = generatePieArcPath(
     innerRadius, grownOuterRadius, arcData.startAngle, arcData.endAngle, cornerRadius, arcData.padAngle
   );
 
