@@ -103,6 +103,12 @@ function isDefsComponent(child: ReactElement): boolean {
   );
 }
 
+function PieChartInner(props: PieChartInnerProps) {
+  const size = Math.min(props.width, props.height);
+  if (size < 10) return null;
+  return <PieChartCore {...props} />;
+}
+
 const PieChartCore = memo(function PieChartCore({
   width, height, data, innerRadius: innerRadiusProp, padAngle, cornerRadius,
   startAngle, endAngle, hoverOffset, children, containerRef,
