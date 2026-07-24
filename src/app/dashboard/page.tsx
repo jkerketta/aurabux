@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { DashboardContent } from "./dashboard-content";
 import { getSpinStatus } from "@/lib/spin";
 import { getCurrentStreak, getStreakBonus } from "@/lib/streak";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 export default async function DashboardPage() {
@@ -129,6 +130,22 @@ export default async function DashboardPage() {
     }));
 
     totalValue = balance + holdingsValue;
+
+    // Snapshot today's portfolio value (idempotent — unique on user_id, snapshot_at)
+    try {
+      const admin = createAdminClient();
+      const today = new Date().toISOString().slice(0, 10);
+      await admin.from("portfolio_snapshots").upsert(
+        {
+          user_id: user.id,
+          total_value: Math.round(totalValue * 100) / 100,
+          snapshot_at: today,
+        },
+        { onConflict: "user_id,snapshot_at" }
+      );
+    } catch {
+      // Snapshot failure should never block dashboard render
+    }
   }
 
   // Time-aware greeting (computed on the server)
