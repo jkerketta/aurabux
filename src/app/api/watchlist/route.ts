@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const {
@@ -21,8 +21,9 @@ export async function GET() {
     const tickers = (watchlist ?? []).map((w: { ticker: string }) => w.ticker);
 
     // Fetch current prices + logos
-    const host = "localhost:3000";
-    const baseUrl = `http://${host}`;
+    const host = request.headers.get("host") ?? "localhost:3000";
+    const protocol = host.includes("localhost") ? "http" : "https";
+    const baseUrl = `${protocol}://${host}`;
 
     const enriched = await Promise.all(
       tickers.map(async (ticker: string) => {
