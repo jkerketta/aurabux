@@ -220,6 +220,20 @@ export default async function StockDetailPage({ params }: Props) {
     }
   }
 
+  // ── Watchlist membership ───────────────────────────────
+  let isInWatchlist = false;
+  try {
+    const { data: watchlistRow } = await supabase
+      .from("watchlist")
+      .select("id")
+      .eq("user_id", user!.id)
+      .eq("ticker", symbolUpper)
+      .maybeSingle();
+    isInWatchlist = !!watchlistRow;
+  } catch {
+    // fails silently
+  }
+
   return (
     <ErrorBoundary fallbackTitle="Failed to load stock details">
       <StockDetailClient
@@ -232,6 +246,7 @@ export default async function StockDetailPage({ params }: Props) {
         userHolding={userHolding}
         portfolioTotalValue={portfolioTotalValue}
         companyInfo={companyInfo}
+        isInWatchlist={isInWatchlist}
       />
     </ErrorBoundary>
   );

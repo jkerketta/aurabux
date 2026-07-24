@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { Search, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WatchlistGrid } from "@/components/watchlist/watchlist-grid";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ChangeEvent } from "react";
 
@@ -125,6 +126,9 @@ function SearchPageInner() {
       {searchError && (
         <p className="mb-4 text-sm text-[#FF4444]">{searchError}</p>
       )}
+
+      {/* Watchlist — shown when search is empty */}
+      {!searchQuery.trim() && <WatchlistGrid />}
 
       {/* Search Results */}
       {searchQuery.trim() && !searchLoading && searchResults.length === 0 && (
