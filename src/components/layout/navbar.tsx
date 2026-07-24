@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
-import { ChevronDown, Users, LogOut, Menu, X } from "lucide-react";
+import { ChevronDown, Users, LogOut, Menu, X, Award } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { FriendsModal } from "@/components/friends/friends-modal";
+import { AchievementsSheet } from "@/components/achievements/achievements-sheet";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface NavbarProps {
@@ -29,6 +30,7 @@ const navLinks = [
 
 export default function Navbar({ user, username, displayNumber }: NavbarProps) {
   const [friendsOpen, setFriendsOpen] = useState(false);
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
@@ -95,6 +97,10 @@ export default function Navbar({ user, username, displayNumber }: NavbarProps) {
                 <DropdownMenuItem onClick={() => setFriendsOpen(true)}>
                   <Users className="mr-2 h-4 w-4" />
                   Friends
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setAchievementsOpen(true)}>
+                  <Award className="mr-2 h-4 w-4" />
+                  Achievements
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
                   <LogOut className="mr-2 h-4 w-4" />
@@ -170,6 +176,17 @@ export default function Navbar({ user, username, displayNumber }: NavbarProps) {
                 </button>
 
                 <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setAchievementsOpen(true);
+                  }}
+                  className="flex items-center gap-2.5 w-full px-4 py-3 rounded-xl text-sm text-[#4B5563] hover:text-[#2563EB] hover:bg-black/5 transition-colors"
+                >
+                  <Award className="h-4 w-4" />
+                  Achievements
+                </button>
+
+                <button
                   onClick={handleLogout}
                   className="flex items-center gap-2.5 w-full px-4 py-3 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors"
                 >
@@ -183,6 +200,7 @@ export default function Navbar({ user, username, displayNumber }: NavbarProps) {
       </motion.nav>
 
       <FriendsModal open={friendsOpen} onOpenChange={setFriendsOpen} />
+      <AchievementsSheet open={achievementsOpen} onOpenChange={setAchievementsOpen} />
     </>
   );
 }
