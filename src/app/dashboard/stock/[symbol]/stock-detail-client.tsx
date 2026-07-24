@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent } from "react";
 import { toast } from "sonner";
+import { getAchievementByKey } from "@/lib/achievements";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -428,6 +429,12 @@ export function StockDetailClient({
         toast.success(
           `Bought ${data.shares_bought} shares of ${data.symbol}`
         );
+        if (Array.isArray(data.achievementsUnlocked)) {
+          for (const key of data.achievementsUnlocked) {
+            const ach = getAchievementByKey(key);
+            if (ach) toast.success(`🏆 ${ach.title} unlocked!`);
+          }
+        }
       } catch {
         setBuyError("Network error — try again");
       } finally {
@@ -462,6 +469,12 @@ export function StockDetailClient({
         toast.success(
           `Sold ${data.shares_sold} shares of ${data.symbol}`
         );
+        if (Array.isArray(data.achievementsUnlocked)) {
+          for (const key of data.achievementsUnlocked) {
+            const ach = getAchievementByKey(key);
+            if (ach) toast.success(`🏆 ${ach.title} unlocked!`);
+          }
+        }
       } catch {
         setSellError("Network error — try again");
       } finally {

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { motion, useAnimationControls } from "framer-motion";
+import { ACHIEVEMENTS } from "@/lib/achievements";
 import {
   Dialog,
   DialogContent,
@@ -97,6 +98,14 @@ export function SpinModal({ open, onOpenChange, onSpinComplete, canSpin, nextRes
         setSpinning(false);
         spinningRef.current = false;
         return;
+      }
+
+      // Achievement toast notifications
+      if (Array.isArray(data.achievementsUnlocked) && data.achievementsUnlocked.length > 0) {
+        for (const key of data.achievementsUnlocked) {
+          const ach = ACHIEVEMENTS.find((a) => a.key === key);
+          if (ach) toast.success(`🏆 ${ach.title} unlocked!`);
+        }
       }
 
       const reward = data.reward;

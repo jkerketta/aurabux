@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { cache } from "@/lib/cache";
+import { evaluateAchievements } from "@/lib/achievements";
 
 export async function POST(request: NextRequest) {
   try {
@@ -235,12 +236,29 @@ export async function POST(request: NextRequest) {
       throw error;
     }
 
+    // Check achievements
+    let achievementsUnlocked: string[] = [];
+    try {
+      const { data: updatedPortfolio } = await adminClient
+        .from("portfolios")
+        .select("total_value")
+        .eq("user_id", user.id)
+        .single();
+      achievementsUnlocked = await evaluateAchievements(adminClient, user.id, {
+        action: "buy",
+        portfolioTotalValue: Number(updatedPortfolio?.total_value ?? newBalance),
+      });
+    } catch {
+      // Achievement evaluation should never break the buy flow
+    }
+
     return NextResponse.json({
       success: true,
       balance: newBalance,
       shares_bought: shares,
       symbol: normalizedSymbol,
       total_cost: totalCost,
+      achievementsUnlocked,
     });
   } catch (error) {
     return NextResponse.json(

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { getSpinStatus, getTodayReset, getNextReset } from "@/lib/spin";
 import { getCurrentStreak, getStreakBonus } from "@/lib/streak";
+import { evaluateAchievements } from "@/lib/achievements";
 
 // Daily reset at 21:00 UTC (4 PM EST / 5 PM EDT)
 const RESET_HOUR_UTC = 21;
@@ -300,11 +301,28 @@ export async function POST() {
       .eq("user_id", user.id)
       .maybeSingle();
 
+    // Check achievements
+    let achievementsUnlocked: string[] = [];
+    try {
+      const { data: p } = await adminSupabase
+        .from("portfolios")
+        .select("total_value")
+        .eq("user_id", user.id)
+        .single();
+      achievementsUnlocked = await evaluateAchievements(adminSupabase, user.id, {
+        action: "spin",
+        portfolioTotalValue: Number(p?.total_value ?? 10000),
+      });
+    } catch {
+      // Achievement evaluation should never break the spin flow
+    }
+
     return NextResponse.json({
       reward: { type: reward.type, value: reward.value, label: reward.label },
       canSpin: false,
       nextResetAt: nextReset.toISOString(),
       freeSpinsRemaining: updatedPortfolio?.free_spins ?? 0,
+      achievementsUnlocked,
     });
   } catch (error) {
     return NextResponse.json(
