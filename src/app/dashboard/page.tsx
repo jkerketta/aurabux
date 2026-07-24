@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { DashboardContent } from "./dashboard-content";
 import { getSpinStatus } from "@/lib/spin";
+import { getCurrentStreak, getStreakBonus } from "@/lib/streak";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 export default async function DashboardPage() {
@@ -54,8 +55,12 @@ export default async function DashboardPage() {
     hasExpiredPowerup: false,
     freeSpinsRemaining: 0,
   };
+  let currentStreak = 0;
+  let streakBonusPct = 0;
   try {
     spinStatus = await getSpinStatus(user.id);
+    currentStreak = await getCurrentStreak(supabase, user.id);
+    streakBonusPct = Math.round((getStreakBonus(currentStreak) - 1) * 100);
   } catch {}
 
   // Build base URL for stock quote API (doesn't require auth)
@@ -157,6 +162,8 @@ export default async function DashboardPage() {
             hasExpiredPowerup={spinStatus.hasExpiredPowerup}
             nextResetAt={spinStatus.nextResetAt}
             freeSpinsRemaining={spinStatus.freeSpinsRemaining}
+            currentStreak={currentStreak}
+            streakBonusPct={streakBonusPct}
           />
         </ErrorBoundary>
       </div>

@@ -46,6 +46,8 @@ interface DashboardContentProps {
   hasExpiredPowerup: boolean;
   nextResetAt: string | null;
   freeSpinsRemaining: number;
+  currentStreak: number;
+  streakBonusPct: number;
 }
 
 function formatCurrency(value: number) {
@@ -85,6 +87,8 @@ export function DashboardContent({
   hasExpiredPowerup,
   nextResetAt,
   freeSpinsRemaining,
+  currentStreak,
+  streakBonusPct,
 }: DashboardContentProps) {
   const router = useRouter();
   const [spinModalOpen, setSpinModalOpen] = useState(false);
@@ -363,6 +367,8 @@ export function DashboardContent({
         canSpin={canSpin}
         nextResetAt={nextResetAt}
         freeSpinsRemaining={freeSpinsRemaining}
+        currentStreak={currentStreak}
+        streakBonusPct={streakBonusPct}
       />
 
       <X2ClaimModal
