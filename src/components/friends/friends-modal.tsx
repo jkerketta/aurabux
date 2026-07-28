@@ -11,6 +11,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FriendPortfolioSheet } from "@/components/friends/friend-portfolio-sheet";
 import { Badge } from "@/components/ui/badge";
 import {
   UserPlus,
@@ -19,6 +20,7 @@ import {
   Loader2,
   X,
   Send,
+  ChevronRight,
 } from "lucide-react";
 
 interface FriendUser {
@@ -53,6 +55,8 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [sendingRequest, setSendingRequest] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [selectedFriendId, setSelectedFriendId] = useState<string | null>(null);
 
   const fetchFriends = useCallback(async () => {
     setLoading(true);
@@ -210,7 +214,7 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <><Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Friends</DialogTitle>
@@ -258,19 +262,29 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
               <div className="space-y-2">
                 {friendsData.friends.map((friend) =>
                   renderUserRow(friend, (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemove(friend.friendship_id)}
-                      disabled={actionLoading === friend.friendship_id}
-                      className="h-8 w-8 p-0 text-[#4B5563] hover:text-red-600"
-                    >
-                      {actionLoading === friend.friendship_id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <X className="h-4 w-4" />
-                      )}
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setSelectedFriendId(friend.id); setSheetOpen(true); }}
+                        className="h-8 w-8 p-0 text-[#4B5563] hover:text-[#2563EB]"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemove(friend.friendship_id)}
+                        disabled={actionLoading === friend.friendship_id}
+                        className="h-8 w-8 p-0 text-[#4B5563] hover:text-red-600"
+                      >
+                        {actionLoading === friend.friendship_id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <X className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   ))
                 )}
               </div>
@@ -399,5 +413,11 @@ export function FriendsModal({ open, onOpenChange }: FriendsModalProps) {
         </Tabs>
       </DialogContent>
     </Dialog>
+      <FriendPortfolioSheet
+        friendId={selectedFriendId}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+      />
+    </>
   );
 }

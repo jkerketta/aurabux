@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { motion, useAnimationControls } from "framer-motion";
+import { ACHIEVEMENTS } from "@/lib/achievements";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, X, RotateCw, Check, Ban, Clock, Ticket } from "lucide-react";
+import { Loader2, X, RotateCw, Check, Ban, Clock, Ticket, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SpinModalProps {
@@ -20,6 +21,8 @@ interface SpinModalProps {
   canSpin: boolean;
   nextResetAt: string | null;
   freeSpinsRemaining: number;
+  currentStreak?: number;
+  streakBonusPct?: number;
 }
 
 const REWARD_SLOTS = [
@@ -58,7 +61,7 @@ function formatCountdown(ms: number) {
   return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-export function SpinModal({ open, onOpenChange, onSpinComplete, canSpin, nextResetAt, freeSpinsRemaining }: SpinModalProps) {
+export function SpinModal({ open, onOpenChange, onSpinComplete, canSpin, nextResetAt, freeSpinsRemaining, currentStreak = 0, streakBonusPct = 0 }: SpinModalProps) {
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<{ label: string; type: string; value: string } | null>(null);
   const [strip, setStrip] = useState<(typeof REWARD_SLOTS)[0][]>([]);
@@ -95,6 +98,14 @@ export function SpinModal({ open, onOpenChange, onSpinComplete, canSpin, nextRes
         setSpinning(false);
         spinningRef.current = false;
         return;
+      }
+
+      // Achievement toast notifications
+      if (Array.isArray(data.achievementsUnlocked) && data.achievementsUnlocked.length > 0) {
+        for (const key of data.achievementsUnlocked) {
+          const ach = ACHIEVEMENTS.find((a) => a.key === key);
+          if (ach) toast.success(`🏆 ${ach.title} unlocked!`);
+        }
       }
 
       const reward = data.reward;
@@ -184,6 +195,17 @@ export function SpinModal({ open, onOpenChange, onSpinComplete, canSpin, nextRes
         </DialogHeader>
 
         <div className="flex flex-col items-center gap-6 py-4">
+          {/* Streak badge */}
+          {currentStreak > 0 && !spinning && !result && (
+            <div className="flex items-center gap-1.5 rounded-full bg-orange-50 border border-orange-200 px-3 py-1">
+              <Flame className="h-3.5 w-3.5 text-orange-500 fill-orange-500" />
+              <span className="text-xs font-semibold text-orange-700">{currentStreak}-day streak</span>
+              {streakBonusPct > 0 && (
+                <span className="text-xs text-orange-500 ml-0.5">(+{streakBonusPct}% bonus)</span>
+              )}
+            </div>
+          )}
+
           {/* Free spins counter */}
           {freeSpinsRemaining > 0 && !spinning && !result && (
             <div className="flex items-center gap-2 rounded-full bg-cyan-50 px-4 py-2">

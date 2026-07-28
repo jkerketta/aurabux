@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent } from "react";
 import { toast } from "sonner";
+import { getAchievementByKey } from "@/lib/achievements";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ import {
   TrendingDown,
   ArrowLeft,
   RotateCw,
+  Star,
 } from "lucide-react";
 import { TradeConfirmation } from "@/components/trade/trade-confirmation";
 
@@ -66,6 +68,7 @@ interface StockDetailClientProps {
     exchange: string | null;
     weburl: string | null;
   } | null;
+  isInWatchlist: boolean;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────
@@ -184,6 +187,7 @@ export function StockDetailClient({
   userHolding,
   portfolioTotalValue,
   companyInfo,
+  isInWatchlist: initialWatchlistStatus,
 }: StockDetailClientProps) {
   const router = useRouter();
 
@@ -213,6 +217,29 @@ export function StockDetailClient({
   const [sellInput, setSellInput] = useState("");
   const [sellLoading, setSellLoading] = useState(false);
   const [sellError, setSellError] = useState<string | null>(null);
+
+  const [inWatchlist, setInWatchlist] = useState(initialWatchlistStatus);
+  const [watchlistLoading, setWatchlistLoading] = useState(false);
+
+  const toggleWatchlist = useCallback(async () => {
+    if (watchlistLoading) return;
+    setWatchlistLoading(true);
+    try {
+      if (inWatchlist) {
+        await fetch(`/api/watchlist?ticker=${encodeURIComponent(symbol)}`, { method: "DELETE" });
+        setInWatchlist(false);
+        toast.success(`Removed ${symbol} from watchlist`);
+      } else {
+        await fetch("/api/watchlist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ticker: symbol }) });
+        setInWatchlist(true);
+        toast.success(`Added ${symbol} to watchlist`);
+      }
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setWatchlistLoading(false);
+    }
+  }, [symbol, inWatchlist, watchlistLoading]);
 
   const [confirmationData, setConfirmationData] = useState<{
     type: "buy" | "sell";
@@ -428,6 +455,12 @@ export function StockDetailClient({
         toast.success(
           `Bought ${data.shares_bought} shares of ${data.symbol}`
         );
+        if (Array.isArray(data.achievementsUnlocked)) {
+          for (const key of data.achievementsUnlocked) {
+            const ach = getAchievementByKey(key);
+            if (ach) toast.success(`🏆 ${ach.title} unlocked!`);
+          }
+        }
       } catch {
         setBuyError("Network error — try again");
       } finally {
@@ -462,6 +495,12 @@ export function StockDetailClient({
         toast.success(
           `Sold ${data.shares_sold} shares of ${data.symbol}`
         );
+        if (Array.isArray(data.achievementsUnlocked)) {
+          for (const key of data.achievementsUnlocked) {
+            const ach = getAchievementByKey(key);
+            if (ach) toast.success(`🏆 ${ach.title} unlocked!`);
+          }
+        }
       } catch {
         setSellError("Network error — try again");
       } finally {
@@ -537,9 +576,19 @@ export function StockDetailClient({
           <div className="mb-6">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-[#111827]">
-                  {symbol}
-                </h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-[#111827]">
+                    {symbol}
+                  </h1>
+                  <button
+                    onClick={toggleWatchlist}
+                    disabled={watchlistLoading}
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-full hover:bg-[#F9FAFB] transition-colors"
+                    aria-label={inWatchlist ? "Remove from watchlist" : "Add to watchlist"}
+                  >
+                    <Star className={`h-5 w-5 ${inWatchlist ? "fill-amber-400 text-amber-400" : "text-[#4B5563]"} ${watchlistLoading ? "animate-pulse" : ""}`} />
+                  </button>
+                </div>
                 <p className="mt-0.5 text-sm text-[#4B5563]">
                   {companyName}
                 </p>

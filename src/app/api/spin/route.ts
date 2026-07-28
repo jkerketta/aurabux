@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { getSpinStatus, getTodayReset, getNextReset } from "@/lib/spin";
+import { getCurrentStreak, getStreakBonus } from "@/lib/streak";
+import { evaluateAchievements } from "@/lib/achievements";
 
 // Daily reset at 21:00 UTC (4 PM EST / 5 PM EDT)
 const RESET_HOUR_UTC = 21;
@@ -32,7 +34,10 @@ export async function GET() {
     }
 
     const status = await getSpinStatus(user.id);
-    return NextResponse.json(status);
+    const currentStreak = await getCurrentStreak(supabase, user.id);
+    const streakBonus = getStreakBonus(currentStreak);
+    const streakBonusPct = Math.round((streakBonus - 1) * 100);
+    return NextResponse.json({ ...status, currentStreak, streakBonusPct });
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to fetch spin status" },
@@ -124,6 +129,19 @@ export async function POST() {
 
     // Apply reward FIRST — only record the spin after reward succeeds
     if (reward.type === "abx") {
+      // Apply streak bonus
+      const streak = await getCurrentStreak(supabase, user.id);
+      const bonus = getStreakBonus(streak);
+      const baseValue = Number(reward.value);
+      const bonusValue = Math.round(baseValue * bonus);
+      const streakBonusAmt = bonusValue - baseValue;
+      reward.value = String(bonusValue);
+      if (streakBonusAmt > 0) {
+        reward.label = `${bonusValue} ABX (+${streakBonusAmt} streak bonus)`;
+      } else {
+        reward.label = `${bonusValue} ABX`;
+      }
+
       const { data: currentPortfolio } = await adminSupabase
         .from("portfolios")
         .select("abx_balance")
@@ -131,7 +149,7 @@ export async function POST() {
         .maybeSingle();
 
       const currentBalance = Number(currentPortfolio?.abx_balance ?? 10000);
-      const newBalance = currentBalance + Number(reward.value);
+      const newBalance = currentBalance + bonusValue;
 
       const { data: balanceUpdated, error: updateError } = await adminSupabase
         .from("portfolios")
@@ -283,11 +301,28 @@ export async function POST() {
       .eq("user_id", user.id)
       .maybeSingle();
 
+    // Check achievements
+    let achievementsUnlocked: string[] = [];
+    try {
+      const { data: p } = await adminSupabase
+        .from("portfolios")
+        .select("total_value")
+        .eq("user_id", user.id)
+        .single();
+      achievementsUnlocked = await evaluateAchievements(adminSupabase, user.id, {
+        action: "spin",
+        portfolioTotalValue: Number(p?.total_value ?? 10000),
+      });
+    } catch {
+      // Achievement evaluation should never break the spin flow
+    }
+
     return NextResponse.json({
       reward: { type: reward.type, value: reward.value, label: reward.label },
       canSpin: false,
       nextResetAt: nextReset.toISOString(),
       freeSpinsRemaining: updatedPortfolio?.free_spins ?? 0,
+      achievementsUnlocked,
     });
   } catch (error) {
     return NextResponse.json(

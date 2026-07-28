@@ -12,12 +12,15 @@ import { SpinInfoModal } from "@/components/spinner/spin-info-modal";
 import { X2ClaimModal } from "@/components/spinner/x2-claim-modal";
 import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
 import { TransactionHistory } from "@/components/transactions/transaction-history";
+import { NetWorthSheet } from "@/components/portfolio/networth-sheet";
+import { StockLogo } from "@/components/holdings/stock-logo";
 
 interface Holding {
   ticker: string;
   shares: number;
   avg_buy_price: number;
   current_price: number;
+  logo: string | null;
 }
 
 interface Transaction {
@@ -44,6 +47,8 @@ interface DashboardContentProps {
   hasExpiredPowerup: boolean;
   nextResetAt: string | null;
   freeSpinsRemaining: number;
+  currentStreak: number;
+  streakBonusPct: number;
 }
 
 function formatCurrency(value: number) {
@@ -83,12 +88,15 @@ export function DashboardContent({
   hasExpiredPowerup,
   nextResetAt,
   freeSpinsRemaining,
+  currentStreak,
+  streakBonusPct,
 }: DashboardContentProps) {
   const router = useRouter();
   const [spinModalOpen, setSpinModalOpen] = useState(false);
   const [claimModalOpen, setClaimModalOpen] = useState(hasExpiredPowerup);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [spinInfoOpen, setSpinInfoOpen] = useState(false);
+  const [netWorthOpen, setNetWorthOpen] = useState(false);
   const [x2Countdown, setX2Countdown] = useState("");
 
   // x2 powerup countdown timer
@@ -272,7 +280,10 @@ export function DashboardContent({
         </Card>
 
         {/* Investments Card */}
-          <Card className="min-h-[100px] sm:min-h-[120px] backdrop-blur-2xl bg-white/60 border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.06)]">
+          <Card
+            className="min-h-[100px] sm:min-h-[120px] backdrop-blur-2xl bg-white/60 border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.06)] cursor-pointer hover:bg-white/80 transition-colors"
+            onClick={() => setNetWorthOpen(true)}
+          >
             <CardHeader className="pb-1 sm:pb-2 px-3 sm:px-6">
               <CardDescription className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-[#4B5563]">
                 Investments
@@ -332,12 +343,7 @@ export function DashboardContent({
             <div className="flex items-center gap-3">
               <div className="flex -space-x-2">
                 {holdings.slice(0, 3).map((h) => (
-                  <div
-                    key={h.ticker}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#F3F4F6] border-2 border-white text-xs font-semibold text-[#111827]"
-                  >
-                    {h.ticker.slice(0, 2)}
-                  </div>
+                  <StockLogo key={h.ticker} logo={h.logo} ticker={h.ticker} />
                 ))}
               </div>
               <span className="text-sm font-medium text-[#111827]">
@@ -366,6 +372,8 @@ export function DashboardContent({
         canSpin={canSpin}
         nextResetAt={nextResetAt}
         freeSpinsRemaining={freeSpinsRemaining}
+        currentStreak={currentStreak}
+        streakBonusPct={streakBonusPct}
       />
 
       <X2ClaimModal
@@ -387,6 +395,11 @@ export function DashboardContent({
       <SpinInfoModal
         open={spinInfoOpen}
         onOpenChange={setSpinInfoOpen}
+      />
+
+      <NetWorthSheet
+        open={netWorthOpen}
+        onOpenChange={setNetWorthOpen}
       />
     </motion.div>
     </>

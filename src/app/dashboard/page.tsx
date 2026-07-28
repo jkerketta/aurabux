@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { DashboardContent } from "./dashboard-content";
 import { getSpinStatus } from "@/lib/spin";
+import { getCurrentStreak, getStreakBonus } from "@/lib/streak";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 export default async function DashboardPage() {
@@ -54,8 +56,12 @@ export default async function DashboardPage() {
     hasExpiredPowerup: false,
     freeSpinsRemaining: 0,
   };
+  let currentStreak = 0;
+  let streakBonusPct = 0;
   try {
     spinStatus = await getSpinStatus(user.id);
+    currentStreak = await getCurrentStreak(supabase, user.id);
+    streakBonusPct = Math.round((getStreakBonus(currentStreak) - 1) * 100);
   } catch {}
 
   // Build base URL for stock quote API (doesn't require auth)
@@ -65,12 +71,13 @@ export default async function DashboardPage() {
   const protocol = host.includes("localhost") ? "http" : "https";
   const baseUrl = `${protocol}://${host}`;
 
-  // Fetch current prices for each holding and calculate total value
+  // Fetch current prices and logos for each holding
   let enrichedHoldings: Array<{
     ticker: string;
     shares: number;
     avg_buy_price: number;
     current_price: number;
+    logo: string | null;
   }> = [];
   let totalValue = balance;
 
@@ -83,7 +90,7 @@ export default async function DashboardPage() {
         );
         if (res.ok) {
           const data = await res.json();
-          return Number(data.currentPrice) ?? Number(h.avg_buy_price);
+          return data.currentPrice != null && !isNaN(Number(data.currentPrice)) ? Number(data.currentPrice) : Number(h.avg_buy_price);
         }
       } catch {
         // network error, fall through to fallback
@@ -91,7 +98,24 @@ export default async function DashboardPage() {
       return Number(h.avg_buy_price);
     });
 
-    const prices = await Promise.all(pricePromises);
+    const logoPromises = holdings.map(async (h: { ticker: string }) => {
+      try {
+        const res = await fetch(
+          `${baseUrl}/api/stocks/profile?symbol=${encodeURIComponent(h.ticker)}`,
+          { cache: "no-store" }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          return data.logo ?? null;
+        }
+      } catch {
+        // network error, fall through
+      }
+      return null;
+    });
+
+    const [prices, logos] = await Promise.all([Promise.all(pricePromises), Promise.all(logoPromises)]);
+
     const holdingsValue = holdings.reduce(
       (sum: number, h: { ticker: string; shares: number; avg_buy_price: number }, i: number) => sum + Number(h.shares) * prices[i],
       0
@@ -102,9 +126,26 @@ export default async function DashboardPage() {
       shares: Number(h.shares),
       avg_buy_price: Number(h.avg_buy_price),
       current_price: prices[i],
+      logo: logos[i],
     }));
 
     totalValue = balance + holdingsValue;
+
+    // Snapshot today's portfolio value (idempotent — unique on user_id, snapshot_at)
+    try {
+      const admin = createAdminClient();
+      const today = new Date().toISOString().slice(0, 10);
+      await admin.from("portfolio_snapshots").upsert(
+        {
+          user_id: user.id,
+          total_value: Math.round(totalValue * 100) / 100,
+          snapshot_at: today,
+        },
+        { onConflict: "user_id,snapshot_at" }
+      );
+    } catch {
+      // Snapshot failure should never block dashboard render
+    }
   }
 
   // Time-aware greeting (computed on the server)
@@ -138,6 +179,8 @@ export default async function DashboardPage() {
             hasExpiredPowerup={spinStatus.hasExpiredPowerup}
             nextResetAt={spinStatus.nextResetAt}
             freeSpinsRemaining={spinStatus.freeSpinsRemaining}
+            currentStreak={currentStreak}
+            streakBonusPct={streakBonusPct}
           />
         </ErrorBoundary>
       </div>
