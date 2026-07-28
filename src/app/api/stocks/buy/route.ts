@@ -55,17 +55,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Canadian stocks (.TO) are not supported" }, { status: 400 });
     }
 
-    // Server-side price verification: check cached live price
-    const cached = cache.get<{ currentPrice: number }>(`quote:${normalizedSymbol}`);
+    // Server-side price verification: try cache, then live fetch as fallback
+    let livePrice = cache.get<{ currentPrice: number }>(`quote:${normalizedSymbol}`)?.currentPrice;
 
-    if (!cached) {
+    if (livePrice == null) {
+      const host = request.headers.get("host") ?? "localhost:3000";
+      const protocol = host.includes("localhost") ? "http" : "https";
+      try {
+        const quoteRes = await fetch(`${protocol}://${host}/api/stocks/quote?symbol=${encodeURIComponent(normalizedSymbol)}`);
+        if (quoteRes.ok) {
+          const quoteData = await quoteRes.json();
+          livePrice = Number(quoteData.currentPrice);
+        }
+      } catch { /* ignore */ }
+    }
+
+    if (livePrice == null || livePrice <= 0) {
       return NextResponse.json(
         { error: "Could not verify current price. Please refresh and try again." },
         { status: 400 }
       );
     }
-
-    const livePrice = cached.currentPrice;
     const tolerance = 0.05; // 5% tolerance
     if (Math.abs(pricePerShare - livePrice) / livePrice > tolerance) {
       return NextResponse.json(
