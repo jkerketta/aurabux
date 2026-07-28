@@ -313,8 +313,8 @@ export async function POST() {
         action: "spin",
         portfolioTotalValue: Number(p?.total_value ?? 10000),
       });
-    } catch {
-      // Achievement evaluation should never break the spin flow
+    } catch (e) {
+      console.error("[achievements] Failed to evaluate achievements:", e);
     }
 
     return NextResponse.json({

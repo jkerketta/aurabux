@@ -258,8 +258,8 @@ export async function POST(request: NextRequest) {
         action: "buy",
         portfolioTotalValue: Number(updatedPortfolio?.total_value ?? newBalance),
       });
-    } catch {
-      // Achievement evaluation should never break the buy flow
+    } catch (e) {
+      console.error("[achievements] Failed to evaluate achievements:", e);
     }
 
     return NextResponse.json({
