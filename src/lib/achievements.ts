@@ -113,8 +113,13 @@ export async function evaluateAchievements(
   if (holdingAgeDays >= 30 && !unlocked.has("hold_stock_30d")) newlyUnlocked.push("hold_stock_30d");
 
   if (newlyUnlocked.length > 0) {
-    const rows = newlyUnlocked.map((k) => ({ user_id: userId, achievement_key: k }));
-    await adminClient.from("user_achievements").upsert(rows, { onConflict: "user_id,achievement_key" });
+    const { error } = await adminClient
+      .from("user_achievements")
+      .upsert(
+        newlyUnlocked.map((k) => ({ user_id: userId, achievement_key: k })),
+        { onConflict: "user_id,achievement_key" }
+      );
+    if (error) throw error;
   }
   return newlyUnlocked;
 }
