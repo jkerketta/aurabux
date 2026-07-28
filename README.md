@@ -1,33 +1,38 @@
-# ABX AURABUX
-
+# Aurabux (ABX)
 ```
-╔══════════════════════════════════════════════════════════╗
-║  ABX AURABUX  ·  v1.0.0                                 ║
-║  The fake stock trading game                             ║
-╚══════════════════════════════════════════════════════════╝
+──────────────────────────────────────
+ ₍₍⚞(˶^ ᗜ ^˶)⚟⁾⁾  Aurabux ver. 1.0
+──────────────────────────────────────
 ```
 
-**A fake stock trading game where you invest fake money in real stocks.** Pick stocks, compete with friends, climb the leaderboard — all backed by live market data. No real money, all the fun.
+<img width="1043" height="595" alt="image" src="https://github.com/user-attachments/assets/66980d54-fc92-4946-92d4-8e4a53ce764d" />
+
+A stock trading game where you use a fake digital currency called Aurabux (ABX) to pick real stocks, compete with friends, and try to grow your portfolio.
+
+## About
+
+ABX gives every player **10,000 ABX** to start trading real stocks with fake money. Track your portfolio, compete on a live leaderboard, spin daily for rewards, and challenge friends to see who makes the best investments. Built for learning, fun, and friendly rivalry.
 
 ## Features
 
-- **Auth** — sign up with email/password or Google OAuth, one-click sign-in.  
+- **Auth** -- sign up with email/password or Google OAuth, one-click sign-in.  
   <small>Supabase Auth · JWT · middleware-protected routes</small>
 
-- **Portfolio** — start with 10,000 ABX, buy and sell real stocks with live prices.  
+- **Portfolio** -- start with 10,000 ABX, buy and sell real stocks with live prices.  
   <small>Real-time quotes · position tracking · daily return % · total invested</small>
 
-- **Daily Spinner** — spin once a day for ABX bonuses, free stocks, or x2 return powerups.  
+- **Daily Spinner** -- spin once a day for ABX bonuses, free stocks, or x2 return powerups.  
   <small>Cooldown tracking · random rewards · powerup activation + claim flow</small>
 
-- **Leaderboard** — global ranking by portfolio value, sorted by return %.  
+- **Leaderboard** -- global ranking by portfolio value, sorted by return %.  
   <small>Live prices · all-time performance · compare with other players</small>
 
-- **Social** — add friends, view their portfolios, compete head-to-head.  
+- **Social** -- add friends, view their portfolios, compete head-to-head.  
   <small>Friend requests · accept/decline · view holdings</small>
 
-- **Onboarding** — guided walkthrough for first-time users.  
+- **Onboarding** -- guided walkthrough for first-time users.  
   <small>Modal slides · dismiss per session · tracks has_seen_onboarding</small>
+
 
 ## Tech Stack
 
@@ -38,12 +43,6 @@
 | Backend | Supabase (PostgreSQL + Auth + RLS) |
 | Hosting | Vercel (auto-deploy from Git) |
 | Market Data | Finnhub API (live stock quotes) |
-
-## Screenshots
-
-<img width="1060" height="578" alt="image" src="https://github.com/user-attachments/assets/ba9f47c4-049d-4cc8-87bc-1f5a4cddbbaa" />
-<img width="1196" height="1040" alt="image" src="https://github.com/user-attachments/assets/e8675884-4406-4565-aff2-f8d0bb57654d" />
-<img width="920" height="1229" alt="image" src="https://github.com/user-attachments/assets/580623d6-65e7-46ed-bda3-489ea019012b" />
 
 ## Quick Start
 
@@ -135,7 +134,7 @@ src/
 │   ├── supabase/            # client, server, admin
 │   ├── spin.ts              # Spin status logic
 │   └── cache.ts             # In-memory price cache
-└── middleware.ts             # Auth + route protection
+└── middleware.ts            # Auth + route protection
 ```
 
 ## Configuration
@@ -149,14 +148,14 @@ src/
 
 ## Security
 
-- **Row Level Security (RLS)** — all tables are RLS-enabled. Users can only read/update their own data.
-- **Service role for writes** — all buy/sell/spin operations go through a server-side admin client that bypasses RLS. Never exposed to the browser.
-- **Optimistic locking** — balance updates use `.eq("current_balance", currentBalance)` to prevent race conditions. If the balance changed between read and write, the transaction fails with 409.
-- **CHECK constraints** — database-level guards preventing negative balance, negative shares, etc.
-- **Server-side price verification** — trade execution verifies stock price against a cached quote (30s TTL, 5% tolerance). Rejects client-submitted prices.
-- **Double-submit protection** — trade confirmation button disables and shows spinner during execution.
-- **Unique indexes** — prevent double-spin and double-powerup-activation at the database level.
-- **Open redirect protection** — email confirmation validates redirect URLs to prevent phishing.
+- **Row Level Security (RLS)** -- all tables are RLS-enabled. Users can only read/update their own data.
+- **Service role for writes** -- all buy/sell/spin operations go through a server-side admin client that bypasses RLS. Never exposed to the browser.
+- **Optimistic locking** -- balance updates use `.eq("current_balance", currentBalance)` to prevent race conditions. If the balance changed between read and write, the transaction fails with 409.
+- **CHECK constraints** -- database-level guards preventing negative balance, negative shares, etc.
+- **Server-side price verification** -- trade execution verifies stock price against a cached quote (30s TTL, 5% tolerance). Rejects client-submitted prices.
+- **Double-submit protection** -- trade confirmation button disables and shows spinner during execution.
+- **Unique indexes** -- prevent double-spin and double-powerup-activation at the database level.
+- **Open redirect protection** -- email confirmation validates redirect URLs to prevent phishing.
 
 ## License
 
